@@ -1,0 +1,67 @@
+{
+  "realm": "feminine",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "internationalizationEnabled": false,
+  "clients": [
+    {
+      "clientId": "feminine-api",
+      "name": "Feminine Portfolio API",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "feminine-api-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "webOrigins": [],
+      "redirectUris": [],
+      "attributes": {
+        "oidc.ciba.grant.enabled": "false",
+        "oauth2.device.authorization.grant.enabled": "true"
+      }
+    },
+    {
+      "clientId": "feminine-web",
+      "name": "Feminine Portfolio Web",
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "elena",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Elena",
+      "lastName": "Petrova",
+      "email": "elena@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "changeit",
+          "temporary": false
+        }
+      ],
+      "realmRoles": []
+    }
+  ]
+}
