@@ -24,12 +24,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Determine dependency manifest
+        id: npm-manifest
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "path=package-lock.json" >> "$GITHUB_OUTPUT"
+            echo "cache=npm" >> "$GITHUB_OUTPUT"
+          elif [ -f npm-shrinkwrap.json ]; then
+            echo "path=npm-shrinkwrap.json" >> "$GITHUB_OUTPUT"
+            echo "cache=npm" >> "$GITHUB_OUTPUT"
+          elif [ -f pnpm-lock.yaml ]; then
+            echo "path=pnpm-lock.yaml" >> "$GITHUB_OUTPUT"
+            echo "cache=pnpm" >> "$GITHUB_OUTPUT"
+          elif [ -f yarn.lock ]; then
+            echo "path=yarn.lock" >> "$GITHUB_OUTPUT"
+            echo "cache=yarn" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=package.json" >> "$GITHUB_OUTPUT"
+            echo "cache=npm" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: package-lock.json
+          cache: ${{ steps.npm-manifest.outputs.cache }}
+          cache-dependency-path: ${{ steps.npm-manifest.outputs.path }}
 
       - name: Cache Node.js modules
         uses: actions/cache@v4
