@@ -98,6 +98,16 @@ Build the application for production:
 npm run build
 ```
 
+## 🧪 Testing
+
+Run the Vitest-powered unit tests locally with coverage enabled:
+
+```bash
+npm test -- --coverage
+```
+
+The Vitest configuration enforces minimum 70 % thresholds for statements, functions, and lines across the covered frontend directories so local runs match the CI gate. 【F:vite.config.mjs†L21-L40】
+
 ## ✅ Continuous Integration
 
 Automated checks for the repository live in `.github/workflows/ci.yml` and run on every push or pull request to `main`.
@@ -105,7 +115,7 @@ Automated checks for the repository live in `.github/workflows/ci.yml` and run o
 ### Frontend quality gates
 
 - Installs dependencies with Node 20, reusing cached modules for faster builds. 【F:.github/workflows/ci.yml†L27-L46】
-- Requires a `test` script in `package.json`, executes the test runner with coverage enabled, and uploads the generated report artifact. 【F:.github/workflows/ci.yml†L48-L67】
+- Requires a `test` script in `package.json`, executes the Vitest suite with coverage enabled, and uploads the generated report artifact while enforcing ≥70 % line/function coverage on targeted frontend modules. 【F:.github/workflows/ci.yml†L48-L67】【F:vite.config.mjs†L5-L40】
 - Builds the Vite bundle to ensure production assets remain healthy. 【F:.github/workflows/ci.yml†L57-L58】
 
 ### Backend quality gates
