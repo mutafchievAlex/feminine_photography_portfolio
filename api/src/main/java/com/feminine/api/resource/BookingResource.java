@@ -3,6 +3,8 @@ package com.feminine.api.resource;
 import com.feminine.api.dto.BookingRequest;
 import com.feminine.api.dto.BookingResponse;
 import com.feminine.api.dto.BookingStatusUpdateRequest;
+import com.feminine.api.dto.InboundEmailRequest;
+import com.feminine.api.dto.OutboundEmailRequest;
 import com.feminine.api.service.BookingService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -65,6 +67,20 @@ public class BookingResource {
     @Operation(summary = "Update booking status")
     public BookingResponse updateStatus(@PathParam("id") UUID id, @Valid BookingStatusUpdateRequest request) {
         return bookingService.updateStatus(id, request.getStatus(), request.getContractUrl());
+    }
+
+    @POST
+    @Path("/bookings/{id}/messages/outbound")
+    @Operation(summary = "Send an email update for a booking")
+    public BookingResponse sendMessage(@PathParam("id") UUID id, @Valid OutboundEmailRequest request) {
+        return bookingService.sendMessage(id, request);
+    }
+
+    @POST
+    @Path("/bookings/{id}/messages/inbound")
+    @Operation(summary = "Record an inbound booking email")
+    public BookingResponse recordInbound(@PathParam("id") UUID id, @Valid InboundEmailRequest request) {
+        return bookingService.recordClientMessage(id, request);
     }
 
     @DELETE

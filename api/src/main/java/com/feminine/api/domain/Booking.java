@@ -31,6 +31,12 @@ public class Booking extends BaseEntity {
 
     private String location;
 
+    @Column(name = "last_photographer_message", length = 2048)
+    private String lastPhotographerMessage;
+
+    @Column(name = "last_client_message", length = 2048)
+    private String lastClientMessage;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BookingStatus status = BookingStatus.PENDING;
@@ -79,6 +85,22 @@ public class Booking extends BaseEntity {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getLastPhotographerMessage() {
+        return lastPhotographerMessage;
+    }
+
+    public void setLastPhotographerMessage(String lastPhotographerMessage) {
+        this.lastPhotographerMessage = lastPhotographerMessage;
+    }
+
+    public String getLastClientMessage() {
+        return lastClientMessage;
+    }
+
+    public void setLastClientMessage(String lastClientMessage) {
+        this.lastClientMessage = lastClientMessage;
     }
 
     public BookingStatus getStatus() {

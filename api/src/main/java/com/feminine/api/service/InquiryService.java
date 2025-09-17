@@ -3,8 +3,10 @@ package com.feminine.api.service;
 import com.feminine.api.audit.Audited;
 import com.feminine.api.domain.Inquiry;
 import com.feminine.api.domain.InquiryStatus;
+import com.feminine.api.dto.InboundEmailRequest;
 import com.feminine.api.dto.InquiryRequest;
 import com.feminine.api.dto.InquiryResponse;
+import com.feminine.api.dto.OutboundEmailRequest;
 import com.feminine.api.mapper.InquiryMapper;
 import com.feminine.api.repository.InquiryRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,12 +31,17 @@ public class InquiryService {
     @Inject
     InquiryMapper inquiryMapper;
 
+    @Inject
+    EmailService emailService;
+
     @Audited
     @Transactional
     public InquiryResponse create(InquiryRequest request) {
         Inquiry inquiry = inquiryMapper.toEntity(request);
         inquiry.setPhotographer(photographerService.findEntity(request.getPhotographerId()));
         inquiryRepository.persist(inquiry);
+        emailService.sendInquiryAcknowledgement(inquiry);
+        emailService.sendNewInquiryNotification(inquiry);
         return inquiryMapper.toResponse(inquiry);
     }
 
@@ -66,6 +73,30 @@ public class InquiryService {
         inquiry.setStatus(status);
         if (status == InquiryStatus.RESPONDED) {
             inquiry.setRespondedAt(Instant.now());
+        }
+        return inquiryMapper.toResponse(inquiry);
+    }
+
+    @Audited
+    @Transactional
+    public InquiryResponse sendResponse(UUID id, OutboundEmailRequest request) {
+        Inquiry inquiry = findInquiry(id);
+        emailService.sendInquiryResponse(inquiry, request.getSubject(), request.getBody(), request.isCopyPhotographer());
+        inquiry.setLastPhotographerMessage(request.getBody());
+        inquiry.setStatus(InquiryStatus.RESPONDED);
+        inquiry.setRespondedAt(Instant.now());
+        return inquiryMapper.toResponse(inquiry);
+    }
+
+    @Audited
+    @Transactional
+    public InquiryResponse recordClientReply(UUID id, InboundEmailRequest request) {
+        Inquiry inquiry = findInquiry(id);
+        emailService.recordInquiryInbound(inquiry, request.getFrom(), request.getSubject(), request.getBody());
+        inquiry.setLastClientMessage(request.getBody());
+        if (inquiry.getStatus() == InquiryStatus.RESPONDED) {
+            inquiry.setStatus(InquiryStatus.IN_PROGRESS);
+            inquiry.setRespondedAt(null);
         }
         return inquiryMapper.toResponse(inquiry);
     }

@@ -15,10 +15,13 @@ public class BookingResponse {
     private String clientEmail;
     private LocalDate eventDate;
     private String location;
+    private String lastPhotographerMessage;
+    private String lastClientMessage;
     private BookingStatus status;
     private String contractUrl;
     private BigDecimal totalAmount;
     private Instant createdAt;
+    private Instant updatedAt;
 
     public UUID getId() {
         return id;
@@ -68,6 +71,22 @@ public class BookingResponse {
         this.location = location;
     }
 
+    public String getLastPhotographerMessage() {
+        return lastPhotographerMessage;
+    }
+
+    public void setLastPhotographerMessage(String lastPhotographerMessage) {
+        this.lastPhotographerMessage = lastPhotographerMessage;
+    }
+
+    public String getLastClientMessage() {
+        return lastClientMessage;
+    }
+
+    public void setLastClientMessage(String lastClientMessage) {
+        this.lastClientMessage = lastClientMessage;
+    }
+
     public BookingStatus getStatus() {
         return status;
     }
@@ -98,5 +117,13 @@ public class BookingResponse {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

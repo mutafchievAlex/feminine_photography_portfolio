@@ -5,6 +5,8 @@ import com.feminine.api.domain.Booking;
 import com.feminine.api.domain.BookingStatus;
 import com.feminine.api.dto.BookingRequest;
 import com.feminine.api.dto.BookingResponse;
+import com.feminine.api.dto.InboundEmailRequest;
+import com.feminine.api.dto.OutboundEmailRequest;
 import com.feminine.api.mapper.BookingMapper;
 import com.feminine.api.repository.BookingRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,12 +31,17 @@ public class BookingService {
     @Inject
     BookingMapper bookingMapper;
 
+    @Inject
+    EmailService emailService;
+
     @Audited
     @Transactional
     public BookingResponse create(BookingRequest request) {
         Booking booking = bookingMapper.toEntity(request);
         booking.setPhotographer(photographerService.findEntity(request.getPhotographerId()));
         bookingRepository.persist(booking);
+        emailService.sendBookingAcknowledgement(booking);
+        emailService.sendNewBookingNotification(booking);
         return bookingMapper.toResponse(booking);
     }
 
@@ -67,6 +74,7 @@ public class BookingService {
         if (contractUrl != null && !contractUrl.isBlank()) {
             booking.setContractUrl(contractUrl);
         }
+        emailService.sendBookingStatusUpdate(booking);
         return bookingMapper.toResponse(booking);
     }
 
@@ -75,6 +83,24 @@ public class BookingService {
     public void delete(UUID id) {
         Booking booking = findBooking(id);
         bookingRepository.delete(booking);
+    }
+
+    @Audited
+    @Transactional
+    public BookingResponse sendMessage(UUID id, OutboundEmailRequest request) {
+        Booking booking = findBooking(id);
+        emailService.sendBookingMessage(booking, request.getSubject(), request.getBody(), request.isCopyPhotographer());
+        booking.setLastPhotographerMessage(request.getBody());
+        return bookingMapper.toResponse(booking);
+    }
+
+    @Audited
+    @Transactional
+    public BookingResponse recordClientMessage(UUID id, InboundEmailRequest request) {
+        Booking booking = findBooking(id);
+        emailService.recordBookingInbound(booking, request.getFrom(), request.getSubject(), request.getBody());
+        booking.setLastClientMessage(request.getBody());
+        return bookingMapper.toResponse(booking);
     }
 
     public long countUpcomingConfirmed(UUID photographerId, LocalDate from) {

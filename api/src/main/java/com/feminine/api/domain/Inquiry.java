@@ -28,6 +28,12 @@ public class Inquiry extends BaseEntity {
     @Column(length = 2048)
     private String message;
 
+    @Column(name = "last_photographer_message", length = 2048)
+    private String lastPhotographerMessage;
+
+    @Column(name = "last_client_message", length = 2048)
+    private String lastClientMessage;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private InquiryStatus status = InquiryStatus.NEW;
@@ -68,6 +74,22 @@ public class Inquiry extends BaseEntity {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getLastPhotographerMessage() {
+        return lastPhotographerMessage;
+    }
+
+    public void setLastPhotographerMessage(String lastPhotographerMessage) {
+        this.lastPhotographerMessage = lastPhotographerMessage;
+    }
+
+    public String getLastClientMessage() {
+        return lastClientMessage;
+    }
+
+    public void setLastClientMessage(String lastClientMessage) {
+        this.lastClientMessage = lastClientMessage;
     }
 
     public InquiryStatus getStatus() {

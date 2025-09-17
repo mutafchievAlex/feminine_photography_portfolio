@@ -12,10 +12,13 @@ public class InquiryResponse {
     private String clientName;
     private String clientEmail;
     private String message;
+    private String lastPhotographerMessage;
+    private String lastClientMessage;
     private InquiryStatus status;
     private Instant desiredEventAt;
     private Instant respondedAt;
     private Instant createdAt;
+    private Instant updatedAt;
 
     public UUID getId() {
         return id;
@@ -57,6 +60,22 @@ public class InquiryResponse {
         this.message = message;
     }
 
+    public String getLastPhotographerMessage() {
+        return lastPhotographerMessage;
+    }
+
+    public void setLastPhotographerMessage(String lastPhotographerMessage) {
+        this.lastPhotographerMessage = lastPhotographerMessage;
+    }
+
+    public String getLastClientMessage() {
+        return lastClientMessage;
+    }
+
+    public void setLastClientMessage(String lastClientMessage) {
+        this.lastClientMessage = lastClientMessage;
+    }
+
     public InquiryStatus getStatus() {
         return status;
     }
@@ -87,5 +106,13 @@ public class InquiryResponse {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

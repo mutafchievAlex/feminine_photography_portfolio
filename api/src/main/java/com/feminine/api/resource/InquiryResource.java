@@ -1,8 +1,10 @@
 package com.feminine.api.resource;
 
+import com.feminine.api.dto.InboundEmailRequest;
 import com.feminine.api.dto.InquiryRequest;
 import com.feminine.api.dto.InquiryResponse;
 import com.feminine.api.dto.InquiryStatusUpdateRequest;
+import com.feminine.api.dto.OutboundEmailRequest;
 import com.feminine.api.service.InquiryService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -65,6 +67,20 @@ public class InquiryResource {
     @Operation(summary = "Update inquiry status")
     public InquiryResponse updateStatus(@PathParam("id") UUID id, @Valid InquiryStatusUpdateRequest request) {
         return inquiryService.updateStatus(id, request.getStatus());
+    }
+
+    @POST
+    @Path("/inquiries/{id}/messages/outbound")
+    @Operation(summary = "Send an email response for an inquiry")
+    public InquiryResponse sendResponse(@PathParam("id") UUID id, @Valid OutboundEmailRequest request) {
+        return inquiryService.sendResponse(id, request);
+    }
+
+    @POST
+    @Path("/inquiries/{id}/messages/inbound")
+    @Operation(summary = "Record an inbound inquiry email")
+    public InquiryResponse recordInbound(@PathParam("id") UUID id, @Valid InboundEmailRequest request) {
+        return inquiryService.recordClientReply(id, request);
     }
 
     @DELETE

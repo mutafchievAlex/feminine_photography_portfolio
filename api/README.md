@@ -49,14 +49,24 @@ OIDC/JWT validation is pre-configured; provide `OIDC_AUTH_SERVER_URL`, `OIDC_CLI
 |  | `POST /api/v1/inquiries` | Create inquiry |
 |  | `PUT /api/v1/inquiries/{id}` | Update inquiry |
 |  | `POST /api/v1/inquiries/{id}/status` | Update status |
+|  | `POST /api/v1/inquiries/{id}/messages/outbound` | Send an email response |
+|  | `POST /api/v1/inquiries/{id}/messages/inbound` | Record inbound email content |
 |  | `DELETE /api/v1/inquiries/{id}` | Delete inquiry |
 | Bookings | `GET /api/v1/photographers/{photographerId}/bookings` | List bookings |
 |  | `POST /api/v1/bookings` | Create booking |
 |  | `PUT /api/v1/bookings/{id}` | Update booking |
 |  | `POST /api/v1/bookings/{id}/status` | Update status and contract URL |
+|  | `POST /api/v1/bookings/{id}/messages/outbound` | Send an email update |
+|  | `POST /api/v1/bookings/{id}/messages/inbound` | Record inbound client email |
 |  | `DELETE /api/v1/bookings/{id}` | Delete booking |
 
 Rate limiting is enforced for every `/api/` call using Bucket4j. Default values (120 requests/minute) can be tuned with `RATE_LIMIT_CAPACITY` and `RATE_LIMIT_REFILL` environment variables.
+
+### Email notifications & ingestion
+
+The API relies on the Quarkus Mailer extension to deliver acknowledgements, notifications and ad-hoc replies for inquiries and bookings. Configure the SMTP gateway via `quarkus.mailer.*` properties and customise the sender/copy addresses with `mail.notifications.from` and `mail.notifications.copy`. For development and automated tests, email delivery is mocked by default.
+
+Inbound email webhooks can post to `POST /api/v1/inquiries/{id}/messages/inbound` and `POST /api/v1/bookings/{id}/messages/inbound` to archive replies from clients while simultaneously notifying the associated photographer.
 
 ### Health, metrics and tracing
 
