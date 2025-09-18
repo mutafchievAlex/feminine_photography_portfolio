@@ -4,4 +4,6 @@ target/
 .vscode/
 .DS_Store
 storage/
+!src/main/java/com/feminine/api/infrastructure/storage/
+!src/test/java/com/feminine/api/infrastructure/storage/
 build/
