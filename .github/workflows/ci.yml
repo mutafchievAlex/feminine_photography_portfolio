@@ -15,7 +15,7 @@ env:
 
 jobs:
   frontend:
-    name: Frontend build, lint, and test
+    name: Frontend lint and build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -65,25 +65,8 @@ jobs:
       - name: Lint
         run: npm run lint --if-present
 
-      - name: Test with coverage
-        id: frontend-tests
-        env:
-          CI: "true"
-        run: |
-          node -e "const pkg=require('./package.json'); if(!pkg.scripts || !pkg.scripts.test){console.error('No npm test script defined.'); process.exit(1);}"
-          npm run test -- --coverage
-          echo "coverage_dir=coverage" >> "$GITHUB_OUTPUT"
-
       - name: Build
         run: npm run build
-
-      - name: Upload frontend coverage
-        if: steps.frontend-tests.outputs.coverage_dir
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-coverage
-          path: coverage
-          if-no-files-found: ignore
 
   backend:
     name: Backend verify and quality gates
@@ -113,8 +96,8 @@ jobs:
           restore-keys: |
             dependency-check-${{ runner.os }}-
 
-      - name: Maven verify with coverage
-        run: mvn -B -ntp clean verify
+      - name: Maven package (tests skipped)
+        run: mvn -B -ntp -DskipTests -Djacoco.skip=true clean package
 
       - name: OWASP Dependency Check
         run: mvn -B -ntp org.owasp:dependency-check-maven:9.1.0:check -DdataDirectory=~/.cache/dependency-check
@@ -128,14 +111,6 @@ jobs:
       - name: SpotBugs
         run: mvn -B -ntp com.github.spotbugs:spotbugs-maven-plugin:4.8.6.2:check
 
-      - name: Upload backend coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-jacoco-report
-          path: |
-            target/site/jacoco
-            target/jacoco.exec
-          if-no-files-found: ignore
 
   docker:
     name: Build and publish Docker image

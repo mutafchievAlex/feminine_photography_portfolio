@@ -106,7 +106,7 @@ Run the Vitest-powered unit tests locally with coverage enabled:
 npm test -- --coverage
 ```
 
-The Vitest configuration enforces minimum 70 % thresholds for statements, functions, and lines across the covered frontend directories so local runs match the CI gate. 【F:vite.config.mjs†L21-L40】
+The Vitest configuration enforces minimum 70 % thresholds for statements, functions, and lines across the covered frontend directories when you run the suite locally, even though the CI workflow skips automated test execution. 【F:vite.config.mjs†L21-L40】
 
 ## ✅ Continuous Integration
 
@@ -115,14 +115,13 @@ Automated checks for the repository live in `.github/workflows/ci.yml` and run o
 ### Frontend quality gates
 
 - Installs dependencies with Node 20, reusing cached modules for faster builds. 【F:.github/workflows/ci.yml†L27-L46】
-- Requires a `test` script in `package.json`, executes the Vitest suite with coverage enabled, and uploads the generated report artifact while enforcing ≥70 % line/function coverage on targeted frontend modules. 【F:.github/workflows/ci.yml†L48-L67】【F:vite.config.mjs†L5-L40】
-- Builds the Vite bundle to ensure production assets remain healthy. 【F:.github/workflows/ci.yml†L57-L58】
+- Runs the lint script when available and intentionally skips automated unit tests to keep pipeline feedback fast. 【F:.github/workflows/ci.yml†L47-L52】
+- Builds the Vite bundle to ensure production assets remain healthy. 【F:.github/workflows/ci.yml†L54-L55】
 
 ### Backend quality gates
 
-- Uses Temurin JDK 17 with Maven dependency caching, then runs `mvn clean verify`, which enforces a 70 % minimum line-coverage threshold via JaCoCo. 【F:.github/workflows/ci.yml†L78-L101】【F:api/pom.xml†L148-L224】
-- Executes OWASP Dependency Check, Checkstyle, PMD, and SpotBugs as failing gates for security and static analysis regressions. 【F:.github/workflows/ci.yml†L102-L119】
-- Uploads the Jacoco HTML and binary reports for reference in job artifacts. 【F:.github/workflows/ci.yml†L111-L118】
+- Uses Temurin JDK 17 with Maven dependency caching, then packages the project while skipping tests and JaCoCo instrumentation. 【F:.github/workflows/ci.yml†L75-L96】
+- Executes OWASP Dependency Check, Checkstyle, PMD, and SpotBugs as failing gates for security and static analysis regressions. 【F:.github/workflows/ci.yml†L98-L115】
 
 ### Docker packaging
 
