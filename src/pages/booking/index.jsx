@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
 import BookingForm from './components/BookingForm';
@@ -8,29 +8,55 @@ import AvailabilityCalendar from './components/AvailabilityCalendar';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import Image from '../../components/AppImage';
+import { submitBooking } from '../../services/booking';
+import { createSubmitHandler } from './bookingSubmission';
 
 const BookingPage = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [activeTab, setActiveTab] = useState('form');
+  const [serverErrors, setServerErrors] = useState({});
+  const [submissionError, setSubmissionError] = useState('');
+  const successTimeoutRef = useRef(null);
 
-  const handleFormSubmit = async (formData) => {
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    console.log('Booking submitted:', { ...formData, selectedDate });
-    
-    setIsSubmitting(false);
-    setShowSuccessMessage(true);
-    
-    // Hide success message after 5 seconds
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-    }, 5000);
+  useEffect(() => {
+    return () => {
+      if (successTimeoutRef?.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleFieldErrorClear = (field) => {
+    if (!field) {
+      return;
+    }
+
+    setServerErrors((prev) => {
+      if (!prev?.[field]) {
+        return prev;
+      }
+
+      const nextErrors = { ...prev };
+      delete nextErrors[field];
+      return nextErrors;
+    });
   };
+
+  const handleFormSubmit = useMemo(
+    () =>
+      createSubmitHandler({
+        submitBookingFn: submitBooking,
+        getSelectedDate: () => selectedDate,
+        setIsSubmitting,
+        setSubmissionError,
+        setServerErrors,
+        setShowSuccessMessage,
+        successTimeoutRef,
+      }),
+    [selectedDate]
+  );
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
@@ -228,9 +254,12 @@ const BookingPage = () => {
               {/* Main Content Area */}
               <div className="lg:col-span-2">
                 {activeTab === 'form' && (
-                  <BookingForm 
-                    onSubmit={handleFormSubmit} 
+                  <BookingForm
+                    onSubmit={handleFormSubmit}
                     isSubmitting={isSubmitting}
+                    serverErrors={serverErrors}
+                    submissionError={submissionError}
+                    onFieldErrorClear={handleFieldErrorClear}
                   />
                 )}
                 
