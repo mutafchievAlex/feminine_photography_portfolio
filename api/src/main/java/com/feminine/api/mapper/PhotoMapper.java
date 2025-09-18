@@ -20,6 +20,10 @@ public interface PhotoMapper {
 
     @Mapping(target = "album", ignore = true)
     @Mapping(target = "imageUrl", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateEntity(PhotoRequest request, @MappingTarget Photo photo);
 
     @Mapping(target = "albumId", source = "album.id")

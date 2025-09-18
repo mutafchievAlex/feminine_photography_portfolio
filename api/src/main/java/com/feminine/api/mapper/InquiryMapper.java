@@ -26,6 +26,10 @@ public interface InquiryMapper {
     @Mapping(target = "respondedAt", ignore = true)
     @Mapping(target = "lastPhotographerMessage", ignore = true)
     @Mapping(target = "lastClientMessage", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateEntity(InquiryRequest request, @MappingTarget Inquiry inquiry);
 
     @Mapping(target = "photographerId", source = "photographer.id")
