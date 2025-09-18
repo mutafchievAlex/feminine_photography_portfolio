@@ -13,9 +13,12 @@ const useGallery = (options = {}) => {
     search,
     sort,
     cursor,
-    limit = DEFAULT_LIMIT,
-    enabled = true,
+    limit: limitOption,
+    enabled: enabledOption,
   } = options ?? {};
+
+  const limit = limitOption ?? DEFAULT_LIMIT;
+  const isEnabled = enabledOption ?? true;
 
   const requestOptions = useMemo(() => {
     const payload = { limit };
@@ -45,7 +48,7 @@ const useGallery = (options = {}) => {
     return payload;
   }, [photographerId, category, style, season, search, sort, cursor, limit]);
 
-  const query = useServiceFetcher(fetchGallery, requestOptions, enabled, []);
+  const query = useServiceFetcher(fetchGallery, requestOptions, isEnabled, []);
 
   return {
     ...query,

@@ -26,13 +26,16 @@ const Gallery = () => {
     setLanguage(savedLanguage);
   }, []);
 
-  const galleryOptions = {
-    limit: 48,
-    locale: language,
-    category: activeCategory !== 'all' ? activeCategory : undefined,
-    style: activeStyle !== 'all' ? activeStyle : undefined,
-    season: activeSeason !== 'all' ? activeSeason : undefined,
-  };
+  const galleryOptions = useMemo(
+    () => ({
+      limit: 48,
+      locale: language,
+      category: activeCategory !== 'all' ? activeCategory : undefined,
+      style: activeStyle !== 'all' ? activeStyle : undefined,
+      season: activeSeason !== 'all' ? activeSeason : undefined,
+    }),
+    [language, activeCategory, activeStyle, activeSeason]
+  );
 
   const {
     gallery: galleryData,

@@ -7,14 +7,17 @@ const DEFAULT_LIMIT = 6;
 const useStories = (options = {}) => {
   const {
     photographerId,
-    limit = DEFAULT_LIMIT,
+    limit: limitOption,
     category,
     tag,
     cursor,
     locale,
     sort,
-    enabled = true,
+    enabled: enabledOption,
   } = options ?? {};
+
+  const limit = limitOption ?? DEFAULT_LIMIT;
+  const isEnabled = enabledOption ?? true;
 
   const requestOptions = useMemo(() => {
     const payload = { limit };
@@ -41,7 +44,7 @@ const useStories = (options = {}) => {
     return payload;
   }, [photographerId, limit, category, tag, cursor, locale, sort]);
 
-  const query = useServiceFetcher(fetchStories, requestOptions, enabled, []);
+  const query = useServiceFetcher(fetchStories, requestOptions, isEnabled, []);
 
   return {
     ...query,

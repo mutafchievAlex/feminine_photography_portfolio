@@ -13,10 +13,12 @@ const RecentStories = () => {
     setLanguage(savedLanguage);
   }, []);
 
-  const { stories: storiesData, isLoading, error, refetch } = useStories({
-    limit: 4,
-    locale: language,
-  });
+  const storyOptions = useMemo(
+    () => ({ limit: 4, locale: language }),
+    [language]
+  );
+
+  const { stories: storiesData, isLoading, error, refetch } = useStories(storyOptions);
 
   const localizeContent = (value) => {
     if (!value) {
