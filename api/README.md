@@ -1,87 +1,50 @@
 # Feminine Photography API
 
-A Quarkus 3 based REST API that powers the feminine photography portfolio platform. The service exposes `/api/v1` endpoints for managing photographer profiles, albums, photos, inquiries and bookings. It integrates with PostgreSQL 16, Flyway migrations, Hibernate Panache, Bean Validation, OIDC/JWT security, rate limiting, OpenAPI/Swagger UI, health and metrics, plus an image storage abstraction that stores files locally in development and targets Amazon S3 in production.
+Quarkus 3 service that powers the portfolio web experience with REST resources for photographers, albums, photos, inquiries, and bookings.
 
-## Getting started
+## Prerequisites
+- **Java 21** (Temurin/OpenJDK). The Maven compiler is temporarily set to 17; install a Java 21 runtime so you can develop against the upcoming baseline while remaining compatible with the current build.【F:api/pom.xml†L14-L25】
+- **Maven 3.9+** for dependency management and the Quarkus CLI goals.【F:api/pom.xml†L11-L186】
+- **Docker** when running tests or local dependencies; the suite uses Testcontainers to launch PostgreSQL automatically.【F:api/src/test/java/com/feminine/api/config/PostgresResource.java†L1-L34】
 
-### Prerequisites
+## Environment setup
+1. Copy the template and provide local secrets:
+   ```bash
+   cp api/.env.example api/.env
+   ```
+   Populate JDBC credentials, OIDC client values, and mail configuration as needed. Never commit populated `.env` files—use GitHub Secrets or your platform secret manager for non-local environments.【F:api/.env.example†L1-L23】【F:api/.env†L1-L6】
+2. Ensure `application.properties` stays secret-free by referencing environment variables (`DB_*`, `OIDC_*`, `MAIL_*`, `S3_*`, etc.) when promoting to shared environments.【F:api/src/main/resources/application.properties†L1-L63】
 
-* Java 17+
-* Maven 3.9+
-* PostgreSQL 16 (for local development)
-* Docker (for running the Testcontainers powered test-suite)
+## Running locally
+1. Start PostgreSQL and Keycloak via the root docker-compose file or your preferred services.
+   ```bash
+   docker compose up -d postgres keycloak
+   ```
+2. Launch Quarkus in dev mode:
+   ```bash
+   cd api
+   mvn quarkus:dev
+   ```
+   Dev services auto-run Flyway migrations and expose Swagger UI at `http://localhost:8080/swagger-ui` and OpenAPI at `/q/openapi`. Seed data from `db/migration` populates reference photographers, albums, and bookings.【F:api/src/main/resources/db/migration/V1__create_tables.sql†L1-L200】
+3. Use the `/api/v1` endpoints for CRUD operations; authentication expects the Keycloak realm defined in `docker/keycloak/feminine-realm.json`.【F:api/src/main/java/com/feminine/api/resource/PhotographerResource.java†L1-L58】【F:docker/keycloak/feminine-realm.json†L1-L48】
 
-### First run
+## Database migrations
+- Flyway migrations live under `src/main/resources/db/migration` and run automatically at application start. Use `mvn quarkus:dev` or `mvn quarkus:run` to apply them locally, or execute `mvn -Dflyway.clean`/`mvn -Dflyway.migrate` for manual control if needed.【F:api/src/main/resources/application.properties†L1-L63】
+- When adding migrations, follow the `V#__description.sql` naming convention so Flyway orders them correctly.
 
-```bash
-cd api
-mvn quarkus:dev
-```
+## Testing
+- Execute the full suite with:
+  ```bash
+  mvn verify
+  ```
+  This command runs unit tests, Quarkus integration tests, and enforces the Jacoco 70% coverage threshold. Docker must be running for Testcontainers to provision PostgreSQL.【F:api/pom.xml†L145-L186】【F:api/src/test/java/com/feminine/api/config/PostgresResource.java†L1-L34】
+- Use `mvn test` for faster feedback when you do not need integration tests or coverage checks.
 
-This will start Quarkus in dev mode on <http://localhost:8080>. Swagger UI is served from [`/swagger-ui`](http://localhost:8080/swagger-ui) and the OpenAPI contract lives at [`/q/openapi`](http://localhost:8080/q/openapi).
+## Common issues
+- **Testcontainers cannot start PostgreSQL**: Verify Docker is installed and running, and that ports 5432/5433 are free. Retry `mvn verify` after pruning old containers.【F:api/src/test/java/com/feminine/api/config/PostgresResource.java†L1-L34】
+- **OIDC failures (401/403)**: Confirm the `OIDC_*` values in `api/.env` match the Keycloak realm imported from `docker/keycloak/feminine-realm.json`, and that the Keycloak server is reachable.【F:api/.env.example†L1-L23】【F:docker/keycloak/feminine-realm.json†L1-L48】
+- **Image upload errors**: The `PhotoService` depends on an `ImageStorageService` adapter that has not been implemented yet; expect failures on `/api/v1/photos` upload/update operations until the storage layer is delivered.【F:api/src/main/java/com/feminine/api/service/PhotoService.java†L1-L69】
 
-Flyway automatically runs the SQL migrations in `src/main/resources/db/migration`. The seed data inserts two photographers, sample albums, photos, inquiries and bookings.
-
-### Configuration profiles
-
-* **Dev** (`quarkus.profile=dev`) — Uses the local PostgreSQL connection configured through the `DEV_DB_*` environment variables (defaults are provided). Images are stored under `build/dev-images`.
-* **Test** (`quarkus.profile=test`) — Bootstrapped by the Testcontainers based `PostgresResource`. Stored images are written to `target/test-images`.
-* **Prod** (`quarkus.profile=prod`) — Reads all DB and S3 configuration from the `PROD_*` environment variables. Enables the S3 storage adapter.
-
-OIDC/JWT validation is pre-configured; provide `OIDC_AUTH_SERVER_URL`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` and a PEM encoded public key at `src/main/resources/keys/publicKey.pem` (or override `quarkus.smallrye-jwt.verify.key.location`).
-
-### Core endpoints
-
-| Resource | Endpoint | Description |
-| --- | --- | --- |
-| Photographers | `GET /api/v1/photographers` | List photographer profiles |
-|  | `POST /api/v1/photographers` | Create a profile |
-|  | `GET/PUT/DELETE /api/v1/photographers/{id}` | Retrieve, update or delete a profile |
-| Albums | `GET /api/v1/photographers/{photographerId}/albums` | List albums for a photographer |
-|  | `POST /api/v1/albums` | Create an album |
-|  | `GET/PUT/DELETE /api/v1/albums/{id}` | Retrieve, update or delete an album |
-| Photos | `GET /api/v1/albums/{albumId}/photos` | List photos |
-|  | `POST /api/v1/photos` *(multipart)* | Upload a new photo and metadata |
-|  | `PUT /api/v1/photos/{id}` | Update metadata |
-|  | `POST /api/v1/photos/{id}/image` *(multipart)* | Replace the stored image |
-|  | `DELETE /api/v1/photos/{id}` | Delete a photo |
-| Inquiries | `GET /api/v1/photographers/{photographerId}/inquiries` | List inquiries |
-|  | `POST /api/v1/inquiries` | Create inquiry |
-|  | `PUT /api/v1/inquiries/{id}` | Update inquiry |
-|  | `POST /api/v1/inquiries/{id}/status` | Update status |
-|  | `POST /api/v1/inquiries/{id}/messages/outbound` | Send an email response |
-|  | `POST /api/v1/inquiries/{id}/messages/inbound` | Record inbound email content |
-|  | `DELETE /api/v1/inquiries/{id}` | Delete inquiry |
-| Bookings | `GET /api/v1/photographers/{photographerId}/bookings` | List bookings |
-|  | `POST /api/v1/bookings` | Create booking |
-|  | `PUT /api/v1/bookings/{id}` | Update booking |
-|  | `POST /api/v1/bookings/{id}/status` | Update status and contract URL |
-|  | `POST /api/v1/bookings/{id}/messages/outbound` | Send an email update |
-|  | `POST /api/v1/bookings/{id}/messages/inbound` | Record inbound client email |
-|  | `DELETE /api/v1/bookings/{id}` | Delete booking |
-
-Rate limiting is enforced for every `/api/` call using Bucket4j. Default values (120 requests/minute) can be tuned with `RATE_LIMIT_CAPACITY` and `RATE_LIMIT_REFILL` environment variables.
-
-### Email notifications & ingestion
-
-The API relies on the Quarkus Mailer extension to deliver acknowledgements, notifications and ad-hoc replies for inquiries and bookings. Configure the SMTP gateway via `quarkus.mailer.*` properties and customise the sender/copy addresses with `mail.notifications.from` and `mail.notifications.copy`. For development and automated tests, email delivery is mocked by default.
-
-Inbound email webhooks can post to `POST /api/v1/inquiries/{id}/messages/inbound` and `POST /api/v1/bookings/{id}/messages/inbound` to archive replies from clients while simultaneously notifying the associated photographer.
-
-### Health, metrics and tracing
-
-* Liveness/readiness checks at `/q/health` and `/q/health/ready` (database readiness check included)
-* Prometheus metrics at `/q/metrics`
-* Audit logging is applied to all mutating service operations
-
-### Testing & coverage
-
-Run the full test-suite (requires Docker):
-
-```bash
-cd api
-mvn verify
-```
-
-`mvn verify` executes unit tests plus the Quarkus/RestAssured integration tests on a PostgreSQL 16 Testcontainer. JaCoCo is configured to enforce a minimum 70% line coverage across the module.
-
+## Secret management
+- Keep all runtime secrets in GitHub Secrets or your deployment platform’s vault. Reference them from CI/CD workflows and (future) infrastructure code instead of modifying repository files.
+- If you must share local defaults, update `api/.env.example` with sanitized placeholders rather than pushing populated `.env` files.【F:api/.env.example†L1-L23】
