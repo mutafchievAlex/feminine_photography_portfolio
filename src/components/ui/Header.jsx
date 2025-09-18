@@ -10,6 +10,7 @@ const Header = () => {
   const location = useLocation();
   const { language, toggleLanguage, isEnglish } = useLanguage();
   const { t } = useTranslations();
+  const isDev = import.meta.env.DEV;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,7 +26,8 @@ const Header = () => {
     { name: t('gallery'), path: '/gallery', icon: 'Camera' },
     { name: t('about'), path: '/about', icon: 'User' },
     { name: t('investment'), path: '/investment', icon: 'DollarSign' },
-    { name: t('booking'), path: '/booking', icon: 'Calendar' }
+    { name: t('booking'), path: '/booking', icon: 'Calendar' },
+    ...(isDev ? [{ name: 'Docs', path: '/docs', icon: 'FileText' }] : [])
   ];
 
   const isActivePath = (path) => location?.pathname === path;
