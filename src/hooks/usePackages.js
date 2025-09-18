@@ -11,9 +11,12 @@ const usePackages = (options = {}) => {
     currency,
     category,
     sort,
-    limit = DEFAULT_LIMIT,
-    enabled = true,
+    limit: limitOption,
+    enabled: enabledOption,
   } = options ?? {};
+
+  const limit = limitOption ?? DEFAULT_LIMIT;
+  const isEnabled = enabledOption ?? true;
 
   const requestOptions = useMemo(() => {
     const payload = { limit };
@@ -37,7 +40,7 @@ const usePackages = (options = {}) => {
     return payload;
   }, [photographerId, locale, currency, category, sort, limit]);
 
-  const query = useServiceFetcher(fetchPackages, requestOptions, enabled, []);
+  const query = useServiceFetcher(fetchPackages, requestOptions, isEnabled, []);
 
   return {
     ...query,

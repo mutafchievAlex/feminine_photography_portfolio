@@ -10,9 +10,12 @@ const useInstagramFeed = (options = {}) => {
     username,
     hashtag,
     cursor,
-    limit = DEFAULT_LIMIT,
-    enabled = true,
+    limit: limitOption,
+    enabled: enabledOption,
   } = options ?? {};
+
+  const limit = limitOption ?? DEFAULT_LIMIT;
+  const isEnabled = enabledOption ?? true;
 
   const requestOptions = useMemo(() => {
     const payload = { limit };
@@ -33,7 +36,7 @@ const useInstagramFeed = (options = {}) => {
     return payload;
   }, [photographerId, username, hashtag, cursor, limit]);
 
-  const query = useServiceFetcher(fetchInstagramFeed, requestOptions, enabled, []);
+  const query = useServiceFetcher(fetchInstagramFeed, requestOptions, isEnabled, []);
 
   return {
     ...query,

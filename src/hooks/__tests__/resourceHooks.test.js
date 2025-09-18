@@ -71,20 +71,25 @@ describe('useStories', () => {
   });
 
   it('only refetches when a tracked option changes', async () => {
-    const harness = await mountHook(useStories, {
+    const initialOptions = {
       photographerId: 'one',
       limit: 3,
-    });
+    };
+
+    const harness = await mountHook(useStories, initialOptions);
 
     expect(fetchStories).toHaveBeenCalledTimes(1);
 
-    await harness.rerender({ photographerId: 'one', limit: 3 });
+    await harness.rerender(initialOptions);
     expect(fetchStories).toHaveBeenCalledTimes(1);
 
-    await harness.rerender({ photographerId: 'two', limit: 3 });
+    await harness.rerender({ ...initialOptions });
+    expect(fetchStories).toHaveBeenCalledTimes(1);
+
+    await harness.rerender({ ...initialOptions, photographerId: 'two' });
     expect(fetchStories).toHaveBeenCalledTimes(2);
 
-    await harness.rerender({ photographerId: 'two', limit: 5 });
+    await harness.rerender({ ...initialOptions, photographerId: 'two', limit: 5 });
     expect(fetchStories).toHaveBeenCalledTimes(3);
 
     harness.unmount();
@@ -98,21 +103,26 @@ describe('useGallery', () => {
   });
 
   it('avoids duplicate fetches for identical filters', async () => {
-    const harness = await mountHook(useGallery, {
+    const initialOptions = {
       photographerId: 'one',
       category: 'weddings',
       limit: 4,
-    });
+    };
+
+    const harness = await mountHook(useGallery, initialOptions);
 
     expect(fetchGallery).toHaveBeenCalledTimes(1);
 
-    await harness.rerender({ photographerId: 'one', category: 'weddings', limit: 4 });
+    await harness.rerender(initialOptions);
     expect(fetchGallery).toHaveBeenCalledTimes(1);
 
-    await harness.rerender({ photographerId: 'one', category: 'portraits', limit: 4 });
+    await harness.rerender({ ...initialOptions });
+    expect(fetchGallery).toHaveBeenCalledTimes(1);
+
+    await harness.rerender({ ...initialOptions, category: 'portraits' });
     expect(fetchGallery).toHaveBeenCalledTimes(2);
 
-    await harness.rerender({ photographerId: 'one', category: 'portraits', limit: 6 });
+    await harness.rerender({ ...initialOptions, category: 'portraits', limit: 6 });
     expect(fetchGallery).toHaveBeenCalledTimes(3);
 
     harness.unmount();
@@ -126,20 +136,25 @@ describe('useInstagramFeed', () => {
   });
 
   it('refetches only when instagram options change', async () => {
-    const harness = await mountHook(useInstagramFeed, {
+    const initialOptions = {
       photographerId: 'one',
       limit: 6,
-    });
+    };
+
+    const harness = await mountHook(useInstagramFeed, initialOptions);
 
     expect(fetchInstagramFeed).toHaveBeenCalledTimes(1);
 
-    await harness.rerender({ photographerId: 'one', limit: 6 });
+    await harness.rerender(initialOptions);
     expect(fetchInstagramFeed).toHaveBeenCalledTimes(1);
 
-    await harness.rerender({ photographerId: 'one', limit: 9 });
+    await harness.rerender({ ...initialOptions });
+    expect(fetchInstagramFeed).toHaveBeenCalledTimes(1);
+
+    await harness.rerender({ ...initialOptions, limit: 9 });
     expect(fetchInstagramFeed).toHaveBeenCalledTimes(2);
 
-    await harness.rerender({ photographerId: 'two', limit: 9 });
+    await harness.rerender({ ...initialOptions, photographerId: 'two', limit: 9 });
     expect(fetchInstagramFeed).toHaveBeenCalledTimes(3);
 
     harness.unmount();
@@ -153,20 +168,25 @@ describe('usePackages', () => {
   });
 
   it('fetches packages once per distinct configuration', async () => {
-    const harness = await mountHook(usePackages, {
+    const initialOptions = {
       photographerId: 'one',
       limit: 2,
-    });
+    };
+
+    const harness = await mountHook(usePackages, initialOptions);
 
     expect(fetchPackages).toHaveBeenCalledTimes(1);
 
-    await harness.rerender({ photographerId: 'one', limit: 2 });
+    await harness.rerender(initialOptions);
     expect(fetchPackages).toHaveBeenCalledTimes(1);
 
-    await harness.rerender({ photographerId: 'one', limit: 3 });
+    await harness.rerender({ ...initialOptions });
+    expect(fetchPackages).toHaveBeenCalledTimes(1);
+
+    await harness.rerender({ ...initialOptions, limit: 3 });
     expect(fetchPackages).toHaveBeenCalledTimes(2);
 
-    await harness.rerender({ photographerId: 'two', limit: 3 });
+    await harness.rerender({ ...initialOptions, photographerId: 'two', limit: 3 });
     expect(fetchPackages).toHaveBeenCalledTimes(3);
 
     harness.unmount();
@@ -180,20 +200,25 @@ describe('useAddOnServices', () => {
   });
 
   it('reuses previous results for identical options', async () => {
-    const harness = await mountHook(useAddOnServices, {
+    const initialOptions = {
       photographerId: 'one',
       limit: 4,
-    });
+    };
+
+    const harness = await mountHook(useAddOnServices, initialOptions);
 
     expect(fetchAddOnServices).toHaveBeenCalledTimes(1);
 
-    await harness.rerender({ photographerId: 'one', limit: 4 });
+    await harness.rerender(initialOptions);
     expect(fetchAddOnServices).toHaveBeenCalledTimes(1);
 
-    await harness.rerender({ photographerId: 'two', limit: 4 });
+    await harness.rerender({ ...initialOptions });
+    expect(fetchAddOnServices).toHaveBeenCalledTimes(1);
+
+    await harness.rerender({ ...initialOptions, photographerId: 'two' });
     expect(fetchAddOnServices).toHaveBeenCalledTimes(2);
 
-    await harness.rerender({ photographerId: 'two', limit: 6 });
+    await harness.rerender({ ...initialOptions, photographerId: 'two', limit: 6 });
     expect(fetchAddOnServices).toHaveBeenCalledTimes(3);
 
     harness.unmount();
@@ -207,20 +232,25 @@ describe('useTestimonials', () => {
   });
 
   it('only fetches testimonials when filter values change', async () => {
-    const harness = await mountHook(useTestimonials, {
+    const initialOptions = {
       photographerId: 'one',
       limit: 3,
-    });
+    };
+
+    const harness = await mountHook(useTestimonials, initialOptions);
 
     expect(fetchTestimonials).toHaveBeenCalledTimes(1);
 
-    await harness.rerender({ photographerId: 'one', limit: 3 });
+    await harness.rerender(initialOptions);
     expect(fetchTestimonials).toHaveBeenCalledTimes(1);
 
-    await harness.rerender({ photographerId: 'two', limit: 3 });
+    await harness.rerender({ ...initialOptions });
+    expect(fetchTestimonials).toHaveBeenCalledTimes(1);
+
+    await harness.rerender({ ...initialOptions, photographerId: 'two' });
     expect(fetchTestimonials).toHaveBeenCalledTimes(2);
 
-    await harness.rerender({ photographerId: 'two', limit: 5 });
+    await harness.rerender({ ...initialOptions, photographerId: 'two', limit: 5 });
     expect(fetchTestimonials).toHaveBeenCalledTimes(3);
 
     harness.unmount();

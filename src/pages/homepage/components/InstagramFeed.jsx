@@ -13,10 +13,12 @@ const InstagramFeed = () => {
     setLanguage(savedLanguage);
   }, []);
 
-  const { posts: instagramPostsData, isLoading, error, refetch } = useInstagramFeed({
-    limit: 6,
-    username: 'elenarose_photography',
-  });
+  const instagramOptions = useMemo(
+    () => ({ limit: 6, username: 'elenarose_photography' }),
+    []
+  );
+
+  const { posts: instagramPostsData, isLoading, error, refetch } = useInstagramFeed(instagramOptions);
 
   const localizeContent = (value) => {
     if (!value) {
