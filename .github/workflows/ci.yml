@@ -65,6 +65,17 @@ jobs:
       - name: Lint
         run: npm run lint --if-present
 
+      - name: Test (coverage ≥70%)
+        id: vitest
+        run: npm test -- --coverage
+
+      - name: Upload Vitest coverage
+        if: steps.vitest.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-coverage
+          path: coverage
+
       - name: Build
         run: npm run build
 
@@ -96,8 +107,9 @@ jobs:
           restore-keys: |
             dependency-check-${{ runner.os }}-
 
-      - name: Maven package (tests skipped)
-        run: mvn -B -ntp -DskipTests -Djacoco.skip=true clean package
+      - name: Maven verify (tests and coverage)
+        id: maven-verify
+        run: mvn -B -ntp clean verify
 
       - name: OWASP Dependency Check
         run: mvn -B -ntp org.owasp:dependency-check-maven:9.1.0:check -DdataDirectory=~/.cache/dependency-check
@@ -110,6 +122,13 @@ jobs:
 
       - name: SpotBugs
         run: mvn -B -ntp com.github.spotbugs:spotbugs-maven-plugin:4.8.6.2:check
+
+      - name: Upload JaCoCo coverage
+        if: steps.maven-verify.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: api/target/site/jacoco
 
 
   docker:
