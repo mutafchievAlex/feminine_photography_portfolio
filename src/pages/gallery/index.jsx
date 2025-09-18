@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
@@ -8,6 +8,7 @@ import GalleryGrid from './components/GalleryGrid';
 import ImageLightbox from './components/ImageLightbox';
 import InspirationBoard from './components/InspirationBoard';
 import CategoryIntro from './components/CategoryIntro';
+import useGallery from '../../hooks/useGallery';
 
 const Gallery = () => {
   const [language, setLanguage] = useState('bg');
@@ -25,139 +26,96 @@ const Gallery = () => {
     setLanguage(savedLanguage);
   }, []);
 
-  // Mock gallery data
-  const galleryImages = [
-    {
-      id: 1,
-      src: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800",
-      alt: "Romantic wedding ceremony",
-      category: language === 'bg' ? 'Сватби' : 'Weddings',
-      style: 'romantic',
-      season: 'summer',
-      location: language === 'bg' ? 'София, България' : 'Sofia, Bulgaria',
-      testimonial: language === 'bg' ? 'Елена улови всеки магически момент от нашия специален ден!' : 'Elena captured every magical moment of our special day!',
-      client: language === 'bg' ? 'Мария и Петър' : 'Maria & Peter',
-      categoryKey: 'weddings'
-    },
-    {
-      id: 2,
-      src: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600",
-      alt: "Maternity portrait in nature",
-      category: language === 'bg' ? 'Бременност' : 'Maternity',
-      style: 'romantic',
-      season: 'spring',
-      location: language === 'bg' ? 'Витоша, България' : 'Vitosha, Bulgaria',
-      testimonial: language === 'bg' ? 'Чувствах се толкова красива и уверена по време на сесията.' : 'I felt so beautiful and confident during the session.',
-      client: language === 'bg' ? 'Анна' : 'Anna',
-      categoryKey: 'maternity'
-    },
-    {
-      id: 3,
-      src: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=700",
-      alt: "Happy family portrait",
-      category: language === 'bg' ? 'Семейство' : 'Family',
-      style: 'candid',
-      season: 'autumn',
-      location: language === 'bg' ? 'Борисова градина' : 'Borisova Garden',
-      testimonial: language === 'bg' ? 'Децата се чувстваха свободно и естествено.' : 'The children felt free and natural.',
-      client: language === 'bg' ? 'Семейство Иванови' : 'Ivanov Family',
-      categoryKey: 'family'
-    },
-    {
-      id: 4,
-      src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500",
-      alt: "Professional business headshot",
-      category: language === 'bg' ? 'Портрети' : 'Headshots',
-      style: 'editorial',
-      season: 'winter',
-      location: language === 'bg' ? 'Студио София' : 'Sofia Studio',
-      testimonial: language === 'bg' ? 'Перфектни снимки за моя LinkedIn профил!' : 'Perfect photos for my LinkedIn profile!',
-      client: language === 'bg' ? 'Димитър' : 'Dimitar',
-      categoryKey: 'headshots'
-    },
-    {
-      id: 5,
-      src: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600",
-      alt: "Romantic couples session",
-      category: language === 'bg' ? 'Двойки' : 'Couples',
-      style: 'romantic',
-      season: 'summer',
-      location: language === 'bg' ? 'Стария град, Пловдив' : 'Old Town, Plovdiv',
-      testimonial: language === 'bg' ? 'Елена улови нашата любов по най-красивия начин.' : 'Elena captured our love in the most beautiful way.',
-      client: language === 'bg' ? 'Елена и Георги' : 'Elena & Georgi',
-      categoryKey: 'couples'
-    },
-    {
-      id: 6,
-      src: "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800",
-      alt: "Wedding reception dance",
-      category: language === 'bg' ? 'Сватби' : 'Weddings',
-      style: 'candid',
-      season: 'autumn',
-      location: language === 'bg' ? 'Хотел Маринела' : 'Hotel Marinela',
-      categoryKey: 'weddings'
-    },
-    {
-      id: 7,
-      src: "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=500",
-      alt: "Maternity silhouette",
-      category: language === 'bg' ? 'Бременност' : 'Maternity',
-      style: 'editorial',
-      season: 'winter',
-      location: language === 'bg' ? 'Студио' : 'Studio',
-      categoryKey: 'maternity'
-    },
-    {
-      id: 8,
-      src: "https://images.unsplash.com/photo-1609220136736-443140cffec6?w=700",
-      alt: "Family playing in park",
-      category: language === 'bg' ? 'Семейство' : 'Family',
-      style: 'candid',
-      season: 'spring',
-      location: language === 'bg' ? 'Южен парк' : 'South Park',
-      categoryKey: 'family'
-    },
-    {
-      id: 9,
-      src: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500",
-      alt: "Professional woman portrait",
-      category: language === 'bg' ? 'Портрети' : 'Headshots',
-      style: 'editorial',
-      season: 'spring',
-      location: language === 'bg' ? 'Офис център' : 'Business Center',
-      categoryKey: 'headshots'
-    },
-    {
-      id: 10,
-      src: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=600",
-      alt: "Engagement session in city",
-      category: language === 'bg' ? 'Двойки' : 'Couples',
-      style: 'editorial',
-      season: 'autumn',
-      location: language === 'bg' ? 'НДК, София' : 'NDK, Sofia',
-      categoryKey: 'couples'
-    },
-    {
-      id: 11,
-      src: "https://images.unsplash.com/photo-1465495976277-4387d4b0e4a6?w=800",
-      alt: "Wedding ceremony outdoor",
-      category: language === 'bg' ? 'Сватби' : 'Weddings',
-      style: 'romantic',
-      season: 'summer',
-      location: language === 'bg' ? 'Замък Равадиново' : 'Ravadinovo Castle',
-      categoryKey: 'weddings'
-    },
-    {
-      id: 12,
-      src: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500",
-      alt: "Maternity couple portrait",
-      category: language === 'bg' ? 'Бременност' : 'Maternity',
-      style: 'romantic',
-      season: 'summer',
-      location: language === 'bg' ? 'Морската градина' : 'Sea Garden',
-      categoryKey: 'maternity'
+  const galleryOptions = {
+    limit: 48,
+    locale: language,
+    category: activeCategory !== 'all' ? activeCategory : undefined,
+    style: activeStyle !== 'all' ? activeStyle : undefined,
+    season: activeSeason !== 'all' ? activeSeason : undefined,
+  };
+
+  const {
+    gallery: galleryData,
+    isLoading: isGalleryLoading,
+    error: galleryError,
+    refetch: refetchGallery,
+  } = useGallery(galleryOptions);
+
+  const localizeField = (value) => {
+    if (!value) {
+      return '';
     }
-  ];
+
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    if (typeof value === 'object') {
+      return value?.[language] ?? value?.name ?? value?.label ?? value?.title ?? Object.values(value)?.[0] ?? '';
+    }
+
+    return '';
+  };
+
+  const galleryImages = useMemo(() => {
+    const rawGallery = Array.isArray(galleryData)
+      ? galleryData
+      : galleryData?.items ?? galleryData?.data ?? galleryData?.gallery ?? [];
+
+    return (
+      rawGallery
+        ?.map((item, index) => {
+          const baseImage = item?.image ?? item?.photo ?? item?.media ?? {};
+          const imageSource =
+            item?.src ??
+            item?.url ??
+            item?.imageUrl ??
+            item?.image ??
+            baseImage?.url ??
+            baseImage?.src ??
+            baseImage?.originalUrl ??
+            baseImage?.previewUrl;
+
+          if (!imageSource) {
+            return null;
+          }
+
+          const categoryKey =
+            item?.categoryKey ??
+            (typeof item?.category === 'object'
+              ? item?.category?.key ?? item?.category?.slug
+              : item?.categorySlug ?? item?.categoryId ?? item?.category);
+
+          const styleKey = item?.style ?? item?.styleKey ?? item?.styleSlug ?? baseImage?.style ?? 'all';
+          const seasonKey = item?.season ?? item?.seasonKey ?? item?.seasonSlug ?? baseImage?.season ?? 'all';
+
+          return {
+            id: item?.id ?? item?.imageId ?? item?.photoId ?? item?.mediaId ?? `gallery-${index}`,
+            src: imageSource,
+            alt:
+              item?.alt ??
+              baseImage?.alt ??
+              item?.title ??
+              (language === 'bg' ? 'Галерия изображение' : 'Gallery image'),
+            category:
+              localizeField(item?.categoryLabel ?? item?.categoryName ?? item?.category) ||
+              categoryKey ||
+              (language === 'bg' ? 'Галерия' : 'Gallery'),
+            style: styleKey,
+            season: seasonKey,
+            location:
+              localizeField(item?.location ?? item?.locationName ?? baseImage?.location) ||
+              (language === 'bg' ? 'София, България' : 'Sofia, Bulgaria'),
+            testimonial: localizeField(item?.testimonial ?? item?.quote),
+            client: localizeField(item?.client ?? item?.clientName ?? item?.subject),
+            categoryKey: categoryKey ?? 'all',
+          };
+        })
+        ?.filter(Boolean)
+    ) ?? [];
+  }, [galleryData, language]);
+
+  const gallerySkeletonItems = useMemo(() => Array.from({ length: 12 }), []);
 
   const translations = {
     bg: {
@@ -181,13 +139,33 @@ const Gallery = () => {
   const t = translations?.[language];
 
   // Filter images based on active filters
-  const filteredImages = galleryImages?.filter(image => {
-    const categoryMatch = activeCategory === 'all' || image?.categoryKey === activeCategory;
-    const styleMatch = activeStyle === 'all' || image?.style === activeStyle;
-    const seasonMatch = activeSeason === 'all' || image?.season === activeSeason;
-    
-    return categoryMatch && styleMatch && seasonMatch;
-  });
+  const filteredImages = useMemo(() => (
+    galleryImages?.filter((image) => {
+      const categoryMatch = activeCategory === 'all' || image?.categoryKey === activeCategory;
+      const styleMatch = activeStyle === 'all' || image?.style === activeStyle;
+      const seasonMatch = activeSeason === 'all' || image?.season === activeSeason;
+
+      return categoryMatch && styleMatch && seasonMatch;
+    }) ?? []
+  ), [galleryImages, activeCategory, activeStyle, activeSeason]);
+
+  useEffect(() => {
+    if (filteredImages?.length === 0) {
+      if (lightboxOpen) {
+        setLightboxOpen(false);
+      }
+
+      if (currentImageIndex !== 0) {
+        setCurrentImageIndex(0);
+      }
+
+      return;
+    }
+
+    if (currentImageIndex >= filteredImages.length) {
+      setCurrentImageIndex(0);
+    }
+  }, [filteredImages, currentImageIndex, lightboxOpen]);
 
   const handleLanguageToggle = () => {
     const newLanguage = language === 'bg' ? 'en' : 'bg';
@@ -225,8 +203,9 @@ const Gallery = () => {
     window.location.href = '/booking';
   };
 
-  const inspirationImages = galleryImages?.filter(img => 
-    inspirationBoard?.includes(img?.id)
+  const inspirationImages = useMemo(
+    () => galleryImages?.filter((img) => inspirationBoard?.includes(img?.id)) ?? [],
+    [galleryImages, inspirationBoard]
   );
 
   const scrollToTop = () => {
@@ -305,13 +284,71 @@ const Gallery = () => {
           />
 
           {/* Gallery Grid */}
-          <GalleryGrid
-            images={filteredImages}
-            onImageClick={handleImageClick}
-            inspirationBoard={inspirationBoard}
-            onToggleInspiration={handleToggleInspiration}
-            language={language}
-          />
+          {isGalleryLoading && (
+            <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+              {gallerySkeletonItems.map((_, index) => (
+                <div
+                  key={`gallery-skeleton-${index}`}
+                  className="break-inside-avoid overflow-hidden rounded-lg shadow-soft bg-surface-elevation animate-pulse h-72"
+                >
+                  <div className="h-full w-full" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!isGalleryLoading && galleryError && (
+            <div className="bg-white rounded-2xl shadow-soft p-10 text-center space-y-4">
+              <Icon name="AlertTriangle" size={36} className="mx-auto text-accent" />
+              <h3 className="font-heading text-2xl text-sophisticated-dark">
+                {language === 'bg' ? 'Не успяхме да заредим галерията' : 'We couldn\'t load the gallery'}
+              </h3>
+              <p className="text-hierarchy-secondary font-sophisticated">
+                {language === 'bg'
+                  ? 'Проверете връзката си и опитайте отново. Ако проблемът продължи, свържете се с нас.'
+                  : 'Please check your connection and try again. If the issue persists, get in touch with us.'}
+              </p>
+              <Button variant="outline" onClick={refetchGallery} className="elegant-hover">
+                <Icon name="RefreshCcw" size={16} className="mr-2" />
+                {language === 'bg' ? 'Опитай отново' : 'Try again'}
+              </Button>
+            </div>
+          )}
+
+          {!isGalleryLoading && !galleryError && filteredImages?.length === 0 && (
+            <div className="bg-white rounded-2xl shadow-soft p-10 text-center space-y-4">
+              <Icon name="Images" size={36} className="mx-auto text-accent" />
+              <h3 className="font-heading text-2xl text-sophisticated-dark">
+                {language === 'bg' ? 'Няма резултати за избраните филтри' : 'No results for your current filters'}
+              </h3>
+              <p className="text-hierarchy-secondary font-sophisticated">
+                {language === 'bg'
+                  ? 'Опитайте с други комбинации от категория, стил или сезон, за да откриете повече вдъхновение.'
+                  : 'Try adjusting the category, style or season to explore more inspiration.'}
+              </p>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setActiveCategory('all');
+                  setActiveStyle('all');
+                  setActiveSeason('all');
+                }}
+                className="elegant-hover"
+              >
+                {language === 'bg' ? 'Изчисти филтрите' : 'Clear filters'}
+              </Button>
+            </div>
+          )}
+
+          {!isGalleryLoading && !galleryError && filteredImages?.length > 0 && (
+            <GalleryGrid
+              images={filteredImages}
+              onImageClick={handleImageClick}
+              inspirationBoard={inspirationBoard}
+              onToggleInspiration={handleToggleInspiration}
+              language={language}
+            />
+          )}
         </main>
 
         {/* Image Lightbox */}

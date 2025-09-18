@@ -16,16 +16,26 @@ mock.module('../../services/instagram', () => ({
 mock.module('../../services/packages', () => ({
   fetchPackages: vi.fn(),
 }));
+mock.module('../../services/addOnServices', () => ({
+  fetchAddOnServices: vi.fn(),
+}));
+mock.module('../../services/testimonials', () => ({
+  fetchTestimonials: vi.fn(),
+}));
 
 const { fetchStories } = await import('../../services/stories');
 const { fetchGallery } = await import('../../services/gallery');
 const { fetchInstagramFeed } = await import('../../services/instagram');
 const { fetchPackages } = await import('../../services/packages');
+const { fetchAddOnServices } = await import('../../services/addOnServices');
+const { fetchTestimonials } = await import('../../services/testimonials');
 
 const useStories = (await import('../useStories')).default;
 const useGallery = (await import('../useGallery')).default;
 const useInstagramFeed = (await import('../useInstagramFeed')).default;
 const usePackages = (await import('../usePackages')).default;
+const useAddOnServices = (await import('../useAddOnServices')).default;
+const useTestimonials = (await import('../useTestimonials')).default;
 
 const mountHook = async (useHook, initialOptions) => {
   const container = document.createElement('div');
@@ -158,6 +168,60 @@ describe('usePackages', () => {
 
     await harness.rerender({ photographerId: 'two', limit: 3 });
     expect(fetchPackages).toHaveBeenCalledTimes(3);
+
+    harness.unmount();
+  });
+});
+
+describe('useAddOnServices', () => {
+  beforeEach(() => {
+    fetchAddOnServices.mockReset();
+    fetchAddOnServices.mockResolvedValue([]);
+  });
+
+  it('reuses previous results for identical options', async () => {
+    const harness = await mountHook(useAddOnServices, {
+      photographerId: 'one',
+      limit: 4,
+    });
+
+    expect(fetchAddOnServices).toHaveBeenCalledTimes(1);
+
+    await harness.rerender({ photographerId: 'one', limit: 4 });
+    expect(fetchAddOnServices).toHaveBeenCalledTimes(1);
+
+    await harness.rerender({ photographerId: 'two', limit: 4 });
+    expect(fetchAddOnServices).toHaveBeenCalledTimes(2);
+
+    await harness.rerender({ photographerId: 'two', limit: 6 });
+    expect(fetchAddOnServices).toHaveBeenCalledTimes(3);
+
+    harness.unmount();
+  });
+});
+
+describe('useTestimonials', () => {
+  beforeEach(() => {
+    fetchTestimonials.mockReset();
+    fetchTestimonials.mockResolvedValue([]);
+  });
+
+  it('only fetches testimonials when filter values change', async () => {
+    const harness = await mountHook(useTestimonials, {
+      photographerId: 'one',
+      limit: 3,
+    });
+
+    expect(fetchTestimonials).toHaveBeenCalledTimes(1);
+
+    await harness.rerender({ photographerId: 'one', limit: 3 });
+    expect(fetchTestimonials).toHaveBeenCalledTimes(1);
+
+    await harness.rerender({ photographerId: 'two', limit: 3 });
+    expect(fetchTestimonials).toHaveBeenCalledTimes(2);
+
+    await harness.rerender({ photographerId: 'two', limit: 5 });
+    expect(fetchTestimonials).toHaveBeenCalledTimes(3);
 
     harness.unmount();
   });
