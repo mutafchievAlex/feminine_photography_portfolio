@@ -20,6 +20,10 @@ public interface AlbumMapper {
 
     @Mapping(target = "photographer", ignore = true)
     @Mapping(target = "photos", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateEntity(AlbumRequest request, @MappingTarget Album album);
 
     @Mapping(target = "photographerId", source = "photographer.id")

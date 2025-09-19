@@ -24,6 +24,12 @@ public interface BookingMapper {
     @Mapping(target = "photographer", ignore = true)
     @Mapping(target = "lastPhotographerMessage", ignore = true)
     @Mapping(target = "lastClientMessage", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "contractUrl", ignore = true)
     void updateEntity(BookingRequest request, @MappingTarget Booking booking);
 
     @Mapping(target = "photographerId", source = "photographer.id")

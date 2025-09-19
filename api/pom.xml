@@ -17,8 +17,7 @@
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.version>3.8.4</quarkus.platform.version>
         <quarkus-plugin.version>${quarkus.platform.version}</quarkus-plugin.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <bucket4j.version>8.2.1</bucket4j.version>
+        <bucket4j.version>8.3.0</bucket4j.version>
         <aws.sdk.version>2.25.37</aws.sdk.version>
         <jacoco.version>0.8.10</jacoco.version>
         <surefire.version>3.1.2</surefire.version>
@@ -50,10 +49,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-resteasy-reactive-multipart</artifactId>
-        </dependency>
+        <!-- resteasy-reactive already provides multipart form support -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-orm-panache</artifactId>
@@ -103,7 +99,7 @@
             <artifactId>quarkus-arc</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j-core</artifactId>
             <version>${bucket4j.version}</version>
         </dependency>

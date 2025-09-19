@@ -21,6 +21,13 @@ public interface PhotographerMapper {
     PhotographerProfile toEntity(PhotographerProfileRequest request);
 
     @Mapping(target = "rating", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    @Mapping(target = "albums", ignore = true)
+    @Mapping(target = "inquiries", ignore = true)
+    @Mapping(target = "bookings", ignore = true)
     void updateEntity(PhotographerProfileRequest request, @MappingTarget PhotographerProfile entity);
 
     PhotographerProfileResponse toResponse(PhotographerProfile profile);
