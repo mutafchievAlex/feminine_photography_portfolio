@@ -1,125 +1,146 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Icon from '../../../components/AppIcon';
+import { activityService } from '../../../services/activityService';
+import { realtimeService } from '../../../services/realtimeService';
+import { useLanguage } from '../../../hooks/useLanguage';
 
-const RecentActivity = () => {
-  const activities = [
-    {
-      id: 1,
-      type: "booking",
-      title: "Нова резервация получена",
-      description: "Мария Петрова резерви сватбена фотосесия за 15 септември",
-      timestamp: "преди 2 часа",
-      icon: "Calendar",
-      color: "text-green-600 bg-green-100"
-    },
-    {
-      id: 2,
-      type: "gallery",
-      title: "Галерия доставена",
-      description: "Семейна галерия за Анна Димитрова е готова за преглед",
-      timestamp: "преди 4 часа",
-      icon: "Image",
-      color: "text-blue-600 bg-blue-100"
-    },
-    {
-      id: 3,
-      type: "inquiry",
-      title: "Ново запитване",
-      description: "Елена Георгиева пита за корпоративни портрети",
-      timestamp: "преди 6 часа",
-      icon: "MessageSquare",
-      color: "text-purple-600 bg-purple-100"
-    },
-    {
-      id: 4,
-      type: "payment",
-      title: "Плащане получено",
-      description: "€450 от Стефан Николов за матернитетна сесия",
-      timestamp: "преди 8 часа",
-      icon: "DollarSign",
-      color: "text-emerald-600 bg-emerald-100"
-    },
-    {
-      id: 5,
-      type: "portfolio",
-      title: "Портфолио актуализирано",
-      description: "Добавени 15 нови снимки в сватбената галерия",
-      timestamp: "преди 1 ден",
-      icon: "Upload",
-      color: "text-orange-600 bg-orange-100"
-    },
-    {
-      id: 6,
-      type: "review",
-      title: "Нова оценка",
-      description: "Ивана Стоянова остави 5-звездна оценка",
-      timestamp: "преди 1 ден",
-      icon: "Star",
-      color: "text-yellow-600 bg-yellow-100"
-    },
-    {
-      id: 7,
-      type: "reminder",
-      title: "Напомняне за сесия",
-      description: "Утрешна сесия с Петър Иванов в 14:00",
-      timestamp: "преди 2 дни",
-      icon: "Bell",
-      color: "text-red-600 bg-red-100"
+export default function RecentActivity() {
+  const { t } = useLanguage();
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch initial activities
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
+  // Setup real-time subscription for new activities
+  useEffect(() => {
+    const subscription = realtimeService?.subscribeToActivityLogs((data) => {
+      const { activity } = data;
+      // Add new activity to the top of the list
+      setActivities(prev => [activity, ...prev]?.slice(0, 10));
+    });
+
+    return () => subscription?.unsubscribe();
+  }, []);
+
+  const fetchActivities = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await activityService?.getRecentActivities(10);
+      setActivities(data || []);
+    } catch (err) {
+      console.error('Error fetching activities:', err);
+      setError(err?.message || 'Грешка при зареждане на активности');
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  const getRelativeTime = (timestamp) => {
-    return timestamp;
   };
 
-  return (
-    <div className="bg-background rounded-lg shadow-soft border border-border">
-      <div className="px-6 py-4 border-b border-border">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-heading font-semibold text-sophisticated-dark">
-            Последна активност
-          </h3>
-          <button className="text-sm text-hierarchy-secondary hover:text-sophisticated-dark transition-colors">
-            Виж всички
-          </button>
-        </div>
-      </div>
-      <div className="max-h-96 overflow-y-auto">
-        <div className="divide-y divide-border">
-          {activities?.map((activity, index) => (
-            <div key={activity?.id} className="px-6 py-4 hover:bg-surface-elevation transition-colors duration-200">
-              <div className="flex items-start space-x-3">
-                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${activity?.color}`}>
-                  <Icon name={activity?.icon} size={16} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-sophisticated-dark">
-                      {activity?.title}
-                    </p>
-                    <p className="text-xs text-hierarchy-secondary">
-                      {getRelativeTime(activity?.timestamp)}
-                    </p>
-                  </div>
-                  <p className="text-sm text-hierarchy-secondary mt-1">
-                    {activity?.description}
-                  </p>
-                </div>
+  const getActivityIcon = (type) => {
+    const icons = {
+      booking_created: 'Calendar',
+      booking_confirmed: 'CheckCircle',
+      booking_updated: 'Edit',
+      gallery_image_added: 'Image',
+      user_registered: 'UserPlus'
+    };
+    return icons?.[type] || 'Activity';
+  };
+
+  const getActivityColor = (type) => {
+    const colors = {
+      booking_created: 'text-blue-600 bg-blue-50',
+      booking_confirmed: 'text-green-600 bg-green-50',
+      booking_updated: 'text-yellow-600 bg-yellow-50',
+      gallery_image_added: 'text-purple-600 bg-purple-50',
+      user_registered: 'text-pink-600 bg-pink-50'
+    };
+    return colors?.[type] || 'text-gray-600 bg-gray-50';
+  };
+
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    if (seconds < 60) return 'Преди момент';
+    if (seconds < 3600) return `Преди ${Math.floor(seconds / 60)} мин`;
+    if (seconds < 86400) return `Преди ${Math.floor(seconds / 3600)} ч`;
+    return `Преди ${Math.floor(seconds / 86400)} дни`;
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-background rounded-lg shadow-soft border border-border p-6">
+        <h3 className="text-lg font-heading font-semibold text-sophisticated-dark mb-6">
+          Последна активност
+        </h3>
+        <div className="space-y-4">
+          {[1, 2, 3]?.map(i => (
+            <div key={i} className="animate-pulse flex items-start space-x-3">
+              <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+              <div className="flex-1">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
               </div>
             </div>
           ))}
         </div>
       </div>
-      <div className="px-6 py-4 border-t border-border bg-surface-elevation rounded-b-lg">
-        <div className="flex items-center justify-center">
-          <button className="text-sm text-hierarchy-secondary hover:text-sophisticated-dark transition-colors flex items-center space-x-2">
-            <Icon name="RefreshCw" size={16} />
-            <span>Обнови активността</span>
-          </button>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-background rounded-lg shadow-soft border border-border p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Грешка при зареждане: {error}</p>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-background rounded-lg shadow-soft border border-border">
+      <div className="px-6 py-4 border-b border-border">
+        <h3 className="text-lg font-heading font-semibold text-sophisticated-dark">
+          Последна активност
+        </h3>
+      </div>
+      <div className="p-6">
+        {activities?.length === 0 ? (
+          <p className="text-center text-hierarchy-secondary py-8">
+            Няма активност
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {activities?.map((activity) => (
+              <div key={activity?.id} className="flex items-start space-x-3">
+                <div className={`p-2 rounded-full ${getActivityColor(activity?.activityType)}`}>
+                  <Icon name={getActivityIcon(activity?.activityType)} size={16} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-sophisticated-dark">
+                    {activity?.description}
+                  </p>
+                  {activity?.user && (
+                    <p className="text-xs text-hierarchy-secondary mt-1">
+                      {activity?.user?.full_name}
+                    </p>
+                  )}
+                  <p className="text-xs text-hierarchy-secondary mt-1">
+                    {formatTimeAgo(activity?.createdAt)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
-};
-
-export default RecentActivity;
+}

@@ -5,13 +5,7 @@ import Select from '../../../components/ui/Select';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import Icon from '../../../components/AppIcon';
 
-const BookingForm = ({
-  onSubmit,
-  isSubmitting,
-  serverErrors = {},
-  submissionError = '',
-  onFieldErrorClear,
-}) => {
+const BookingForm = ({ onSubmit, isSubmitting }) => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -52,9 +46,6 @@ const BookingForm = ({
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors?.[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-    if (serverErrors?.[field]) {
-      onFieldErrorClear?.(field);
     }
   };
 
@@ -108,15 +99,6 @@ const BookingForm = ({
           Започнете вашето пътуване с безплатна консултация / Start your journey with a complimentary consultation
         </p>
       </div>
-      {submissionError && (
-        <div
-          role="alert"
-          className="rounded-lg border border-destructive/40 bg-destructive/10 text-sm text-destructive p-4 mb-6"
-        >
-          {submissionError}
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Personal Information */}
         <div className="space-y-4">
@@ -131,7 +113,7 @@ const BookingForm = ({
               placeholder="Въведете вашето име / Enter your name"
               value={formData?.fullName}
               onChange={(e) => handleInputChange('fullName', e?.target?.value)}
-              error={errors?.fullName || serverErrors?.fullName}
+              error={errors?.fullName}
               required
             />
 
@@ -141,7 +123,7 @@ const BookingForm = ({
               placeholder="your@email.com"
               value={formData?.email}
               onChange={(e) => handleInputChange('email', e?.target?.value)}
-              error={errors?.email || serverErrors?.email}
+              error={errors?.email}
               required
             />
           </div>
@@ -152,7 +134,7 @@ const BookingForm = ({
             placeholder="+359 XXX XXX XXX"
             value={formData?.phone}
             onChange={(e) => handleInputChange('phone', e?.target?.value)}
-            error={errors?.phone || serverErrors?.phone}
+            error={errors?.phone}
             required
           />
         </div>
@@ -169,7 +151,7 @@ const BookingForm = ({
             options={sessionTypeOptions}
             value={formData?.sessionType}
             onChange={(value) => handleInputChange('sessionType', value)}
-            error={errors?.sessionType || serverErrors?.sessionType}
+            error={errors?.sessionType}
             required
           />
 
@@ -179,7 +161,7 @@ const BookingForm = ({
               type="date"
               value={formData?.preferredDate}
               onChange={(e) => handleInputChange('preferredDate', e?.target?.value)}
-              error={errors?.preferredDate || serverErrors?.preferredDate}
+              error={errors?.preferredDate}
               min={new Date()?.toISOString()?.split('T')?.[0]}
               required
             />
@@ -189,7 +171,6 @@ const BookingForm = ({
               type="date"
               value={formData?.alternateDate}
               onChange={(e) => handleInputChange('alternateDate', e?.target?.value)}
-              error={serverErrors?.alternateDate}
               min={new Date()?.toISOString()?.split('T')?.[0]}
             />
           </div>
@@ -200,7 +181,6 @@ const BookingForm = ({
             options={locationOptions}
             value={formData?.location}
             onChange={(value) => handleInputChange('location', value)}
-            error={serverErrors?.location}
           />
         </div>
 
@@ -222,9 +202,6 @@ const BookingForm = ({
                 value={formData?.vision}
                 onChange={(e) => handleInputChange('vision', e?.target?.value)}
               />
-              {serverErrors?.vision && (
-                <p className="text-sm text-destructive mt-2">{serverErrors?.vision}</p>
-              )}
             </div>
 
             <div>
@@ -238,9 +215,6 @@ const BookingForm = ({
                 value={formData?.inspiration}
                 onChange={(e) => handleInputChange('inspiration', e?.target?.value)}
               />
-              {serverErrors?.inspiration && (
-                <p className="text-sm text-destructive mt-2">{serverErrors?.inspiration}</p>
-              )}
             </div>
 
             <div>
@@ -254,9 +228,6 @@ const BookingForm = ({
                 value={formData?.specialRequests}
                 onChange={(e) => handleInputChange('specialRequests', e?.target?.value)}
               />
-              {serverErrors?.specialRequests && (
-                <p className="text-sm text-destructive mt-2">{serverErrors?.specialRequests}</p>
-              )}
             </div>
           </div>
         </div>
@@ -267,7 +238,7 @@ const BookingForm = ({
             label="Съгласявам се с условията за ползване и политиката за поверителност / I agree to the terms of service and privacy policy"
             checked={formData?.agreedToTerms}
             onChange={(e) => handleInputChange('agreedToTerms', e?.target?.checked)}
-            error={errors?.agreedToTerms || serverErrors?.agreedToTerms}
+            error={errors?.agreedToTerms}
             required
           />
 
@@ -275,7 +246,6 @@ const BookingForm = ({
             label="Желая да получавам новини и вдъхновение за фотография / I'd like to receive photography news and inspiration"
             checked={formData?.marketingConsent}
             onChange={(e) => handleInputChange('marketingConsent', e?.target?.checked)}
-            error={serverErrors?.marketingConsent}
           />
         </div>
 

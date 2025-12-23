@@ -1,215 +1,83 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../../components/ui/Header';
-import Icon from '../../components/AppIcon';
-import Button from '../../components/ui/Button';
 import GalleryFilter from './components/GalleryFilter';
 import GalleryGrid from './components/GalleryGrid';
 import ImageLightbox from './components/ImageLightbox';
-import InspirationBoard from './components/InspirationBoard';
+
 import CategoryIntro from './components/CategoryIntro';
-import useGallery from '../../hooks/useGallery';
+import { galleryService } from '../../services/galleryService';
+import { albumService } from '../../services/albumService';
 
-const Gallery = () => {
-  const [language, setLanguage] = useState('bg');
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [activeStyle, setActiveStyle] = useState('all');
-  const [activeSeason, setActiveSeason] = useState('all');
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [inspirationBoard, setInspirationBoard] = useState([]);
-  const [boardOpen, setBoardOpen] = useState(false);
 
-  // Load language preference
+import { Helmet } from 'react-helmet';
+import { useNavigate } from 'react-router-dom';
+
+export default function GalleryPage() {
+  const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [images, setImages] = useState([]);
+  const [publishedAlbums, setPublishedAlbums] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') || 'bg';
-    setLanguage(savedLanguage);
+    loadGalleryData();
   }, []);
 
-  const galleryOptions = useMemo(
-    () => ({
-      limit: 48,
-      locale: language,
-      category: activeCategory !== 'all' ? activeCategory : undefined,
-      style: activeStyle !== 'all' ? activeStyle : undefined,
-      season: activeSeason !== 'all' ? activeSeason : undefined,
-    }),
-    [language, activeCategory, activeStyle, activeSeason]
-  );
-
-  const {
-    gallery: galleryData,
-    isLoading: isGalleryLoading,
-    error: galleryError,
-    refetch: refetchGallery,
-  } = useGallery(galleryOptions);
-
-  const localizeField = (value) => {
-    if (!value) {
-      return '';
+  const loadGalleryData = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch gallery images (for category filtering)
+      const galleryData = await galleryService?.getAll();
+      setImages(galleryData || []);
+      
+      // Fetch published albums
+      const albumsData = await albumService?.getPublishedAlbums();
+      setPublishedAlbums(albumsData || []);
+    } catch (error) {
+      console.error('Error loading gallery data:', error);
+      setImages([]);
+      setPublishedAlbums([]);
+    } finally {
+      setLoading(false);
     }
+  }, []);
 
-    if (typeof value === 'string') {
-      return value;
-    }
-
-    if (typeof value === 'object') {
-      return value?.[language] ?? value?.name ?? value?.label ?? value?.title ?? Object.values(value)?.[0] ?? '';
-    }
-
-    return '';
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category === 'all' ? 'all' : category);
   };
 
-  const galleryImages = useMemo(() => {
-    const rawGallery = Array.isArray(galleryData)
-      ? galleryData
-      : galleryData?.items ?? galleryData?.data ?? galleryData?.gallery ?? [];
+  const filteredImages = selectedCategory === 'all'
+    ? images
+    : images?.filter(img => img?.category === selectedCategory);
 
-    return (
-      rawGallery
-        ?.map((item, index) => {
-          const baseImage = item?.image ?? item?.photo ?? item?.media ?? {};
-          const imageSource =
-            item?.src ??
-            item?.url ??
-            item?.imageUrl ??
-            item?.image ??
-            baseImage?.url ??
-            baseImage?.src ??
-            baseImage?.originalUrl ??
-            baseImage?.previewUrl;
-
-          if (!imageSource) {
-            return null;
-          }
-
-          const categoryKey =
-            item?.categoryKey ??
-            (typeof item?.category === 'object'
-              ? item?.category?.key ?? item?.category?.slug
-              : item?.categorySlug ?? item?.categoryId ?? item?.category);
-
-          const styleKey = item?.style ?? item?.styleKey ?? item?.styleSlug ?? baseImage?.style ?? 'all';
-          const seasonKey = item?.season ?? item?.seasonKey ?? item?.seasonSlug ?? baseImage?.season ?? 'all';
-
-          return {
-            id: item?.id ?? item?.imageId ?? item?.photoId ?? item?.mediaId ?? `gallery-${index}`,
-            src: imageSource,
-            alt:
-              item?.alt ??
-              baseImage?.alt ??
-              item?.title ??
-              (language === 'bg' ? 'Галерия изображение' : 'Gallery image'),
-            category:
-              localizeField(item?.categoryLabel ?? item?.categoryName ?? item?.category) ||
-              categoryKey ||
-              (language === 'bg' ? 'Галерия' : 'Gallery'),
-            style: styleKey,
-            season: seasonKey,
-            location:
-              localizeField(item?.location ?? item?.locationName ?? baseImage?.location) ||
-              (language === 'bg' ? 'София, България' : 'Sofia, Bulgaria'),
-            testimonial: localizeField(item?.testimonial ?? item?.quote),
-            client: localizeField(item?.client ?? item?.clientName ?? item?.subject),
-            categoryKey: categoryKey ?? 'all',
-          };
-        })
-        ?.filter(Boolean)
-    ) ?? [];
-  }, [galleryData, language]);
-
-  const gallerySkeletonItems = useMemo(() => Array.from({ length: 12 }), []);
-
-  const translations = {
-    bg: {
-      title: 'Галерия',
-      subtitle: 'Открийте моята колекция от незабравими моменти',
-      inspirationBoard: 'Борд за вдъхновение',
-      viewBoard: 'Виж борда',
-      languageToggle: 'EN',
-      backToTop: 'Нагоре'
-    },
-    en: {
-      title: 'Gallery',
-      subtitle: 'Discover my collection of unforgettable moments',
-      inspirationBoard: 'Inspiration Board',
-      viewBoard: 'View Board',
-      languageToggle: 'БГ',
-      backToTop: 'Back to Top'
-    }
+  const handleImageClick = (image) => {
+    navigate(`/individual-photography-album/${image?.category}`, {
+      state: { imageId: image?.id }
+    });
   };
 
-  const t = translations?.[language];
-
-  // Filter images based on active filters
-  const filteredImages = useMemo(() => (
-    galleryImages?.filter((image) => {
-      const categoryMatch = activeCategory === 'all' || image?.categoryKey === activeCategory;
-      const styleMatch = activeStyle === 'all' || image?.style === activeStyle;
-      const seasonMatch = activeSeason === 'all' || image?.season === activeSeason;
-
-      return categoryMatch && styleMatch && seasonMatch;
-    }) ?? []
-  ), [galleryImages, activeCategory, activeStyle, activeSeason]);
-
-  useEffect(() => {
-    if (filteredImages?.length === 0) {
-      if (lightboxOpen) {
-        setLightboxOpen(false);
-      }
-
-      if (currentImageIndex !== 0) {
-        setCurrentImageIndex(0);
-      }
-
-      return;
-    }
-
-    if (currentImageIndex >= filteredImages.length) {
-      setCurrentImageIndex(0);
-    }
-  }, [filteredImages, currentImageIndex, lightboxOpen]);
+  const handleAlbumClick = useCallback((album) => {
+    navigate(`/individual-photography-album/${album?.id}`);
+  }, [navigate]);
 
   const handleLanguageToggle = () => {
-    const newLanguage = language === 'bg' ? 'en' : 'bg';
-    setLanguage(newLanguage);
-    localStorage.setItem('language', newLanguage);
-  };
-
-  const handleImageClick = (image, index) => {
-    setCurrentImageIndex(index);
-    setLightboxOpen(true);
-  };
-
-  const handleLightboxNavigate = (newIndex) => {
-    setCurrentImageIndex(newIndex);
-  };
-
-  const handleToggleInspiration = (imageId) => {
-    setInspirationBoard(prev => 
-      prev?.includes(imageId) 
-        ? prev?.filter(id => id !== imageId)
-        : [...prev, imageId]
-    );
+    // Language toggle logic would be implemented here
   };
 
   const handleRemoveFromBoard = (imageId) => {
-    setInspirationBoard(prev => prev?.filter(id => id !== imageId));
+    // Board removal logic would be implemented here
   };
 
   const handleClearBoard = () => {
-    setInspirationBoard([]);
+    // Board clearing logic would be implemented here
   };
 
   const handleRequestConsultation = () => {
-    setBoardOpen(false);
-    window.location.href = '/booking';
+    // Consultation request logic would be implemented here
   };
-
-  const inspirationImages = useMemo(
-    () => galleryImages?.filter((img) => inspirationBoard?.includes(img?.id)) ?? [],
-    [galleryImages, inspirationBoard]
-  );
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -218,194 +86,119 @@ const Gallery = () => {
   return (
     <>
       <Helmet>
-        <title>{language === 'bg' ? 'Галерия - Elena Rose Photography' : 'Gallery - Elena Rose Photography'}</title>
-        <meta 
-          name="description" 
-          content={language === 'bg' ?'Разгледайте моята колекция от сватбени, семейни, портретни и други фотографии. Професионална фотография в София, България.' :'Explore my collection of wedding, family, portrait and other photography. Professional photography in Sofia, Bulgaria.'
-          } 
-        />
+        <title>Gallery | Elena Rose Photography</title>
       </Helmet>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gray-50">
         <Header />
-        
-        {/* Hero Section */}
-        <section className="pt-24 pb-16 bg-gradient-to-b from-gallery-canvas to-background">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <div className="flex items-center justify-center space-x-4 mb-6">
+        <main className="pt-20 pb-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            {/* Hero Section */}
+            <section className="pt-24 pb-16 bg-gradient-to-b from-gray-50 to-white">
+              <div className="text-center mb-12">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-medium text-sophisticated-dark">
-                  {t?.title}
+                  Gallery
                 </h1>
-                
-                {/* Language Toggle */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLanguageToggle}
-                  className="elegant-hover"
-                >
-                  {t?.languageToggle}
-                </Button>
+                <p className="text-lg text-hierarchy-secondary max-w-2xl mx-auto">
+                  Browse our projects
+                </p>
               </div>
-              
-              <p className="text-lg text-hierarchy-secondary max-w-2xl mx-auto">
-                {t?.subtitle}
-              </p>
-            </div>
 
-            {/* Inspiration Board Button */}
-            {inspirationBoard?.length > 0 && (
-              <div className="flex justify-center mb-8">
-                <Button
-                  variant="default"
-                  onClick={() => setBoardOpen(true)}
-                  iconName="Heart"
-                  iconPosition="left"
-                  className="bg-gradient-to-r from-accent to-secondary text-sophisticated-dark magnetic-hover pulse-cta"
-                >
-                  {t?.viewBoard} ({inspirationBoard?.length})
-                </Button>
-              </div>
-            )}
-          </div>
-        </section>
+              {/* Published Albums Section */}
+              {publishedAlbums?.length > 0 && (
+                <section className="py-16 px-6 bg-white">
+                  <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-12">
+                      <h2 className="text-4xl font-serif text-[#8B7355] mb-4">
+                        Featured Albums
+                      </h2>
+                      <p className="text-[#8B7355]/70 max-w-2xl mx-auto">
+                        Explore our curated collections of memorable moments
+                      </p>
+                    </div>
 
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-          {/* Category Introduction */}
-          <CategoryIntro category={activeCategory} language={language} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {publishedAlbums?.map((album) => (
+                        <div
+                          key={album?.id}
+                          onClick={() => handleAlbumClick(album)}
+                          className="group cursor-pointer"
+                        >
+                          <div className="relative aspect-[4/3] rounded-lg overflow-hidden mb-4">
+                            <img
+                              src={album?.coverImageUrl || album?.photos?.[0]?.imageUrl}
+                              alt={album?.title}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          </div>
+                          <h3 className="text-xl font-medium text-[#8B7355] mb-2">
+                            {album?.title}
+                          </h3>
+                          {album?.description && (
+                            <p className="text-[#8B7355]/70 text-sm mb-2 line-clamp-2">
+                              {album?.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-4 text-sm text-[#8B7355]/60">
+                            <span>{album?.photos?.length} photos</span>
+                            {album?.sessionDate && (
+                              <span>
+                                {new Date(album?.sessionDate)?.toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
 
-          {/* Gallery Filter */}
-          <GalleryFilter
-            activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
-            activeStyle={activeStyle}
-            onStyleChange={setActiveStyle}
-            activeSeason={activeSeason}
-            onSeasonChange={setActiveSeason}
-            language={language}
-          />
+              <CategoryIntro category={selectedCategory} language="en" />
 
-          {/* Gallery Grid */}
-          {isGalleryLoading && (
-            <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
-              {gallerySkeletonItems.map((_, index) => (
-                <div
-                  key={`gallery-skeleton-${index}`}
-                  className="break-inside-avoid overflow-hidden rounded-lg shadow-soft bg-surface-elevation animate-pulse h-72"
-                >
-                  <div className="h-full w-full" />
+              <GalleryFilter 
+                onCategoryChange={handleCategoryChange}
+                selectedCategory={selectedCategory}
+                activeCategory={selectedCategory}
+                activeStyle={null}
+                onStyleChange={() => {}}
+                activeSeason={null}
+                onSeasonChange={() => {}}
+                language="en"
+              />
+
+              {error && (
+                <div className="mb-8 bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-red-800 text-center">Грешка при зареждане: {error}</p>
                 </div>
-              ))}
-            </div>
-          )}
+              )}
 
-          {!isGalleryLoading && galleryError && (
-            <div className="bg-white rounded-2xl shadow-soft p-10 text-center space-y-4">
-              <Icon name="AlertTriangle" size={36} className="mx-auto text-accent" />
-              <h3 className="font-heading text-2xl text-sophisticated-dark">
-                {language === 'bg' ? 'Не успяхме да заредим галерията' : 'We couldn\'t load the gallery'}
-              </h3>
-              <p className="text-hierarchy-secondary font-sophisticated">
-                {language === 'bg'
-                  ? 'Проверете връзката си и опитайте отново. Ако проблемът продължи, свържете се с нас.'
-                  : 'Please check your connection and try again. If the issue persists, get in touch with us.'}
-              </p>
-              <Button variant="outline" onClick={refetchGallery} className="elegant-hover">
-                <Icon name="RefreshCcw" size={16} className="mr-2" />
-                {language === 'bg' ? 'Опитай отново' : 'Try again'}
-              </Button>
-            </div>
-          )}
+              <GalleryGrid 
+                images={filteredImages}
+                onImageClick={handleImageClick}
+                loading={loading}
+              />
 
-          {!isGalleryLoading && !galleryError && filteredImages?.length === 0 && (
-            <div className="bg-white rounded-2xl shadow-soft p-10 text-center space-y-4">
-              <Icon name="Images" size={36} className="mx-auto text-accent" />
-              <h3 className="font-heading text-2xl text-sophisticated-dark">
-                {language === 'bg' ? 'Няма резултати за избраните филтри' : 'No results for your current filters'}
-              </h3>
-              <p className="text-hierarchy-secondary font-sophisticated">
-                {language === 'bg'
-                  ? 'Опитайте с други комбинации от категория, стил или сезон, за да откриете повече вдъхновение.'
-                  : 'Try adjusting the category, style or season to explore more inspiration.'}
-              </p>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setActiveCategory('all');
-                  setActiveStyle('all');
-                  setActiveSeason('all');
-                }}
-                className="elegant-hover"
-              >
-                {language === 'bg' ? 'Изчисти филтрите' : 'Clear filters'}
-              </Button>
-            </div>
-          )}
-
-          {!isGalleryLoading && !galleryError && filteredImages?.length > 0 && (
-            <GalleryGrid
-              images={filteredImages}
-              onImageClick={handleImageClick}
-              inspirationBoard={inspirationBoard}
-              onToggleInspiration={handleToggleInspiration}
-              language={language}
-            />
-          )}
-        </main>
-
-        {/* Image Lightbox */}
-        <ImageLightbox
-          isOpen={lightboxOpen}
-          onClose={() => setLightboxOpen(false)}
-          images={filteredImages}
-          currentIndex={currentImageIndex}
-          onNavigate={handleLightboxNavigate}
-          inspirationBoard={inspirationBoard}
-          onToggleInspiration={handleToggleInspiration}
-          language={language}
-        />
-
-        {/* Inspiration Board Modal */}
-        <InspirationBoard
-          isOpen={boardOpen}
-          onClose={() => setBoardOpen(false)}
-          inspirationImages={inspirationImages}
-          onRemoveImage={handleRemoveFromBoard}
-          onClearBoard={handleClearBoard}
-          onRequestConsultation={handleRequestConsultation}
-          language={language}
-        />
-
-        {/* Back to Top Button */}
-        <Button
-          variant="default"
-          size="icon"
-          onClick={scrollToTop}
-          className="fixed bottom-6 left-6 z-40 w-12 h-12 rounded-full bg-gradient-to-r from-accent to-secondary text-sophisticated-dark shadow-strong magnetic-hover"
-          title={t?.backToTop}
-        >
-          <Icon name="ChevronUp" size={20} />
-        </Button>
-
-        {/* Floating Inspiration Board Widget */}
-        {inspirationBoard?.length > 0 && (
-          <div className="fixed bottom-6 right-20 z-40 lg:block hidden">
-            <Button
-              variant="default"
-              onClick={() => setBoardOpen(true)}
-              iconName="Heart"
-              iconPosition="left"
-              iconSize={16}
-              className="bg-gradient-to-r from-accent to-secondary text-sophisticated-dark shadow-strong magnetic-hover pulse-cta"
-            >
-              {inspirationBoard?.length}
-            </Button>
+              {selectedImage && (
+                <ImageLightbox
+                  image={selectedImage}
+                  images={images}
+                  isOpen={true}
+                  onClose={() => setSelectedImage(null)}
+                  inspirationBoard={[]}
+                  onToggleInspiration={() => {}}
+                  language="en"
+                  onNavigate={() => {}}
+                  currentIndex={images?.findIndex(img => img === selectedImage)}
+                />
+              )}
+            </section>
           </div>
-        )}
+        </main>
       </div>
     </>
   );
-};
-
-export default Gallery;
+}

@@ -1,73 +1,66 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import Image from '../../../components/AppImage';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
-import useStories from '../../../hooks/useStories';
+import { albumService } from '../../../services/albumService';
 
 const RecentStories = () => {
   const [language, setLanguage] = useState('bg');
+  const [stories, setStories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem('language') || 'bg';
     setLanguage(savedLanguage);
   }, []);
 
-  const storyOptions = useMemo(
-    () => ({ limit: 4, locale: language }),
-    [language]
-  );
+  useEffect(() => {
+    const fetchRecentAlbums = async () => {
+      try {
+        setLoading(true);
+        const publishedAlbums = await albumService?.getPublishedAlbums();
+        
+        // Get last 4 albums sorted by created_at
+        const recentAlbums = publishedAlbums
+          ?.sort((a, b) => new Date(b?.createdAt) - new Date(a?.createdAt))
+          ?.slice(0, 4);
+        
+        // Transform albums to stories format
+        const transformedStories = recentAlbums?.map(album => ({
+          id: album?.id,
+          title: {
+            bg: album?.title || 'Без заглавие',
+            en: album?.title || 'Untitled'
+          },
+          description: {
+            bg: album?.description || 'Красива фотосесия',
+            en: album?.description || 'Beautiful photo session'
+          },
+          image: album?.coverImageUrl || album?.photos?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1519741497674-611481863552',
+          category: album?.sessionType || 'wedding',
+          date: album?.sessionDate || album?.createdAt,
+          location: album?.location || language === 'bg' ? 'България' : 'Bulgaria',
+          albumId: album?.id
+        }));
+        
+        setStories(transformedStories);
+      } catch (error) {
+        console.error('Error fetching recent albums:', error);
+        setStories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const { stories: storiesData, isLoading, error, refetch } = useStories(storyOptions);
+    fetchRecentAlbums();
+  }, [language]);
 
-  const localizeContent = (value) => {
-    if (!value) {
-      return '';
-    }
-
-    if (typeof value === 'string') {
-      return value;
-    }
-
-    if (typeof value === 'object') {
-      return value?.[language] ?? value?.name ?? value?.label ?? value?.title ?? Object.values(value)?.[0] ?? '';
-    }
-
-    return '';
+  const handleViewAlbum = (albumId) => {
+    navigate(`/individual-photography-album/${albumId}`);
   };
-
-  const stories = useMemo(() => {
-    const rawStories = Array.isArray(storiesData)
-      ? storiesData
-      : storiesData?.items ?? storiesData?.data ?? storiesData?.stories ?? [];
-
-    return (
-      rawStories
-        ?.map((story, index) => {
-        const fallbackImage = story?.coverImageUrl ?? story?.imageUrl ?? story?.image ?? story?.coverImage?.url;
-        const fallbackCategory =
-          typeof story?.category === 'object'
-            ? story?.category?.key ?? story?.category?.slug ?? story?.category?.id
-            : story?.category ?? story?.categoryKey ?? story?.categorySlug;
-
-        return {
-          id: story?.id ?? story?.storyId ?? story?.slug ?? `story-${index}`,
-          title: localizeContent(story?.title) || (language === 'bg' ? 'Без заглавие' : 'Untitled'),
-          description: localizeContent(story?.description),
-          image: fallbackImage ?? story?.featuredImage ?? story?.mediaUrl ?? story?.thumbnailUrl,
-          category:
-            localizeContent(story?.categoryLabel ?? story?.categoryName ?? story?.category) ||
-            fallbackCategory ||
-            (language === 'bg' ? 'История' : 'Story'),
-          date: story?.date ?? story?.eventDate ?? story?.publishedAt ?? story?.createdAt,
-          location: localizeContent(story?.location) ?? localizeContent(story?.eventLocation),
-        };
-        })
-        ?.filter((story) => story?.id)
-    ) ?? [];
-  }, [storiesData, language]);
-
-  const skeletonCards = useMemo(() => Array.from({ length: 4 }), []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -90,6 +83,34 @@ const RecentStories = () => {
       }
     }
   };
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-gallery-canvas">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-hierarchy-secondary font-sophisticated">
+              {language === 'bg' ? 'Зареждане...' : 'Loading...'}
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (stories?.length === 0) {
+    return (
+      <section className="py-20 bg-gallery-canvas">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-hierarchy-secondary font-sophisticated">
+              {language === 'bg' ? 'Няма налични истории' : 'No stories available'}
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 bg-gallery-canvas">
@@ -119,75 +140,7 @@ const RecentStories = () => {
           viewport={{ once: true }}
           className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
         >
-          {isLoading && (
-            <>
-              {skeletonCards.map((_, index) => (
-                <motion.article
-                  key={`story-skeleton-${index}`}
-                  variants={itemVariants}
-                  className={`group ${index % 2 === 0 ? 'lg:mt-0' : 'lg:mt-12'}`}
-                >
-                  <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
-                    <div className="h-64 md:h-80 bg-surface-elevation animate-pulse" />
-                    <div className="p-6 md:p-8 space-y-4">
-                      <div className="h-6 w-3/4 bg-surface-elevation animate-pulse rounded" />
-                      <div className="h-4 w-1/3 bg-surface-elevation animate-pulse rounded" />
-                      <div className="space-y-2">
-                        <div className="h-4 w-full bg-surface-elevation animate-pulse rounded" />
-                        <div className="h-4 w-5/6 bg-surface-elevation animate-pulse rounded" />
-                        <div className="h-4 w-2/3 bg-surface-elevation animate-pulse rounded" />
-                      </div>
-                      <div className="h-10 w-32 bg-surface-elevation animate-pulse rounded-full" />
-                    </div>
-                  </div>
-                </motion.article>
-              ))}
-            </>
-          )}
-
-          {!isLoading && error && (
-            <motion.article
-              variants={itemVariants}
-              className="lg:col-span-2"
-            >
-              <div className="bg-white rounded-2xl shadow-soft p-10 text-center space-y-4">
-                <Icon name="AlertTriangle" size={36} className="mx-auto text-accent" />
-                <h3 className="font-heading text-2xl text-sophisticated-dark">
-                  {language === 'bg' ? 'Неуспешно зареждане на историите' : 'Stories failed to load'}
-                </h3>
-                <p className="text-hierarchy-secondary font-sophisticated">
-                  {language === 'bg'
-                    ? 'Моля, опитайте отново малко по-късно. Ако проблемът продължи, свържете се с нас.'
-                    : 'Please try again shortly. If the issue persists, feel free to get in touch.'}
-                </p>
-                <Button variant="outline" onClick={refetch} className="elegant-hover">
-                  <Icon name="RefreshCcw" size={16} className="mr-2" />
-                  {language === 'bg' ? 'Опитай отново' : 'Try again'}
-                </Button>
-              </div>
-            </motion.article>
-          )}
-
-          {!isLoading && !error && stories?.length === 0 && (
-            <motion.article
-              variants={itemVariants}
-              className="lg:col-span-2"
-            >
-              <div className="bg-white rounded-2xl shadow-soft p-10 text-center space-y-4">
-                <Icon name="BookOpen" size={36} className="mx-auto text-accent" />
-                <h3 className="font-heading text-2xl text-sophisticated-dark">
-                  {language === 'bg' ? 'Скоро ще споделим нови истории' : 'New stories coming soon'}
-                </h3>
-                <p className="text-hierarchy-secondary font-sophisticated">
-                  {language === 'bg'
-                    ? 'Следете галерията, за да откриете най-новите ни вдъхновяващи истории.'
-                    : 'Check back soon to explore our latest inspiring stories.'}
-                </p>
-              </div>
-            </motion.article>
-          )}
-
-          {!isLoading && !error && stories?.slice(0, 4)?.map((story, index) => (
+          {stories?.map((story, index) => (
             <motion.article
               key={story?.id}
               variants={itemVariants}
@@ -195,21 +148,21 @@ const RecentStories = () => {
             >
               <div className="bg-white rounded-2xl shadow-soft overflow-hidden elegant-hover">
                 {/* Image */}
-                <div className="relative h-64 md:h-80 overflow-hidden">
+                <div className="relative h-64 md:h-80 overflow-hidden cursor-pointer" onClick={() => handleViewAlbum(story?.albumId)}>
                   <Image
-                    src={story?.image ?? '/assets/images/no_image.png'}
-                    alt={story?.title}
+                    src={story?.image}
+                    alt={story?.title?.[language]}
                     className="w-full h-full object-cover gallery-image"
                   />
                   <div className="absolute top-4 left-4">
                     <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-sophisticated text-sophisticated-dark">
-                      {story?.category?.charAt?.(0)?.toUpperCase?.() + story?.category?.slice?.(1) || story?.category}
+                      {story?.category?.charAt(0)?.toUpperCase() + story?.category?.slice(1)}
                     </span>
                   </div>
                   <div className="absolute bottom-4 right-4">
                     <div className="flex items-center space-x-2 text-white/90 text-sm">
                       <Icon name="MapPin" size={16} />
-                      <span className="font-sophisticated">{story?.location || (language === 'bg' ? 'България' : 'Bulgaria')}</span>
+                      <span className="font-sophisticated">{story?.location}</span>
                     </div>
                   </div>
                 </div>
@@ -218,25 +171,21 @@ const RecentStories = () => {
                 <div className="p-6 md:p-8">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-heading text-xl md:text-2xl text-sophisticated-dark">
-                      {story?.title}
+                      {story?.title?.[language]}
                     </h3>
                     <span className="text-sm text-hierarchy-secondary font-sophisticated">
-                      {story?.date
-                        ? new Date(story.date)?.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-US')
-                        : language === 'bg'
-                          ? 'Съвсем скоро'
-                          : 'Recently'}
+                      {new Date(story?.date)?.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-US')}
                     </span>
                   </div>
-
-                  <p className="text-hierarchy-secondary font-sophisticated leading-relaxed mb-6 whitespace-pre-line">
-                    {story?.description || (language === 'bg' ? 'Описаниета скоро ще бъде налично.' : 'Description coming soon.')}
+                  
+                  <p className="text-hierarchy-secondary font-sophisticated leading-relaxed mb-6 whitespace-pre-line line-clamp-3">
+                    {story?.description?.[language]}
                   </p>
 
                   <Button
                     variant="outline"
                     className="group-hover:bg-accent group-hover:border-accent group-hover:text-sophisticated-dark transition-all duration-300"
-                    onClick={() => window.location.href = '/gallery'}
+                    onClick={() => handleViewAlbum(story?.albumId)}
                   >
                     <Icon name="Eye" size={16} className="mr-2" />
                     {language === 'bg' ? 'Виж повече' : 'View More'}
@@ -258,7 +207,7 @@ const RecentStories = () => {
           <Button
             variant="default"
             className="bg-gradient-to-r from-accent to-secondary text-sophisticated-dark px-8 py-3 text-lg magnetic-hover pulse-cta"
-            onClick={() => window.location.href = '/gallery'}
+            onClick={() => navigate('/gallery')}
           >
             <Icon name="Camera" size={20} className="mr-2" />
             {language === 'bg' ? 'Разгледай всички истории' : 'View All Stories'}

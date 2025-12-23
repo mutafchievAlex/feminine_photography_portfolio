@@ -1,95 +1,132 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Icon from '../../../components/AppIcon';
+import { bookingService } from '../../../services/bookingService';
+import { realtimeService } from '../../../services/realtimeService';
+import { useLanguage } from '../../../hooks/useLanguage';
 
-const DashboardStats = () => {
-  const stats = [
+export default function DashboardStats() {
+  const { t } = useLanguage();
+  const [stats, setStats] = useState({
+    totalBookings: 0,
+    pendingBookings: 0,
+    completedBookings: 0,
+    totalRevenue: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Fetch initial stats
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  // Setup real-time subscription for booking updates
+  useEffect(() => {
+    const subscription = realtimeService?.subscribeToBookingUpdates(() => {
+      // Refresh stats when any booking changes
+      fetchStats();
+    });
+
+    return () => subscription?.unsubscribe();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const bookings = await bookingService?.getAllBookings();
+      
+      const totalBookings = bookings?.length || 0;
+      const pendingBookings = bookings?.filter(b => b?.status === 'pending')?.length || 0;
+      const completedBookings = bookings?.filter(b => b?.status === 'completed')?.length || 0;
+      const totalRevenue = bookings
+        ?.filter(b => b?.status === 'completed')
+        ?.reduce((sum, b) => sum + (parseFloat(b?.total_amount) || 0), 0) || 0;
+
+      setStats({
+        totalBookings,
+        pendingBookings,
+        completedBookings,
+        totalRevenue,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4]?.map(i => (
+          <div key={i} className="bg-background rounded-lg shadow-soft border border-border p-6 animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const statCards = [
     {
-      id: 1,
-      title: "Upcoming Sessions",
-      value: "12",
-      change: "+3 this week",
-      trend: "up",
-      icon: "Calendar",
-      color: "bg-accent"
+      title: 'Общо резервации',
+      value: stats?.totalBookings,
+      icon: 'Calendar',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      trend: `+${stats?.thisMonth} този месец`
     },
     {
-      id: 2,
-      title: "Pending Inquiries",
-      value: "8",
-      change: "2 urgent",
-      trend: "neutral",
-      icon: "MessageSquare",
-      color: "bg-secondary"
+      title: 'Чакащи потвърждение',
+      value: stats?.pendingBookings,
+      icon: 'Clock',
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50',
+      trend: 'Изискват внимание'
     },
     {
-      id: 3,
-      title: "Gallery Deliveries",
-      value: "5",
-      change: "Due this week",
-      trend: "down",
-      icon: "Image",
-      color: "bg-surface-elevation"
+      title: 'Потвърдени',
+      value: stats?.completedBookings,
+      icon: 'CheckCircle',
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      trend: 'Предстоящи сесии'
     },
     {
-      id: 4,
-      title: "Monthly Revenue",
-      value: "€4,850",
-      change: "+15% vs last month",
-      trend: "up",
-      icon: "DollarSign",
-      color: "bg-warm-section"
+      title: 'Завършени',
+      value: stats?.completedBookings,
+      icon: 'Award',
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      trend: 'Общо завършени'
     }
   ];
 
-  const getTrendIcon = (trend) => {
-    switch (trend) {
-      case 'up': return 'TrendingUp';
-      case 'down': return 'TrendingDown';
-      default: return 'Minus';
-    }
-  };
-
-  const getTrendColor = (trend) => {
-    switch (trend) {
-      case 'up': return 'text-green-600';
-      case 'down': return 'text-red-500';
-      default: return 'text-hierarchy-secondary';
-    }
-  };
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-      {stats?.map((stat) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {statCards?.map((stat, index) => (
         <div
-          key={stat?.id}
-          className={`${stat?.color} rounded-lg p-6 shadow-soft elegant-hover`}
+          key={index}
+          className="bg-background rounded-lg shadow-soft border border-border p-6 hover:shadow-medium transition-shadow"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className={`w-12 h-12 rounded-full bg-white/20 flex items-center justify-center`}>
-              <Icon name={stat?.icon} size={24} className="text-sophisticated-dark" />
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-hierarchy-secondary mb-1">
+                {stat?.title}
+              </p>
+              <h3 className="text-3xl font-heading font-bold text-sophisticated-dark">
+                {stat?.value}
+              </h3>
+              <p className="text-xs text-hierarchy-secondary mt-2">
+                {stat?.trend}
+              </p>
             </div>
-            <Icon 
-              name={getTrendIcon(stat?.trend)} 
-              size={16} 
-              className={getTrendColor(stat?.trend)} 
-            />
-          </div>
-          
-          <div className="space-y-1">
-            <h3 className="text-2xl font-heading font-semibold text-sophisticated-dark">
-              {stat?.value}
-            </h3>
-            <p className="text-sm font-sophisticated text-hierarchy-secondary">
-              {stat?.title}
-            </p>
-            <p className={`text-xs font-medium ${getTrendColor(stat?.trend)}`}>
-              {stat?.change}
-            </p>
+            <div className={`${stat?.bgColor} ${stat?.color} p-3 rounded-lg`}>
+              <Icon name={stat?.icon} size={24} />
+            </div>
           </div>
         </div>
       ))}
     </div>
   );
-};
-
-export default DashboardStats;
+}

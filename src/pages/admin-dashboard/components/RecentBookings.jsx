@@ -1,207 +1,227 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { bookingService } from '../../../services/bookingService';
+import { realtimeService } from '../../../services/realtimeService';
+import { useLanguage } from '../../../hooks/useLanguage';
 
-const RecentBookings = () => {
-  const bookings = [
-    {
-      id: 1,
-      clientName: "Мария Петрова",
-      sessionType: "Wedding Photography",
-      date: "2025-09-15",
-      time: "14:00",
-      status: "confirmed",
-      location: "София, България",
-      package: "Premium Wedding Package",
-      value: "€2,500"
-    },
-    {
-      id: 2,
-      clientName: "Анна Димитрова",
-      sessionType: "Maternity Session",
-      date: "2025-09-08",
-      time: "10:30",
-      status: "pending",
-      location: "Пловдив, България",
-      package: "Maternity Deluxe",
-      value: "€450"
-    },
-    {
-      id: 3,
-      clientName: "Елена Георгиева",
-      sessionType: "Family Portrait",
-      date: "2025-09-12",
-      time: "16:00",
-      status: "confirmed",
-      location: "Варна, България",
-      package: "Family Classic",
-      value: "€350"
-    },
-    {
-      id: 4,
-      clientName: "Стефан Николов",
-      sessionType: "Corporate Headshots",
-      date: "2025-09-05",
-      time: "09:00",
-      status: "requires_action",
-      location: "София, България",
-      package: "Professional Headshots",
-      value: "€200"
-    },
-    {
-      id: 5,
-      clientName: "Ивана Стоянова",
-      sessionType: "Engagement Session",
-      date: "2025-09-20",
-      time: "17:30",
-      status: "confirmed",
-      location: "Банско, България",
-      package: "Engagement Premium",
-      value: "€600"
-    }
-  ];
+export default function RecentBookings() {
+  const { t } = useLanguage();
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [updatingStatus, setUpdatingStatus] = useState(null);
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      confirmed: {
-        color: 'bg-green-100 text-green-800',
-        icon: 'CheckCircle',
-        text: 'Потвърдена'
-      },
-      pending: {
-        color: 'bg-yellow-100 text-yellow-800',
-        icon: 'Clock',
-        text: 'Чакаща'
-      },
-      requires_action: {
-        color: 'bg-red-100 text-red-800',
-        icon: 'AlertCircle',
-        text: 'Изисква действие'
+  // Fetch initial bookings
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  // Setup real-time subscription
+  useEffect(() => {
+    const subscription = realtimeService?.subscribeToBookingUpdates((data) => {
+      const { type, booking } = data;
+
+      if (type === 'INSERT') {
+        // Add new booking to the list
+        setBookings(prev => [booking, ...prev]?.slice(0, 5));
+      } else if (type === 'UPDATE') {
+        // Update existing booking
+        setBookings(prev =>
+          prev?.map(b => (b?.id === booking?.id ? booking : b))
+        );
+      } else if (type === 'DELETE') {
+        // Remove deleted booking
+        setBookings(prev => prev?.filter(b => b?.id !== booking?.id));
       }
-    };
-
-    const config = statusConfig?.[status];
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config?.color}`}>
-        <Icon name={config?.icon} size={12} className="mr-1" />
-        {config?.text}
-      </span>
-    );
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date?.toLocaleDateString('bg-BG', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
     });
+
+    return () => subscription?.unsubscribe();
+  }, []);
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const data = await bookingService?.getAllBookings();
+      setBookings(data?.slice(0, 5) || []);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      setError(error?.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="bg-background rounded-lg shadow-soft border border-border">
-      <div className="px-6 py-4 border-b border-border">
-        <div className="flex items-center justify-between">
+  const handleStatusChange = async (bookingId, newStatus) => {
+    setUpdatingStatus(bookingId);
+    try {
+      await bookingService?.updateStatus(bookingId, newStatus);
+      await fetchBookings(); // Reload bookings
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Грешка при актуализиране на статус: ' + err?.message);
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      confirmed: 'bg-green-100 text-green-800',
+      completed: 'bg-blue-100 text-blue-800',
+      cancelled: 'bg-red-100 text-red-800'
+    };
+    return colors?.[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      pending: 'Чакащо',
+      confirmed: 'Потвърдено',
+      completed: 'Завършено',
+      cancelled: 'Отказано'
+    };
+    return labels?.[status] || status;
+  };
+
+  const getSessionTypeLabel = (type) => {
+    const labels = {
+      wedding: 'Сватба',
+      maternity: 'Бременност',
+      family: 'Семейна',
+      engagement: 'Годеж',
+      individual: 'Индивидуална',
+      corporate: 'Корпоративна',
+      newborn: 'Новородено',
+      other: 'Друго'
+    };
+    return labels?.[type] || type;
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-background rounded-lg shadow-soft border border-border p-6">
+        <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-heading font-semibold text-sophisticated-dark">
             Последни резервации
           </h3>
-          <Button variant="outline" size="sm">
-            <Icon name="Plus" size={16} className="mr-2" />
-            Нова резервация
-          </Button>
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3]?.map(i => (
+            <div key={i} className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ))}
         </div>
       </div>
-      <div className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border">
-            <thead className="bg-surface-elevation">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-hierarchy-secondary uppercase tracking-wider">
-                  Клиент
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-hierarchy-secondary uppercase tracking-wider">
-                  Сесия
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-hierarchy-secondary uppercase tracking-wider">
-                  Дата & Час
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-hierarchy-secondary uppercase tracking-wider">
-                  Статус
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-hierarchy-secondary uppercase tracking-wider">
-                  Стойност
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-hierarchy-secondary uppercase tracking-wider">
-                  Действия
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-background divide-y divide-border">
-              {bookings?.map((booking) => (
-                <tr key={booking?.id} className="hover:bg-surface-elevation transition-colors duration-200">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center">
-                          <Icon name="User" size={16} className="text-sophisticated-dark" />
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-sophisticated-dark">
-                          {booking?.clientName}
-                        </div>
-                        <div className="text-sm text-hierarchy-secondary">
-                          {booking?.location}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-sophisticated-dark">{booking?.sessionType}</div>
-                    <div className="text-sm text-hierarchy-secondary">{booking?.package}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-sophisticated-dark">{formatDate(booking?.date)}</div>
-                    <div className="text-sm text-hierarchy-secondary">{booking?.time}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(booking?.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-sophisticated-dark">
-                    {booking?.value}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end space-x-2">
-                      <Button variant="ghost" size="sm">
-                        <Icon name="Eye" size={16} />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Icon name="Edit" size={16} />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Icon name="MessageSquare" size={16} />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-background rounded-lg shadow-soft border border-border p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Грешка при зареждане: {error}</p>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-background rounded-lg shadow-soft border border-border">
+      <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+        <h3 className="text-lg font-heading font-semibold text-sophisticated-dark">
+          Последни резервации
+        </h3>
+        <Button variant="ghost" size="sm">
+          <Icon name="MoreHorizontal" size={20} />
+        </Button>
+      </div>
+      <div className="p-6">
+        {bookings?.length === 0 ? (
+          <p className="text-center text-hierarchy-secondary py-8">
+            Няма резервации
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {bookings?.map((booking) => (
+              <div
+                key={booking?.id}
+                className="flex items-start justify-between p-4 bg-surface-elevation rounded-lg hover:shadow-soft transition-shadow"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <h4 className="font-sophisticated font-medium text-sophisticated-dark">
+                      {booking?.fullName}
+                    </h4>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking?.status)}`}>
+                      {getStatusLabel(booking?.status)}
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-sm text-hierarchy-secondary">
+                    <p className="flex items-center space-x-2">
+                      <Icon name="Camera" size={14} />
+                      <span>{getSessionTypeLabel(booking?.sessionType)}</span>
+                    </p>
+                    <p className="flex items-center space-x-2">
+                      <Icon name="Calendar" size={14} />
+                      <span>{new Date(booking.preferredDate)?.toLocaleDateString('bg-BG')}</span>
+                    </p>
+                    <p className="flex items-center space-x-2">
+                      <Icon name="Mail" size={14} />
+                      <span>{booking?.email}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col space-y-2 ml-4">
+                  {booking?.status === 'pending' && (
+                    <>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleStatusChange(booking?.id, 'confirmed')}
+                        loading={updatingStatus === booking?.id}
+                      >
+                        <Icon name="Check" size={16} className="mr-1" />
+                        Потвърди
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleStatusChange(booking?.id, 'cancelled')}
+                        loading={updatingStatus === booking?.id}
+                      >
+                        <Icon name="X" size={16} className="mr-1" />
+                        Откажи
+                      </Button>
+                    </>
+                  )}
+                  {booking?.status === 'confirmed' && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleStatusChange(booking?.id, 'completed')}
+                      loading={updatingStatus === booking?.id}
+                    >
+                      <Icon name="CheckCircle" size={16} className="mr-1" />
+                      Завърши
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <div className="px-6 py-4 border-t border-border">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-hierarchy-secondary">
-            Показани 5 от 23 резервации
-          </p>
-          <Button variant="outline" size="sm">
-            Виж всички резервации
-            <Icon name="ArrowRight" size={16} className="ml-2" />
-          </Button>
-        </div>
+        <Button variant="ghost" fullWidth>
+          Виж всички резервации
+          <Icon name="ArrowRight" size={16} className="ml-2" />
+        </Button>
       </div>
     </div>
   );
-};
-
-export default RecentBookings;
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
@@ -10,374 +10,119 @@ import ValueProposition from './components/ValueProposition';
 import TestimonialCard from './components/TestimonialCard';
 import PaymentOptions from './components/PaymentOptions';
 import SeasonalPromotion from './components/SeasonalPromotion';
-import usePackages from '../../hooks/usePackages';
-import useAddOnServices from '../../hooks/useAddOnServices';
-import useTestimonials from '../../hooks/useTestimonials';
 
 const Investment = () => {
   const navigate = useNavigate();
   const [selectedPackage, setSelectedPackage] = useState(null);
-  const [language, setLanguage] = useState('bg');
 
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') || 'bg';
-    setLanguage(savedLanguage);
-  }, []);
-
-  const packageOptions = useMemo(
-    () => ({ limit: 3, locale: language, currency: 'BGN' }),
-    [language]
-  );
-
-  const addOnOptions = useMemo(
-    () => ({ limit: 6, locale: language, currency: 'BGN' }),
-    [language]
-  );
-
-  const testimonialOptions = useMemo(
-    () => ({ limit: 6, locale: language }),
-    [language]
-  );
-
-  const {
-    packages: packagesData,
-    isLoading: isPackagesLoading,
-    error: packagesError,
-    refetch: refetchPackages,
-  } = usePackages(packageOptions);
-
-  const {
-    addOnServices: addOnServicesData,
-    isLoading: isAddOnsLoading,
-    error: addOnsError,
-    refetch: refetchAddOns,
-  } = useAddOnServices(addOnOptions);
-
-  const {
-    testimonials: testimonialsData,
-    isLoading: isTestimonialsLoading,
-    error: testimonialsError,
-    refetch: refetchTestimonials,
-  } = useTestimonials(testimonialOptions);
-
-  const localizeContent = (value) => {
-    if (value === null || value === undefined) {
-      return '';
+  // Mock data for packages
+  const packages = [
+    {
+      id: 1,
+      name: "Essential",
+      subtitle: "Перфектно за малки събития",
+      price: "450",
+      description: "Идеален избор за интимни моменти и малки празненства. Включва основните услуги за създаване на красиви спомени.",
+      features: [
+        "1 час фотосесия",
+        "1 локация по избор",
+        "20 професионално редактирани снимки",
+        "Онлайн галерия за 30 дни",
+        "Високо разделителна способност за печат",
+        "Консултация преди сесията"
+      ]
+    },
+    {
+      id: 2,
+      name: "Signature",
+      subtitle: "Най-популярният избор",
+      price: "750",
+      description: "Нашият най-търсен пакет, който предлага перфектния баланс между стойност и качество за вашите специални моменти.",
+      features: [
+        "2 часа фотосесия",
+        "До 2 локации",
+        "50 професионално редактирани снимки",
+        "Частна онлайн галерия за 90 дни",
+        "Всички снимки в пълна резолюция",
+        "Подробна консултация и планиране",
+        "Бързо редактиране - 48 часа",
+        "Възможност за допълнителни снимки"
+      ]
+    },
+    {
+      id: 3,
+      name: "Legacy",
+      subtitle: "Пълното изживяване",
+      price: "1200",
+      description: "Премиум пакетът за тези, които искат да запазят всеки момент. Включва всичко необходимо за създаване на вечни спомени.",
+      features: [
+        "4 часа фотосесия",
+        "Неограничен брой локации",
+        "100+ професионално редактирани снимки",
+        "Частна галерия за 1 година",
+        "Всички оригинални файлове",
+        "Персонален фотоалбум (30 страници)",
+        "Приоритетно редактиране - 24 часа",
+        "Втора консултация след сесията",
+        "USB с всички снимки",
+        "Права за търговска употреба"
+      ]
     }
+  ];
 
-    if (typeof value === 'string' || typeof value === 'number') {
-      return value.toString();
+  // Mock data for add-on services
+  const addOnServices = [
+    {
+      id: 1,
+      name: "Engagement Session",
+      price: "300",
+      icon: "Heart",
+      description: "Романтична предсватбена фотосесия за двойки. Перфектна за запознаване преди сватбата.",
+      features: [
+        "1 час фотосесия",
+        "15 редактирани снимки",
+        "Онлайн галерия"
+      ]
+    },
+    {
+      id: 2,
+      name: "Second Photographer",
+      price: "200",
+      icon: "Users",
+      description: "Допълнителен фотограф за по-голямо покритие и различни ъгли на събитието.",
+      features: [
+        "Пълно покритие",
+        "Различни перспективи",
+        "Повече кандидни моменти"
+      ]
+    },
+    {
+      id: 3,
+      name: "Premium Album",
+      price: "400",
+      icon: "Book",
+      description: "Луксозен фотоалбум с твърди корици и професионален печат на най-добрите снимки.",
+      features: [
+        "50 страници",
+        "Премиум материали",
+        "Персонализиран дизайн"
+      ]
+    },
+    {
+      id: 4,
+      name: "Extended Gallery",
+      price: "150",
+      icon: "Clock",
+      description: "Удължаване на достъпа до онлайн галерията за допълнителни 6 месеца.",
+      features: [
+        "6 месеца допълнително",
+        "Неограничени изтегляния",
+        "Споделяне с близки"
+      ]
     }
+  ];
 
-    if (typeof value === 'object') {
-      const localized =
-        value?.[language] ??
-        value?.value ??
-        value?.text ??
-        value?.description ??
-        value?.label ??
-        value?.name ??
-        value?.title ??
-        value?.content ??
-        value?.message;
-
-      if (localized !== undefined) {
-        if (typeof localized === 'string' || typeof localized === 'number') {
-          return localized.toString();
-        }
-      }
-
-      const firstPrimitive = Object.values(value).find(
-        (entry) => typeof entry === 'string' || typeof entry === 'number'
-      );
-
-      if (firstPrimitive !== undefined) {
-        return firstPrimitive.toString();
-      }
-    }
-
-    return '';
-  };
-
-  const toArray = (value) => {
-    if (!value) {
-      return [];
-    }
-
-    if (Array.isArray(value)) {
-      return value;
-    }
-
-    if (typeof value === 'string') {
-      return value
-        .split(/\r?\n|\u2022|,/)
-        .map((item) => item.replace(/^[\s\u2022-]+/, '').trim())
-        .filter(Boolean);
-    }
-
-    if (typeof value === 'object') {
-      if (Array.isArray(value?.items)) {
-        return value.items;
-      }
-
-      if (Array.isArray(value?.data)) {
-        return value.data;
-      }
-
-      return Object.values(value);
-    }
-
-    return [];
-  };
-
-  const normalizeFeatureList = (value) =>
-    toArray(value)
-      .map((feature) => {
-        if (feature === null || feature === undefined) {
-          return '';
-        }
-
-        if (typeof feature === 'string' || typeof feature === 'number') {
-          return feature.toString();
-        }
-
-        return localizeContent(feature);
-      })
-      .filter(Boolean);
-
-  const parsePrice = (input) => {
-    if (input === null || input === undefined) {
-      return '';
-    }
-
-    if (typeof input === 'number') {
-      return input % 1 === 0 ? input.toString() : input.toFixed(2);
-    }
-
-    if (typeof input === 'string') {
-      const trimmed = input.trim();
-
-      if (!trimmed) {
-        return '';
-      }
-
-      const numericPortion = trimmed.replace(/[^0-9.,]/g, '');
-      return numericPortion || trimmed;
-    }
-
-    if (typeof input === 'object') {
-      const value =
-        input?.[language] ??
-        input?.amount ??
-        input?.value ??
-        input?.price ??
-        input?.amountValue ??
-        (typeof input?.amountCents === 'number'
-          ? input.amountCents / 100
-          : undefined) ??
-        input?.display ??
-        input?.formatted;
-
-      if (value !== undefined) {
-        return parsePrice(value);
-      }
-
-      const firstPrimitive = Object.values(input).find(
-        (entry) => typeof entry === 'string' || typeof entry === 'number'
-      );
-
-      if (firstPrimitive !== undefined) {
-        return parsePrice(firstPrimitive);
-      }
-    }
-
-    return '';
-  };
-
-  const packages = useMemo(() => {
-    const rawPackages = Array.isArray(packagesData)
-      ? packagesData
-      : packagesData?.items ??
-        packagesData?.data ??
-        packagesData?.results ??
-        packagesData?.packages ??
-        packagesData?.records ??
-        [];
-
-    return (
-      rawPackages
-        ?.map((pkg, index) => {
-          if (!pkg) {
-            return null;
-          }
-
-          const normalizedFeatures = normalizeFeatureList(
-            pkg?.features ??
-              pkg?.includedServices ??
-              pkg?.benefits ??
-              pkg?.highlights ??
-              pkg?.details ??
-              pkg?.points
-          );
-
-          const priceValue = parsePrice(
-            pkg?.price ??
-              pkg?.amount ??
-              pkg?.priceValue ??
-              pkg?.priceAmount ??
-              pkg?.price?.amount ??
-              pkg?.price?.value ??
-              pkg?.pricing ??
-              pkg?.amountValue
-          );
-
-          return {
-            id: pkg?.id ?? pkg?.packageId ?? pkg?.slug ?? pkg?.uuid ?? `package-${index}`,
-            name:
-              localizeContent(pkg?.name ?? pkg?.title) ||
-              (language === 'bg' ? 'Фотографски пакет' : 'Photography Package'),
-            subtitle: localizeContent(
-              pkg?.subtitle ??
-                pkg?.tagline ??
-                pkg?.label ??
-                pkg?.categoryLabel ??
-                pkg?.category
-            ),
-            price: priceValue,
-            description: localizeContent(
-              pkg?.description ?? pkg?.summary ?? pkg?.detailsText ?? pkg?.content
-            ),
-            features: normalizedFeatures,
-          };
-        })
-        ?.filter((pkg) => pkg?.id)
-    ) ?? [];
-  }, [packagesData, language]);
-
-  const addOnServices = useMemo(() => {
-    const rawAddOns = Array.isArray(addOnServicesData)
-      ? addOnServicesData
-      : addOnServicesData?.items ??
-        addOnServicesData?.data ??
-        addOnServicesData?.addOns ??
-        addOnServicesData?.services ??
-        addOnServicesData?.results ??
-        [];
-
-    return (
-      rawAddOns
-        ?.map((service, index) => {
-          if (!service) {
-            return null;
-          }
-
-          return {
-            id:
-              service?.id ??
-              service?.serviceId ??
-              service?.slug ??
-              service?.uuid ??
-              `add-on-${index}`,
-            name:
-              localizeContent(service?.name ?? service?.title) ||
-              (language === 'bg' ? 'Допълнителна услуга' : 'Add-on Service'),
-            price: parsePrice(
-              service?.price ??
-                service?.amount ??
-                service?.priceValue ??
-                service?.price?.amount ??
-                service?.price?.value
-            ),
-            icon:
-              service?.icon ??
-              service?.iconName ??
-              service?.iconKey ??
-              service?.icon_id ??
-              'Sparkles',
-            description: localizeContent(
-              service?.description ?? service?.summary ?? service?.details
-            ),
-            features: normalizeFeatureList(
-              service?.features ??
-                service?.highlights ??
-                service?.benefits ??
-                service?.detailsList
-            ),
-          };
-        })
-        ?.filter((service) => service?.id)
-    ) ?? [];
-  }, [addOnServicesData, language]);
-
-  const testimonials = useMemo(() => {
-    const rawTestimonials = Array.isArray(testimonialsData)
-      ? testimonialsData
-      : testimonialsData?.items ??
-        testimonialsData?.data ??
-        testimonialsData?.testimonials ??
-        testimonialsData?.results ??
-        [];
-
-    return (
-      rawTestimonials
-        ?.map((testimonial, index) => {
-          if (!testimonial) {
-            return null;
-          }
-
-          const quote = localizeContent(
-            testimonial?.quote ??
-              testimonial?.testimonial ??
-              testimonial?.feedback ??
-              testimonial?.message ??
-              testimonial?.review
-          );
-
-          if (!quote) {
-            return null;
-          }
-
-          return {
-            id:
-              testimonial?.id ??
-              testimonial?.testimonialId ??
-              testimonial?.slug ??
-              testimonial?.uuid ??
-              `testimonial-${index}`,
-            name:
-              localizeContent(
-                testimonial?.name ??
-                  testimonial?.client ??
-                  testimonial?.clientName ??
-                  testimonial?.author
-              ) || (language === 'bg' ? 'Клиент' : 'Client'),
-            session: localizeContent(
-              testimonial?.session ??
-                testimonial?.service ??
-                testimonial?.shootType ??
-                testimonial?.category ??
-                testimonial?.event
-            ),
-            avatar:
-              testimonial?.avatar ??
-              testimonial?.photo ??
-              testimonial?.image ??
-              testimonial?.imageUrl ??
-              testimonial?.avatarUrl ??
-              testimonial?.clientImage ??
-              '/assets/images/no_image.png',
-            quote,
-          };
-        })
-        ?.filter((testimonial) => testimonial?.id)
-    ) ?? [];
-  }, [testimonialsData, language]);
-
-  const packageSkeletons = useMemo(() => Array.from({ length: 3 }), []);
-  const addOnSkeletons = useMemo(() => Array.from({ length: 4 }), []);
-  const testimonialSkeletons = useMemo(() => Array.from({ length: 3 }), []);
-
-  // Value propositions remain static content on the page
+  // Mock data for value propositions
   const valuePropositions = [
     {
       id: 1,
@@ -405,6 +150,30 @@ const Investment = () => {
     }
   ];
 
+  // Mock data for testimonials
+  const testimonials = [
+    {
+      id: 1,
+      name: "Мария Петрова",
+      session: "Сватбена фотосесия",
+      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+      quote: "Елена улови всеки емоционален момент от нашата сватба. Снимките са като произведения на изкуството - всяка разказва история. Инвестицията си заслужаваше напълно!"
+    },
+    {
+      id: 2,
+      name: "Анна Димитрова",
+      session: "Бременност",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+      quote: "Професионализмът и вниманието към детайлите на Елена са невероятни. Тя направи фотосесията по време на бременността ми незабравима. Резултатът надмина очакванията ми."
+    },
+    {
+      id: 3,
+      name: "Георги Стоянов",
+      session: "Семейна фотосесия",
+      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+      quote: "Като семейство сме много доволни от работата на Елена. Тя успя да улови естествените моменти между нас и създаде спомени, които ще пазим завинаги."
+    }
+  ];
 
   const handleSelectPackage = (pkg, type = 'package') => {
     setSelectedPackage(pkg);
@@ -494,72 +263,14 @@ const Investment = () => {
             </div>
 
             <div className="grid lg:grid-cols-3 gap-8 mb-16">
-              {isPackagesLoading && (
-                <>
-                  {packageSkeletons.map((_, index) => (
-                    <div
-                      key={`package-skeleton-${index}`}
-                      className="bg-surface-elevation rounded-2xl p-8 shadow-soft animate-pulse space-y-6"
-                    >
-                      <div className="h-6 w-1/2 bg-white/10 rounded" />
-                      <div className="h-4 w-2/3 bg-white/10 rounded" />
-                      <div className="h-10 w-32 bg-white/10 rounded" />
-                      <div className="space-y-2 pt-2">
-                        {Array.from({ length: 6 }).map((__, featureIndex) => (
-                          <div key={featureIndex} className="h-4 w-full bg-white/10 rounded" />
-                        ))}
-                      </div>
-                      <div className="h-10 w-full bg-white/10 rounded-full" />
-                      <div className="h-10 w-full bg-white/10 rounded-full" />
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {!isPackagesLoading && packagesError && (
-                <div className="lg:col-span-3">
-                  <div className="bg-white rounded-2xl shadow-soft p-10 text-center space-y-4">
-                    <Icon name="AlertTriangle" size={36} className="mx-auto text-accent" />
-                    <h3 className="font-heading text-2xl text-sophisticated-dark">
-                      Не успяхме да заредим пакетите
-                    </h3>
-                    <p className="text-hierarchy-secondary font-sophisticated">
-                      Проверете връзката си с интернет и опитайте отново след малко.
-                    </p>
-                    <Button variant="outline" onClick={refetchPackages} className="elegant-hover">
-                      <Icon name="RefreshCcw" size={16} className="mr-2" />
-                      Опитай отново
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {!isPackagesLoading && !packagesError && packages?.length === 0 && (
-                <div className="lg:col-span-3">
-                  <div className="bg-white rounded-2xl shadow-soft p-10 text-center space-y-4">
-                    <Icon name="Package" size={36} className="mx-auto text-accent" />
-                    <h3 className="font-heading text-2xl text-sophisticated-dark">
-                      Скоро ще добавим нови пакети
-                    </h3>
-                    <p className="text-hierarchy-secondary font-sophisticated">
-                      Свържете се с нас за персонализирана оферта или запазете безплатна консултация.
-                    </p>
-                    <Button variant="ghost" onClick={handleBookConsultation} className="elegant-hover">
-                      Резервирайте консултация
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {!isPackagesLoading && !packagesError &&
-                packages?.map((pkg, index) => (
-                  <PackageCard
-                    key={pkg?.id}
-                    package={pkg}
-                    isPopular={index === 1}
-                    onSelectPackage={handleSelectPackage}
-                  />
-                ))}
+              {packages?.map((pkg, index) => (
+                <PackageCard
+                  key={pkg?.id}
+                  package={pkg}
+                  isPopular={index === 1}
+                  onSelectPackage={handleSelectPackage}
+                />
+              ))}
             </div>
 
             <div className="text-center">
@@ -591,62 +302,9 @@ const Investment = () => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {isAddOnsLoading && (
-                <>
-                  {addOnSkeletons.map((_, index) => (
-                    <div
-                      key={`add-on-skeleton-${index}`}
-                      className="bg-surface-elevation rounded-xl p-6 animate-pulse space-y-4"
-                    >
-                      <div className="h-10 w-10 bg-white/10 rounded-full" />
-                      <div className="h-5 w-2/3 bg-white/10 rounded" />
-                      <div className="h-4 w-1/3 bg-white/10 rounded" />
-                      <div className="space-y-2 pt-2">
-                        {Array.from({ length: 3 }).map((__, featureIndex) => (
-                          <div key={featureIndex} className="h-3 w-full bg-white/10 rounded" />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {!isAddOnsLoading && addOnsError && (
-                <div className="md:col-span-2">
-                  <div className="bg-white rounded-2xl shadow-soft p-10 text-center space-y-4">
-                    <Icon name="AlertTriangle" size={36} className="mx-auto text-accent" />
-                    <h3 className="font-heading text-2xl text-sophisticated-dark">
-                      Не успяхме да заредим допълнителните услуги
-                    </h3>
-                    <p className="text-hierarchy-secondary font-sophisticated">
-                      Моля, опитайте отново след кратка пауза или се свържете с нас за повече информация.
-                    </p>
-                    <Button variant="outline" onClick={refetchAddOns} className="elegant-hover">
-                      <Icon name="RefreshCcw" size={16} className="mr-2" />
-                      Опитай отново
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {!isAddOnsLoading && !addOnsError && addOnServices?.length === 0 && (
-                <div className="md:col-span-2">
-                  <div className="bg-white rounded-2xl shadow-soft p-10 text-center space-y-4">
-                    <Icon name="Puzzle" size={36} className="mx-auto text-accent" />
-                    <h3 className="font-heading text-2xl text-sophisticated-dark">
-                      В момента няма допълнителни услуги
-                    </h3>
-                    <p className="text-hierarchy-secondary font-sophisticated">
-                      Свържете се с нас, за да изградим пакет, който отговаря на вашите нужди.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {!isAddOnsLoading && !addOnsError &&
-                addOnServices?.map((service) => (
-                  <AddOnService key={service?.id} service={service} />
-                ))}
+              {addOnServices?.map((service) => (
+                <AddOnService key={service?.id} service={service} />
+              ))}
             </div>
           </div>
         </section>
@@ -782,67 +440,9 @@ const Investment = () => {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {isTestimonialsLoading && (
-                <>
-                  {testimonialSkeletons.map((_, index) => (
-                    <div
-                      key={`testimonial-skeleton-${index}`}
-                      className="bg-surface-elevation rounded-xl p-8 shadow-soft animate-pulse space-y-4"
-                    >
-                      <div className="flex space-x-2">
-                        {Array.from({ length: 5 }).map((__, starIndex) => (
-                          <div key={starIndex} className="h-4 w-4 bg-white/10 rounded" />
-                        ))}
-                      </div>
-                      <div className="h-16 w-full bg-white/10 rounded" />
-                      <div className="flex items-center space-x-4 pt-4">
-                        <div className="w-12 h-12 bg-white/10 rounded-full" />
-                        <div className="flex-1 space-y-2">
-                          <div className="h-4 w-1/2 bg-white/10 rounded" />
-                          <div className="h-3 w-1/3 bg-white/10 rounded" />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {!isTestimonialsLoading && testimonialsError && (
-                <div className="md:col-span-2 lg:col-span-3">
-                  <div className="bg-white rounded-2xl shadow-soft p-10 text-center space-y-4">
-                    <Icon name="AlertTriangle" size={36} className="mx-auto text-accent" />
-                    <h3 className="font-heading text-2xl text-sophisticated-dark">
-                      Не успяхме да заредим отзивите
-                    </h3>
-                    <p className="text-hierarchy-secondary font-sophisticated">
-                      Рефрешнете страницата или опитайте отново по-късно. Благодарим за търпението!
-                    </p>
-                    <Button variant="outline" onClick={refetchTestimonials} className="elegant-hover">
-                      <Icon name="RefreshCcw" size={16} className="mr-2" />
-                      Опитай отново
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {!isTestimonialsLoading && !testimonialsError && testimonials?.length === 0 && (
-                <div className="md:col-span-2 lg:col-span-3">
-                  <div className="bg-white rounded-2xl shadow-soft p-10 text-center space-y-4">
-                    <Icon name="MessageCircle" size={36} className="mx-auto text-accent" />
-                    <h3 className="font-heading text-2xl text-sophisticated-dark">
-                      Първите истории тепърва предстоят
-                    </h3>
-                    <p className="text-hierarchy-secondary font-sophisticated">
-                      Бъдете сред първите, които ще споделят своя опит с Elena Rose Photography.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {!isTestimonialsLoading && !testimonialsError &&
-                testimonials?.map((testimonial) => (
-                  <TestimonialCard key={testimonial?.id} testimonial={testimonial} />
-                ))}
+              {testimonials?.map((testimonial) => (
+                <TestimonialCard key={testimonial?.id} testimonial={testimonial} />
+              ))}
             </div>
           </div>
         </section>
