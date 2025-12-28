@@ -1,8 +1,10 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const SeasonalPromotion = ({ onBookNow }) => {
+  const { t } = useLanguage();
   return (
     <div className="relative bg-gradient-to-r from-accent to-secondary rounded-2xl p-8 overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
@@ -17,17 +19,17 @@ const SeasonalPromotion = ({ onBookNow }) => {
               className="text-sophisticated-dark" 
             />
             <span className="text-sm font-sophisticated text-sophisticated-dark">
-              Ограничена оферта
+              {t('limitedOffer')}
             </span>
           </div>
         </div>
         
         <div className="text-center mb-6">
           <h3 className="font-heading text-2xl font-medium text-sophisticated-dark mb-2">
-            Есенна промоция 2024
+            {t('seasonalPromoTitle')}
           </h3>
           <p className="text-sophisticated-dark/80 leading-relaxed max-w-md mx-auto">
-            Резервирайте вашата есенна фотосесия до 15 октомври и получете безплатна втора локация
+            {t('seasonalPromoDescription')}
           </p>
         </div>
         
@@ -37,7 +39,7 @@ const SeasonalPromotion = ({ onBookNow }) => {
               15%
             </div>
             <div className="text-sm text-sophisticated-dark/80">
-              отстъпка
+              {t('seasonalDiscountLabel')}
             </div>
           </div>
           
@@ -48,7 +50,7 @@ const SeasonalPromotion = ({ onBookNow }) => {
               +1
             </div>
             <div className="text-sm text-sophisticated-dark/80">
-              локация
+              {t('seasonalExtraLocationLabel')}
             </div>
           </div>
           
@@ -59,7 +61,7 @@ const SeasonalPromotion = ({ onBookNow }) => {
               48ч
             </div>
             <div className="text-sm text-sophisticated-dark/80">
-              доставка
+              {t('seasonalDeliveryLabel')}
             </div>
           </div>
         </div>
@@ -70,7 +72,7 @@ const SeasonalPromotion = ({ onBookNow }) => {
             className="bg-white/20 border-sophisticated-dark/30 text-sophisticated-dark hover:bg-white/30 magnetic-hover"
             onClick={onBookNow}
           >
-            Резервирайте сега
+            {t('bookNow')}
           </Button>
         </div>
       </div>

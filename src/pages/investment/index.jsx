@@ -11,61 +11,64 @@ import TestimonialCard from './components/TestimonialCard';
 import PaymentOptions from './components/PaymentOptions';
 import SeasonalPromotion from './components/SeasonalPromotion';
 
+import { useLanguage } from '../../hooks/useLanguage';
+
 const Investment = () => {
   const navigate = useNavigate();
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const { t } = useLanguage();
 
   // Mock data for packages
   const packages = [
     {
       id: 1,
       name: "Essential",
-      subtitle: "Перфектно за малки събития",
+      subtitle: t('essentialSubtitle'),
       price: "450",
-      description: "Идеален избор за интимни моменти и малки празненства. Включва основните услуги за създаване на красиви спомени.",
+      description: t('essentialDescription'),
       features: [
-        "1 час фотосесия",
-        "1 локация по избор",
-        "20 професионално редактирани снимки",
-        "Онлайн галерия за 30 дни",
-        "Високо разделителна способност за печат",
-        "Консултация преди сесията"
+        t('essentialFeatSession'),
+        t('essentialFeatLocation'),
+        t('essentialFeatEditedPhotos'),
+        t('essentialFeatOnlineGallery'),
+        t('essentialFeatHighRes'),
+        t('essentialFeatConsultation')
       ]
     },
     {
       id: 2,
       name: "Signature",
-      subtitle: "Най-популярният избор",
+      subtitle: t('signatureSubtitle'),
       price: "750",
-      description: "Нашият най-търсен пакет, който предлага перфектния баланс между стойност и качество за вашите специални моменти.",
+      description: t('signatureDescription'),
       features: [
-        "2 часа фотосесия",
-        "До 2 локации",
-        "50 професионално редактирани снимки",
-        "Частна онлайн галерия за 90 дни",
-        "Всички снимки в пълна резолюция",
-        "Подробна консултация и планиране",
-        "Бързо редактиране - 48 часа",
-        "Възможност за допълнителни снимки"
+        t('signatureFeatSession'),
+        t('signatureFeatLocations'),
+        t('signatureFeatEditedPhotos'),
+        t('signatureFeatOnlineGallery'),
+        t('signatureFeatAllPhotosFullRes'),
+        t('signatureFeatPlanning'),
+        t('signatureFeatFastEdit'),
+        t('signatureFeatExtraPhotos')
       ]
     },
     {
       id: 3,
       name: "Legacy",
-      subtitle: "Пълното изживяване",
+      subtitle: t('legacySubtitle'),
       price: "1200",
-      description: "Премиум пакетът за тези, които искат да запазят всеки момент. Включва всичко необходимо за създаване на вечни спомени.",
+      description: t('legacyDescription'),
       features: [
-        "4 часа фотосесия",
-        "Неограничен брой локации",
-        "100+ професионално редактирани снимки",
-        "Частна галерия за 1 година",
-        "Всички оригинални файлове",
-        "Персонален фотоалбум (30 страници)",
-        "Приоритетно редактиране - 24 часа",
-        "Втора консултация след сесията",
-        "USB с всички снимки",
-        "Права за търговска употреба"
+        t('legacyFeatSession'),
+        t('legacyFeatLocations'),
+        t('legacyFeatEditedPhotos'),
+        t('legacyFeatPrivateGallery'),
+        t('legacyFeatOriginalFiles'),
+        t('legacyFeatAlbum'),
+        t('legacyFeatPriorityEdit'),
+        t('legacyFeatSecondConsult'),
+        t('legacyFeatUSB'),
+        t('legacyFeatCommercialRights')
       ]
     }
   ];
@@ -77,11 +80,11 @@ const Investment = () => {
       name: "Engagement Session",
       price: "300",
       icon: "Heart",
-      description: "Романтична предсватбена фотосесия за двойки. Перфектна за запознаване преди сватбата.",
+      description: t('engagementDescription'),
       features: [
-        "1 час фотосесия",
-        "15 редактирани снимки",
-        "Онлайн галерия"
+        t('engagementFeatSession'),
+        t('engagementFeatEdited'),
+        t('engagementFeatGallery')
       ]
     },
     {
@@ -89,11 +92,11 @@ const Investment = () => {
       name: "Second Photographer",
       price: "200",
       icon: "Users",
-      description: "Допълнителен фотограф за по-голямо покритие и различни ъгли на събитието.",
+      description: t('secondPhotographerDescription'),
       features: [
-        "Пълно покритие",
-        "Различни перспективи",
-        "Повече кандидни моменти"
+        t('secondPhotographerFeatCoverage'),
+        t('secondPhotographerFeatAngles'),
+        t('secondPhotographerFeatCandids')
       ]
     },
     {
@@ -101,11 +104,11 @@ const Investment = () => {
       name: "Premium Album",
       price: "400",
       icon: "Book",
-      description: "Луксозен фотоалбум с твърди корици и професионален печат на най-добрите снимки.",
+      description: t('premiumAlbumDescription'),
       features: [
-        "50 страници",
-        "Премиум материали",
-        "Персонализиран дизайн"
+        t('premiumAlbumFeatPages'),
+        t('premiumAlbumFeatMaterials'),
+        t('premiumAlbumFeatDesign')
       ]
     },
     {
@@ -113,11 +116,11 @@ const Investment = () => {
       name: "Extended Gallery",
       price: "150",
       icon: "Clock",
-      description: "Удължаване на достъпа до онлайн галерията за допълнителни 6 месеца.",
+      description: t('extendedGalleryDescription'),
       features: [
-        "6 месеца допълнително",
-        "Неограничени изтегляния",
-        "Споделяне с близки"
+        t('extendedGalleryFeatMonths'),
+        t('extendedGalleryFeatDownloads'),
+        t('extendedGalleryFeatSharing')
       ]
     }
   ];
@@ -126,26 +129,26 @@ const Investment = () => {
   const valuePropositions = [
     {
       id: 1,
-      title: "Професионално оборудване",
-      description: "Използваме най-съвременната техника и оборудване за гарантиране на перфектно качество на всяка снимка.",
+      title: t('valueEquipmentTitle'),
+      description: t('valueEquipmentDesc'),
       icon: "Camera"
     },
     {
       id: 2,
-      title: "Артистична експертиза",
-      description: "Над 8 години опит в създаването на емоционални и художествени фотографии, които разказват вашата история.",
+      title: t('valueArtistryTitle'),
+      description: t('valueArtistryDesc'),
       icon: "Palette"
     },
     {
       id: 3,
-      title: "Персонализиран подход",
-      description: "Всяка сесия е уникална. Работим заедно, за да създадем снимки, които отразяват вашата индивидуалност.",
+      title: t('valuePersonalApproachTitle'),
+      description: t('valuePersonalApproachDesc'),
       icon: "User"
     },
     {
       id: 4,
-      title: "Дългосрочна стойност",
-      description: "Инвестицията в професионални снимки се увеличава с времето - спомените стават още по-ценни.",
+      title: t('valueLongTermValueTitle'),
+      description: t('valueLongTermValueDesc'),
       icon: "TrendingUp"
     }
   ];
@@ -154,24 +157,24 @@ const Investment = () => {
   const testimonials = [
     {
       id: 1,
-      name: "Мария Петрова",
-      session: "Сватбена фотосесия",
+      name: t('testimonialMariaName'),
+      session: t('testimonialMariaSession'),
       avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      quote: "Елена улови всеки емоционален момент от нашата сватба. Снимките са като произведения на изкуството - всяка разказва история. Инвестицията си заслужаваше напълно!"
+      quote: t('testimonialMariaQuote')
     },
     {
       id: 2,
-      name: "Анна Димитрова",
-      session: "Бременност",
+      name: t('testimonialAnnaName'),
+      session: t('testimonialAnnaSession'),
       avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-      quote: "Професионализмът и вниманието към детайлите на Елена са невероятни. Тя направи фотосесията по време на бременността ми незабравима. Резултатът надмина очакванията ми."
+      quote: t('testimonialAnnaQuote')
     },
     {
       id: 3,
-      name: "Георги Стоянов",
-      session: "Семейна фотосесия",
+      name: t('testimonialGeorgiName'),
+      session: t('testimonialGeorgiSession'),
       avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      quote: "Като семейство сме много доволни от работата на Елена. Тя успя да улови естествените моменти между нас и създаде спомени, които ще пазим завинаги."
+      quote: t('testimonialGeorgiQuote')
     }
   ];
 
@@ -199,9 +202,9 @@ const Investment = () => {
   return (
     <>
       <Helmet>
-        <title>Инвестиция в спомени - Elena Rose Photography</title>
-        <meta name="description" content="Открийте нашите фотографски пакети и направете инвестиция в запазването на вашите най-ценни моменти. Прозрачно ценообразуване и гъвкави опции за плащане." />
-        <meta name="keywords" content="фотография цени, сватбена фотография, семейна фотосесия, инвестиция спомени" />
+        <title>{t('investment')} - Elena Rose Photography</title>
+        <meta name="description" content={t('heroDescription')} />
+        <meta name="keywords" content={t('investmentKeywords')} />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Header />
@@ -211,14 +214,11 @@ const Investment = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-4xl mx-auto">
               <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-medium text-sophisticated-dark mb-6">
-                Инвестиция в 
-                <span className="text-transparent bg-gradient-to-r from-accent to-secondary bg-clip-text"> вечни спомени</span>
+                {t('heroTitle')}
               </h1>
-              
+
               <p className="text-lg md:text-xl text-hierarchy-secondary leading-relaxed mb-8 max-w-3xl mx-auto">
-                Професионалната фотография е повече от услуга - това е инвестиция в запазването на 
-                най-ценните моменти от вашия живот. Всеки пакет е създаден, за да предостави 
-                изключително качество и незабравимо изживяване.
+                {t('heroDescription')}
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
@@ -227,7 +227,7 @@ const Investment = () => {
                   className="bg-gradient-to-r from-accent to-secondary text-sophisticated-dark magnetic-hover pulse-cta"
                   onClick={handleBookConsultation}
                 >
-                  Безплатна консултация
+                  {t('bookConsultation')}
                 </Button>
                 
                 <Button
@@ -235,7 +235,7 @@ const Investment = () => {
                   className="elegant-hover"
                   onClick={() => document.getElementById('packages')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  Разгледайте пакетите
+                  {t('viewGallery')}
                 </Button>
               </div>
             </div>
@@ -254,11 +254,10 @@ const Investment = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="font-heading text-3xl md:text-4xl font-medium text-sophisticated-dark mb-6">
-                Изберете вашия пакет
+                {t('investment')}
               </h2>
               <p className="text-lg text-hierarchy-secondary leading-relaxed max-w-3xl mx-auto">
-                Всеки пакет е внимателно създаден, за да отговори на различни нужди и бюджети, 
-                като запазва високото качество и професионализъм във всяка услуга.
+                {t('heroDescription')}
               </p>
             </div>
 
@@ -275,14 +274,14 @@ const Investment = () => {
 
             <div className="text-center">
               <p className="text-hierarchy-secondary mb-4">
-                Не сте сигурни кой пакет е подходящ за вас?
+                {t('unsurePackageQuestion')}
               </p>
               <Button
                 variant="outline"
                 onClick={handleBookConsultation}
                 className="elegant-hover"
               >
-                Резервирайте безплатна консултация
+                {t('bookFreeConsultation')}
               </Button>
             </div>
           </div>
@@ -293,11 +292,10 @@ const Investment = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="font-heading text-3xl md:text-4xl font-medium text-sophisticated-dark mb-6">
-                Допълнителни услуги
+                {t('addOnTitle')}
               </h2>
               <p className="text-lg text-hierarchy-secondary leading-relaxed max-w-3xl mx-auto">
-                Персонализирайте вашето изживяване с нашите допълнителни услуги, 
-                създадени да обогатят и допълнят основния пакет.
+                {t('addOnDescription')}
               </p>
             </div>
 
@@ -314,11 +312,10 @@ const Investment = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="font-heading text-3xl md:text-4xl font-medium text-sophisticated-dark mb-6">
-                Защо да инвестирате в професионална фотография?
+                {t('valueTitle')}
               </h2>
               <p className="text-lg text-hierarchy-secondary leading-relaxed max-w-3xl mx-auto">
-                Разберете стойността зад всяка инвестиция и как професионалната фотография 
-                създава дългосрочна стойност за вас и вашето семейство.
+                {t('valueDescription')}
               </p>
             </div>
 
@@ -335,11 +332,10 @@ const Investment = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="font-heading text-3xl md:text-4xl font-medium text-sophisticated-dark mb-6">
-                Какво включва изживяването?
+                {t('includedTitle')}
               </h2>
               <p className="text-lg text-hierarchy-secondary leading-relaxed max-w-3xl mx-auto">
-                От първоначалната консултация до финалната доставка - ето пълният процес 
-                на работа с нас.
+                {t('includedDescription')}
               </p>
             </div>
 
@@ -349,10 +345,10 @@ const Investment = () => {
                   <Icon name="MessageCircle" size={24} className="text-sophisticated-dark" />
                 </div>
                 <h3 className="font-sophisticated font-medium text-sophisticated-dark mb-3">
-                  Първоначална консултация
+                  {t('includedConsultationTitle')}
                 </h3>
                 <p className="text-hierarchy-secondary leading-relaxed">
-                  Обсъждаме вашата визия, предпочитания и планираме детайлите на сесията.
+                  {t('includedConsultationDesc')}
                 </p>
               </div>
 
@@ -361,10 +357,10 @@ const Investment = () => {
                   <Icon name="Camera" size={24} className="text-sophisticated-dark" />
                 </div>
                 <h3 className="font-sophisticated font-medium text-sophisticated-dark mb-3">
-                  Професионална фотосесия
+                  {t('includedPhotoshootTitle')}
                 </h3>
                 <p className="text-hierarchy-secondary leading-relaxed">
-                  Използваме най-доброто оборудване и техники за създаване на перфектни снимки.
+                  {t('includedPhotoshootDesc')}
                 </p>
               </div>
 
@@ -373,10 +369,10 @@ const Investment = () => {
                   <Icon name="Edit" size={24} className="text-sophisticated-dark" />
                 </div>
                 <h3 className="font-sophisticated font-medium text-sophisticated-dark mb-3">
-                  Професионално редактиране
+                  {t('includedEditingTitle')}
                 </h3>
                 <p className="text-hierarchy-secondary leading-relaxed">
-                  Всяка снимка се обработва индивидуално за постигане на най-високо качество.
+                  {t('includedEditingDesc')}
                 </p>
               </div>
 
@@ -385,10 +381,10 @@ const Investment = () => {
                   <Icon name="Globe" size={24} className="text-sophisticated-dark" />
                 </div>
                 <h3 className="font-sophisticated font-medium text-sophisticated-dark mb-3">
-                  Онлайн галерия
+                  {t('includedGalleryTitle')}
                 </h3>
                 <p className="text-hierarchy-secondary leading-relaxed">
-                  Частна, защитена галерия за лесно споделяне и изтегляне на снимките.
+                  {t('includedGalleryDesc')}
                 </p>
               </div>
 
@@ -397,10 +393,10 @@ const Investment = () => {
                   <Icon name="Download" size={24} className="text-sophisticated-dark" />
                 </div>
                 <h3 className="font-sophisticated font-medium text-sophisticated-dark mb-3">
-                  Високо разделителна способност
+                  {t('includedHighResTitle')}
                 </h3>
                 <p className="text-hierarchy-secondary leading-relaxed">
-                  Всички снимки се доставят в пълна резолюция, готови за печат и споделяне.
+                  {t('includedHighResDesc')}
                 </p>
               </div>
 
@@ -409,10 +405,10 @@ const Investment = () => {
                   <Icon name="HeadphonesIcon" size={24} className="text-sophisticated-dark" />
                 </div>
                 <h3 className="font-sophisticated font-medium text-sophisticated-dark mb-3">
-                  Продължаваща подкрепа
+                  {t('includedSupportTitle')}
                 </h3>
                 <p className="text-hierarchy-secondary leading-relaxed">
-                  Винаги сме на разположение за въпроси и допълнителни услуги.
+                  {t('includedSupportDesc')}
                 </p>
               </div>
             </div>
@@ -431,11 +427,10 @@ const Investment = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="font-heading text-3xl md:text-4xl font-medium text-sophisticated-dark mb-6">
-                Какво казват нашите клиенти
+                {t('testimonialsTitle')}
               </h2>
               <p className="text-lg text-hierarchy-secondary leading-relaxed max-w-3xl mx-auto">
-                Историите на нашите клиенти говорят за стойността на инвестицията в 
-                професионална фотография и незабравимите спомени, които създаваме заедно.
+                {t('testimonialsDescription')}
               </p>
             </div>
 
@@ -451,11 +446,10 @@ const Investment = () => {
         <section className="py-20 bg-warm-section">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="font-heading text-3xl md:text-4xl font-medium text-sophisticated-dark mb-6">
-              Готови да направите инвестицията?
+              {t('finalCtaTitle')}
             </h2>
             <p className="text-lg text-hierarchy-secondary leading-relaxed mb-8 max-w-2xl mx-auto">
-              Нека започнем разговора за вашите мечти и как можем да ги превърнем в 
-              красиви, вечни спомени. Първата консултация е винаги безплатна.
+              {t('finalCtaDescription')}
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
@@ -464,7 +458,7 @@ const Investment = () => {
                 className="bg-gradient-to-r from-accent to-secondary text-sophisticated-dark magnetic-hover pulse-cta"
                 onClick={handleBookConsultation}
               >
-                Резервирайте консултация
+                {t('bookFreeConsultation')}
               </Button>
               
               <Button
@@ -472,22 +466,22 @@ const Investment = () => {
                 className="elegant-hover"
                 onClick={() => navigate('/gallery')}
               >
-                Разгледайте галерията
+                {t('viewGallery')}
               </Button>
             </div>
             
             <div className="mt-8 flex items-center justify-center space-x-6 text-sm text-hierarchy-secondary">
               <div className="flex items-center space-x-2">
                 <Icon name="Shield" size={16} className="text-accent" />
-                <span>100% гаранция за качество</span>
+                  <span>{t('qualityGuarantee')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Icon name="Clock" size={16} className="text-accent" />
-                <span>Бърза доставка</span>
+                  <span>{t('fastDelivery')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Icon name="Heart" size={16} className="text-accent" />
-                <span>Персонализиран подход</span>
+                  <span>{t('personalizedApproach')}</span>
               </div>
             </div>
           </div>
@@ -512,8 +506,7 @@ const Investment = () => {
               </div>
               
               <p className="text-white/70 mb-6 max-w-md mx-auto">
-                Създаваме красиви спомени, които ще пазите завинаги. 
-                Всяка снимка разказва уникална история.
+                {t('footerTagline')}
               </p>
               
               <div className="flex items-center justify-center space-x-6 mb-6">
@@ -533,7 +526,7 @@ const Investment = () => {
               
               <div className="border-t border-white/20 pt-6">
                 <p className="text-white/50 text-sm">
-                  © {new Date()?.getFullYear()} Elena Rose Photography. Всички права запазени.
+                  © {new Date()?.getFullYear()} Elena Rose Photography. {t('allRightsReserved')}.
                 </p>
               </div>
             </div>

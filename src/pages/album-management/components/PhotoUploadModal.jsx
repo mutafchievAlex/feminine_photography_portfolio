@@ -6,6 +6,7 @@ export default function PhotoUploadModal({ albumId, onClose, onUploadComplete })
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
+  const fileInputRef = React.useRef(null);
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e?.target?.files);
@@ -56,6 +57,7 @@ export default function PhotoUploadModal({ albumId, onClose, onUploadComplete })
       await onUploadComplete();
       onClose();
     } catch (err) {
+      console.error('Photo upload error:', err);
       setError(err?.message || 'Failed to upload photos');
     } finally {
       setUploading(false);
@@ -98,12 +100,17 @@ export default function PhotoUploadModal({ albumId, onClose, onUploadComplete })
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
             <div className="mt-4">
-              <label htmlFor="file-upload" className="cursor-pointer">
-                <span className="mt-2 text-base text-indigo-600 hover:text-indigo-700 font-medium">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="mt-2 text-base text-indigo-600 hover:text-indigo-700 font-medium"
+                >
                   Select files to upload
-                </span>
+                </button>
                 <input
                   id="file-upload"
+                  ref={fileInputRef}
                   type="file"
                   multiple
                   accept="image/*"
@@ -111,7 +118,7 @@ export default function PhotoUploadModal({ albumId, onClose, onUploadComplete })
                   className="hidden"
                   disabled={uploading}
                 />
-              </label>
+              </div>
               <p className="mt-1 text-sm text-gray-500">
                 PNG, JPG, WEBP up to 10MB each
               </p>

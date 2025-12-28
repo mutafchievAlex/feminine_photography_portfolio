@@ -1,7 +1,9 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const ConsultationProcess = () => {
+  const { t } = useLanguage();
   const processSteps = [
     {
       id: 1,
@@ -62,13 +64,10 @@ const ConsultationProcess = () => {
       <div className="bg-surface-elevation rounded-xl shadow-soft p-6 lg:p-8">
         <div className="text-center mb-8">
           <h3 className="text-elegant text-2xl text-sophisticated-dark mb-3">
-            Процесът на консултация / Consultation Process
+            {t('consultationProcess')}
           </h3>
           <p className="text-sophisticated text-hierarchy-secondary max-w-2xl mx-auto">
-            Всяка консултация е внимателно планирана, за да разберем вашата визия и да създадем перфектното изживяване
-          </p>
-          <p className="text-sophisticated text-hierarchy-secondary max-w-2xl mx-auto mt-2">
-            Each consultation is carefully planned to understand your vision and create the perfect experience
+            {t('consultationProcessDescription')}
           </p>
         </div>
 
@@ -108,7 +107,7 @@ const ConsultationProcess = () => {
       <div className="bg-warm-section rounded-xl shadow-soft p-6 lg:p-8">
         <div className="text-center mb-6">
           <h3 className="text-elegant text-xl text-sophisticated-dark mb-2">
-            Какво да очаквате / What to Expect
+            {t('whatToExpect')}
           </h3>
         </div>
 
@@ -132,10 +131,10 @@ const ConsultationProcess = () => {
       <div className="bg-surface-elevation rounded-xl shadow-soft p-6 lg:p-8">
         <div className="text-center mb-6">
           <h3 className="text-elegant text-xl text-sophisticated-dark mb-2">
-            Времева линия / Timeline
+            {t('timeline')}
           </h3>
           <p className="text-sophisticated text-hierarchy-secondary">
-            От консултация до готови снимки / From consultation to final images
+            {t('timelineDescription')}
           </p>
         </div>
 

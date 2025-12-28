@@ -1,56 +1,41 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useBookings } from '../../../hooks/useBookings';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const UpcomingSchedule = () => {
+  const { t } = useLanguage();
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const { data: bookings = [], isLoading, isError } = useBookings({ retry: 1 });
 
-  const upcomingEvents = [
-    {
-      id: 1,
-      title: "Сватбена фотосесия",
-      client: "Мария и Георги Петрови",
-      date: "2025-09-05",
-      time: "14:00 - 20:00",
-      location: "Хотел Маринела, София",
-      type: "wedding",
-      status: "confirmed",
-      notes: "Церемония в 15:00, прием в 18:00"
-    },
-    {
-      id: 2,
-      title: "Матернитетна сесия",
-      client: "Анна Димитрова",
-      date: "2025-09-06",
-      time: "10:30 - 12:00",
-      location: "Студио, Пловдив",
-      type: "maternity",
-      status: "confirmed",
-      notes: "Първа бременност, 32 седмици"
-    },
-    {
-      id: 3,
-      title: "Корпоративни портрети",
-      client: "ТехКомпани ООД",
-      date: "2025-09-07",
-      time: "09:00 - 11:00",
-      location: "Офис на клиента, София",
-      type: "corporate",
-      status: "pending_confirmation",
-      notes: "15 служители, бизнес дрескод"
-    },
-    {
-      id: 4,
-      title: "Семейна фотосесия",
-      client: "Семейство Георгиеви",
-      date: "2025-09-08",
-      time: "16:00 - 18:00",
-      location: "Борисова градина, София",
-      type: "family",
-      status: "confirmed",
-      notes: "2 деца (5 и 8 години), есенна тематика"
-    }
-  ];
+  // derive upcoming events from bookings (next 30 days)
+  const upcomingEvents = React.useMemo(() => {
+    if (!bookings || bookings?.length === 0) return [];
+    
+    return (bookings || [])
+      .filter(b => b?.preferredDate)
+      .map(b => ({
+        id: b.id,
+        title: b.sessionType ? `${b.sessionType.charAt(0).toUpperCase()}${b.sessionType.slice(1)} фотосесия` : 'Сесия',
+        client: b.fullName || (b.client && b.client.full_name) || 'Клиент',
+        date: b.preferredDate,
+        time: '',
+        location: b.location || '',
+        type: b.sessionType,
+        status: b.status,
+        notes: b.adminNotes || ''
+      }))
+      .filter(ev => {
+        const eventDate = new Date(ev.date);
+        const today = new Date();
+        const diffTime = eventDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 && diffDays <= 30;
+      })
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(0, 10);
+  }, [bookings]);
 
   const getEventTypeIcon = (type) => {
     const icons = {
@@ -124,12 +109,12 @@ const UpcomingSchedule = () => {
       <div className="px-6 py-4 border-b border-border">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-heading font-semibold text-sophisticated-dark">
-            Предстоящи сесии
+            {t('upcomingSessions')}
           </h3>
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm">
               <Icon name="Calendar" size={16} className="mr-2" />
-              Календар
+              {t('booking')}
             </Button>
             <Button variant="ghost" size="sm">
               <Icon name="Plus" size={16} />
@@ -203,12 +188,12 @@ const UpcomingSchedule = () => {
         ))}
       </div>
       <div className="px-6 py-4 border-t border-border bg-surface-elevation rounded-b-lg">
-        <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
           <p className="text-sm text-hierarchy-secondary">
-            4 предстоящи сесии тази седмица
+            {upcomingEvents?.length || 0} {t('upcomingSessionsInfo')}
           </p>
           <Button variant="outline" size="sm">
-            Виж пълния календар
+            {t('learnMore')}
             <Icon name="ArrowRight" size={16} className="ml-2" />
           </Button>
         </div>

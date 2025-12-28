@@ -18,23 +18,59 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.fullName?.trim()) {
+      errors.fullName = 'Името е задължително';
+    }
+
+    if (!formData.email?.trim()) {
+      errors.email = 'Имейлът е задължителен';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Невалиден имейл адрес';
+    }
+
+    if (formData.password?.length < 6) {
+      errors.password = 'Паролата трябва да бъде поне 6 символа';
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Паролите не съвпадат';
+    }
+
+    if (formData.phone && !/^[\d\s+\-()]+$/.test(formData.phone)) {
+      errors.phone = 'Невалиден телефонен номер';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError('');
+    
+    // Clear validation error for this field
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
     setError('');
 
-    if (formData?.password !== formData?.confirmPassword) {
-      setError('Паролите не съвпадат');
-      return;
-    }
-
-    if (formData?.password?.length < 6) {
-      setError('Паролата трябва да бъде поне 6 символа');
+    if (!validateForm()) {
+      setError('Моля коригирайте грешките в формата');
       return;
     }
 
@@ -64,13 +100,15 @@ const SignUp = () => {
                 Регистрацията е успешна!
               </h2>
               <p className="text-hierarchy-secondary mb-6">
-                Моля проверете вашия имейл за потвърждаване на акаунта.
+                Вашият акаунт е създаден. Можете да влезете с вашите учетни данни.
               </p>
               <Button
                 variant="default"
                 fullWidth
                 onClick={() => navigate('/signin')}
+                className="bg-gradient-to-r from-accent to-secondary"
               >
+                <Icon name="LogIn" size={20} className="mr-2" />
                 Към вход
               </Button>
             </div>
@@ -95,17 +133,21 @@ const SignUp = () => {
 
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800 text-sm">{error}</p>
+              <p className="text-red-800 text-sm flex items-start gap-2">
+                <Icon name="AlertCircle" size={16} className="mt-0.5 flex-shrink-0" />
+                <span>{error}</span>
+              </p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <Input
               label="Пълно име"
               type="text"
               placeholder="Вашето име"
               value={formData?.fullName}
               onChange={(e) => handleChange('fullName', e?.target?.value)}
+              error={validationErrors.fullName}
               required
             />
 
@@ -115,34 +157,60 @@ const SignUp = () => {
               placeholder="your@email.com"
               value={formData?.email}
               onChange={(e) => handleChange('email', e?.target?.value)}
+              error={validationErrors.email}
               required
             />
 
             <Input
-              label="Телефон"
+              label="Телефон (опционално)"
               type="tel"
-              placeholder="+359 XXX XXX XXX"
+              placeholder="+359 89 123 4567"
               value={formData?.phone}
               onChange={(e) => handleChange('phone', e?.target?.value)}
+              error={validationErrors.phone}
             />
 
-            <Input
-              label="Парола"
-              type="password"
-              placeholder="Минимум 6 символа"
-              value={formData?.password}
-              onChange={(e) => handleChange('password', e?.target?.value)}
-              required
-            />
+            <div>
+              <div className="relative">
+                <Input
+                  label="Парола"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Минимум 6 символа"
+                  value={formData?.password}
+                  onChange={(e) => handleChange('password', e?.target?.value)}
+                  error={validationErrors.password}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-10 text-hierarchy-secondary hover:text-sophisticated-dark"
+                >
+                  <Icon name={showPassword ? 'EyeOff' : 'Eye'} size={18} />
+                </button>
+              </div>
+            </div>
 
-            <Input
-              label="Потвърдете паролата"
-              type="password"
-              placeholder="Повторете паролата"
-              value={formData?.confirmPassword}
-              onChange={(e) => handleChange('confirmPassword', e?.target?.value)}
-              required
-            />
+            <div>
+              <div className="relative">
+                <Input
+                  label="Потвърдете паролата"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Повторете паролата"
+                  value={formData?.confirmPassword}
+                  onChange={(e) => handleChange('confirmPassword', e?.target?.value)}
+                  error={validationErrors.confirmPassword}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-10 text-hierarchy-secondary hover:text-sophisticated-dark"
+                >
+                  <Icon name={showConfirmPassword ? 'EyeOff' : 'Eye'} size={18} />
+                </button>
+              </div>
+            </div>
 
             <Button
               type="submit"
@@ -150,7 +218,7 @@ const SignUp = () => {
               size="lg"
               fullWidth
               loading={loading}
-              className="bg-gradient-to-r from-accent to-secondary"
+              className="bg-gradient-to-r from-accent to-secondary mt-6"
             >
               {loading ? 'Регистрация...' : (
                 <>
@@ -165,7 +233,7 @@ const SignUp = () => {
             <button
               type="button"
               onClick={() => navigate('/signin')}
-              className="text-accent hover:text-secondary text-sm font-medium"
+              className="text-accent hover:text-secondary text-sm font-medium transition-colors"
             >
               Вече имате акаунт? Влезте
             </button>

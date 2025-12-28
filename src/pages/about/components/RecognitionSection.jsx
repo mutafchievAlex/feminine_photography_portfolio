@@ -1,50 +1,53 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 
 const RecognitionSection = () => {
+  const { t } = useLanguage();
+
   const awards = [
     {
       year: "2024",
       title: "Photographer of the Year",
       organization: "Bulgarian Wedding Photography Association",
-      category: "Сватбена фотография"
+      category: t('weddingPhotographyCategory')
     },
     {
       year: "2023",
       title: "Excellence in Portrait Photography",
       organization: "European Photography Awards",
-      category: "Портретна фотография"
+      category: t('portraitPhotographyCategory')
     },
     {
       year: "2023",
       title: "Best Newcomer",
       organization: "International Wedding Photography Awards",
-      category: "Международно признание"
+      category: t('internationalRecognition')
     },
     {
       year: "2022",
       title: "Creative Vision Award",
       organization: "Sofia Photography Festival",
-      category: "Творческа фотография"
+      category: t('creativePhotography')
     }
   ];
 
   const publications = [
     {
-      title: "Сватба & Стил",
-      description: "Интервю за тенденциите в сватбената фотография",
-      date: "Март 2024"
+      title: t('weddingStyleMagazine'),
+      description: t('weddingStyleDescription'),
+      date: t('march2024')
     },
     {
-      title: "Bulgarian Photography Magazine",
-      description: "Портфолио представяне - 8 страници",
-      date: "Януари 2024"
+      title: t('bulgarianPhotoMagazine'),
+      description: t('bulgarianPhotoDescription'),
+      date: t('january2024')
     },
     {
-      title: "Wedding Bells Bulgaria",
-      description: "Топ 10 сватбени фотографи в България",
-      date: "Декември 2023"
+      title: t('weddingBellsBulgaria'),
+      description: t('weddingBellsDescription'),
+      date: t('december2023')
     }
   ];
 
@@ -68,19 +71,19 @@ const RecognitionSection = () => {
 
   const testimonialHighlights = [
     {
-      quote: "Елена улови всички емоции от нашия специален ден. Снимките са като от приказка!",
-      author: "Мария и Петър",
-      occasion: "Сватба в Пловдив"
+      quote: t('testimonial1Quote'),
+      author: t('testimonial1Author'),
+      occasion: t('testimonial1Occasion')
     },
     {
-      quote: "Професионализмът и творческият подход на Елена надминаха всичките ни очаквания.",
-      author: "Анна Георгиева",
-      occasion: "Семейна фотосесия"
+      quote: t('testimonial2Quote'),
+      author: t('testimonial2Author'),
+      occasion: t('testimonial2Occasion')
     },
     {
-      quote: "Работата с Елена беше удоволствие. Тя знае как да те накара да се чувстваш комфортно.",
-      author: "Димитър Стоянов",
-      occasion: "Корпоративни портрети"
+      quote: t('testimonial3Quote'),
+      author: t('testimonial3Author'),
+      occasion: t('testimonial3Occasion')
     }
   ];
 
@@ -90,18 +93,17 @@ const RecognitionSection = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-heading text-sophisticated-dark mb-6">
-            Признание и постижения
+            {t('recognitionTitle')}
           </h2>
           <p className="text-lg text-hierarchy-secondary max-w-3xl mx-auto">
-            Благодарна съм за признанието, което получавам от колеги и клиенти. 
-            Всяка награда е мотивация да продължавам да се развивам и да създавам още по-красиви снимки.
+            {t('recognitionDescription')}
           </p>
         </div>
 
         {/* Awards Section */}
         <div className="mb-20">
           <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
-            Награди и отличия
+            {t('awardsTitle')}
           </h3>
           
           <div className="grid md:grid-cols-2 gap-8">
@@ -135,7 +137,7 @@ const RecognitionSection = () => {
         {/* Publications & Media */}
         <div className="mb-20">
           <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
-            Публикации и медии
+            {t('publicationsTitle')}
           </h3>
           
           <div className="grid lg:grid-cols-3 gap-8">
@@ -159,7 +161,7 @@ const RecognitionSection = () => {
         {/* Education & Certifications */}
         <div className="mb-20">
           <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
-            Образование и сертификати
+            {t('educationTitle')}
           </h3>
           
           <div className="bg-feminine-accent p-8 rounded-3xl">
@@ -187,7 +189,7 @@ const RecognitionSection = () => {
         {/* Client Testimonials */}
         <div className="mb-20">
           <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
-            Какво казват клиентите
+            {t('testimonialsTitle')}
           </h3>
           
           <div className="grid lg:grid-cols-3 gap-8">
@@ -215,7 +217,7 @@ const RecognitionSection = () => {
         {/* Professional Memberships */}
         <div className="text-center">
           <h3 className="text-2xl font-heading text-sophisticated-dark mb-8">
-            Професионални членства
+            {t('professionalMemberships')}
           </h3>
           
           <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">

@@ -1,73 +1,75 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const LocationsSection = () => {
+  const { t } = useLanguage();
   const favoriteLocations = [
     {
-      name: "Стария град, Пловдив",
-      description: "Романтичните калдъръмени улички и възрожденската архитектура създават перфектна атмосфера за сватбени и портретни снимки.",
+      name: t('oldTownPlovdiv'),
+      description: t('oldTownPlovdivDescription'),
       image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      specialty: "Сватби и портрети",
-      bestTime: "Златен час"
+      specialty: t('oldTownPlovdivSpecialty'),
+      bestTime: t('oldTownPlovdivBestTime')
     },
     {
-      name: "Боянската църква, София",
-      description: "Историческото наследство и уникалната архитектура правят това място идеално за елегантни фотосесии.",
+      name: t('boyanaChurch'),
+      description: t('boyanaChurchDescription'),
       image: "https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      specialty: "Културни портрети",
-      bestTime: "Сутрин"
+      specialty: t('boyanaChurchSpecialty'),
+      bestTime: t('boyanaChurchBestTime')
     },
     {
-      name: "Витоша планина",
-      description: "Природната красота на планината предлага безкрайни възможности за романтични и приключенски фотосесии.",
+      name: t('vitoshaMountain'),
+      description: t('vitoshaMountainDescription'),
       image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      specialty: "Природни сесии",
-      bestTime: "Изгрев/залез"
+      specialty: t('vitoshaMountainSpecialty'),
+      bestTime: t('vitoshaMountainBestTime')
     },
     {
-      name: "Морската градина, Варна",
-      description: "Комбинацията от море, градина и архитектура създава разнообразни възможности за всеки тип фотосесия.",
+      name: t('seaGardenVarna'),
+      description: t('seaGardenVarnaDescription'),
       image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      specialty: "Семейни сесии",
-      bestTime: "Следобед"
+      specialty: t('seaGardenVarnaSpecialty'),
+      bestTime: t('seaGardenVarnaBestTime')
     },
     {
-      name: "Рилски манастир",
-      description: "Духовната атмосфера и величествената архитектура правят това място специално за дълбоки, емоционални портрети.",
+      name: t('rilaMonastery'),
+      description: t('rilaMonasteryDescription'),
       image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      specialty: "Духовни портрети",
-      bestTime: "Рано сутрин"
+      specialty: t('rilaMonasterySpecialty'),
+      bestTime: t('rilaMonasteryBestTime')
     },
     {
-      name: "Созопол",
-      description: "Старинният морски град с каменните къщи и морската романтика е идеален за интимни сватбени сесии.",
+      name: t('sozopol'),
+      description: t('sozopolDescription'),
       image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      specialty: "Морски сватби",
-      bestTime: "Залез"
+      specialty: t('sozopolSpecialty'),
+      bestTime: t('sozopolBestTime')
     }
   ];
 
   const locationServices = [
     {
       icon: "MapPin",
-      title: "Локално познание",
-      description: "Познавам най-добрите места и времена за снимане в цяла България"
+      title: t('localKnowledge'),
+      description: t('localKnowledgeDescription')
     },
     {
       icon: "Clock",
-      title: "Планиране на времето",
-      description: "Оптимизирам времето според светлината и атмосферата на всяка локация"
+      title: t('timePlanning'),
+      description: t('timePlanningDescription')
     },
     {
       icon: "Camera",
-      title: "Адаптивна техника",
-      description: "Използвам подходящо оборудване според спецификите на всяко място"
+      title: t('adaptiveTechnique'),
+      description: t('adaptiveTechniqueDescription')
     },
     {
       icon: "Heart",
-      title: "Емоционална връзка",
-      description: "Помагам да изберете място, което има специално значение за вас"
+      title: t('emotionalConnection'),
+      description: t('emotionalConnectionDescription')
     }
   ];
 
@@ -77,11 +79,10 @@ const LocationsSection = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-heading text-sophisticated-dark mb-6">
-            Любими локации в България
+            {t('favoriteLocations')}
           </h2>
           <p className="text-lg text-hierarchy-secondary max-w-3xl mx-auto">
-            Всяко място има своя душа и история. Ето някои от моите любими локации, 
-            където създавам най-красивите снимки заедно с клиентите си.
+            {t('locationsDescription')}
           </p>
         </div>
 
@@ -126,7 +127,7 @@ const LocationsSection = () => {
         {/* Services */}
         <div className="mb-20">
           <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
-            Как работя с локации
+            {t('howIWorkLocations')}
           </h3>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -151,29 +152,20 @@ const LocationsSection = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h3 className="text-2xl font-heading text-sophisticated-dark mb-6">
-                Планиране на локацията
+                {t('locationPlanning')}
               </h3>
               <div className="space-y-4 text-hierarchy-secondary">
-                <p>
-                  Избирането на правилната локация е ключово за успеха на всяка фотосесия. 
-                  Работя с вас, за да намерим мястото, което най-добре отговаря на вашата визия и стил.
-                </p>
-                <p>
-                  Имам опит с фотосесии в цяла България - от планински върхове до морски брегове, 
-                  от исторически центрове до модерни градски пространства.
-                </p>
-                <p>
-                  За всяка локация подготвям детайлен план, включващ най-добрите времена за снимане, 
-                  необходимите разрешения и логистичните детайли.
-                </p>
+                <p>{t('locationPlanningParagraph1')}</p>
+                <p>{t('locationPlanningParagraph2')}</p>
+                <p>{t('locationPlanningParagraph3')}</p>
               </div>
               
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <button className="bg-sophisticated-dark text-background px-6 py-3 rounded-full font-sophisticated elegant-hover">
-                  Обсъдете локация
+                  {t('discussLocation')}
                 </button>
                 <button className="border border-sophisticated-dark text-sophisticated-dark px-6 py-3 rounded-full font-sophisticated elegant-hover">
-                  Вижте галерията
+                  {t('viewGalleryButton')}
                 </button>
               </div>
             </div>
@@ -182,7 +174,7 @@ const LocationsSection = () => {
               <div className="aspect-square rounded-2xl overflow-hidden shadow-medium">
                 <Image
                   src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  alt="Планиране на фотосесия"
+                  alt={t('locationPlanningAlt')}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -191,7 +183,7 @@ const LocationsSection = () => {
               <div className="absolute -bottom-6 -right-6 bg-background p-6 rounded-2xl shadow-strong">
                 <div className="text-center">
                   <div className="text-2xl font-heading text-sophisticated-dark">50+</div>
-                  <div className="text-sm text-hierarchy-secondary">Локации</div>
+                  <div className="text-sm text-hierarchy-secondary">{t('locationsCount')}</div>
                 </div>
               </div>
             </div>
@@ -201,7 +193,7 @@ const LocationsSection = () => {
         {/* Map Section */}
         <div className="mt-20">
           <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-8">
-            Покритие в България
+            {t('coverageInBulgaria')}
           </h3>
           
           <div className="bg-background rounded-2xl p-6 shadow-medium">
@@ -210,7 +202,7 @@ const LocationsSection = () => {
                 width="100%"
                 height="100%"
                 loading="lazy"
-                title="Покритие в България"
+                title={t('coverageInBulgaria')}
                 referrerPolicy="no-referrer-when-downgrade"
                 src="https://www.google.com/maps?q=42.7339,25.4858&z=7&output=embed"
                 className="w-full h-full"
@@ -219,7 +211,7 @@ const LocationsSection = () => {
             
             <div className="mt-6 text-center">
               <p className="text-hierarchy-secondary">
-                Работя в цяла България. За локации извън София се прилага допълнителна такса за пътуване.
+                {t('coverageNote')}
               </p>
             </div>
           </div>

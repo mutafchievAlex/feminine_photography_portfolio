@@ -1,30 +1,32 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const PaymentOptions = ({ onBookConsultation }) => {
+  const { t } = useLanguage();
   const paymentPlans = [
     {
       id: 1,
       name: "Full Payment",
-      discount: "5% отстъпка",
-      description: "Платете пълната сума при резервация и получете 5% отстъпка",
+      discount: t('fullPaymentDiscount'),
+      description: t('fullPaymentDescription'),
       icon: "CreditCard",
       popular: false
     },
     {
       id: 2,
       name: "Payment Plan",
-      discount: "Без лихви",
-      description: "50% депозит при резервация, останалата сума 7 дни преди сесията",
+      discount: t('paymentPlanDiscount'),
+      description: t('paymentPlanDescription'),
       icon: "Calendar",
       popular: true
     },
     {
       id: 3,
       name: "Extended Plan",
-      discount: "Гъвкавост",
-      description: "30% депозит, 40% преди сесията, 30% при доставка на снимките",
+      discount: t('extendedPlanDiscount'),
+      description: t('extendedPlanDescription'),
       icon: "Clock",
       popular: false
     }
@@ -34,11 +36,10 @@ const PaymentOptions = ({ onBookConsultation }) => {
     <div className="bg-warm-section rounded-2xl p-8">
       <div className="text-center mb-8">
         <h3 className="font-heading text-2xl font-medium text-sophisticated-dark mb-4">
-          Опции за плащане
+          {t('paymentOptions')}
         </h3>
         <p className="text-hierarchy-secondary leading-relaxed max-w-2xl mx-auto">
-          Разбираме, че професионалната фотография е инвестиция. Предлагаме гъвкави опции за плащане, 
-          за да направим услугите ни достъпни за всеки бюджет.
+          {t('paymentOptionsDescription')}
         </p>
       </div>
       <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -52,7 +53,7 @@ const PaymentOptions = ({ onBookConsultation }) => {
             {plan?.popular && (
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                 <span className="bg-accent text-sophisticated-dark text-xs font-sophisticated px-3 py-1 rounded-full">
-                  Най-популярен
+                  {t('mostPopular')}
                 </span>
               </div>
             )}
@@ -86,7 +87,7 @@ const PaymentOptions = ({ onBookConsultation }) => {
           className="bg-gradient-to-r from-accent to-secondary text-sophisticated-dark magnetic-hover"
           onClick={onBookConsultation}
         >
-          Обсъдете опциите за плащане
+          {t('discussPaymentOptions')}
         </Button>
       </div>
     </div>

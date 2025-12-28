@@ -63,7 +63,8 @@
   "scripts": {
     "start": "vite",
     "build": "vite build --sourcemap",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "dev:autorestart": "nodemon --watch src --watch vite.config.mjs --ext js,jsx,mjs,ts,tsx,json --exec \"npm run start -- --port 5173\""
   },
   "eslintConfig": {
     "extends": [
@@ -94,6 +95,7 @@
     "postcss": "8.4.8",
     "tailwindcss": "3.4.6",
     "vite": "5.0.0",
-    "vite-tsconfig-paths": "3.6.0"
+    "vite-tsconfig-paths": "3.6.0",
+    "nodemon": "2.0.22"
   }
 }

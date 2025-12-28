@@ -1,7 +1,9 @@
 import React from 'react';
 import Image from '../../../components/AppImage';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const HeroSection = () => {
+  const { t } = useLanguage();
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gallery-canvas overflow-hidden">
       {/* Background Pattern */}
@@ -17,36 +19,34 @@ const HeroSection = () => {
           <div className="space-y-8 text-center lg:text-left">
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading text-sophisticated-dark leading-tight">
-                Здравейте, аз съм
-                <span className="block text-accent font-medium">Елена Роуз</span>
+                {t('helloIAm')}
+                <span className="block text-accent font-medium">{t('photographerName')}</span>
               </h1>
               <p className="text-xl md:text-2xl text-hierarchy-secondary font-sophisticated">
-                Фотограф със страст към улавянето на автентични моменти и емоции
+                {t('heroSubtitle')}
               </p>
             </div>
             
             <div className="prose prose-lg text-hierarchy-secondary max-w-none">
               <p>
-                Вече повече от 8 години се занимавам с фотография, специализирайки се в сватбена, 
-                семейна и портретна фотография. Моята мисия е да създавам изображения, които разказват 
-                истории и съхраняват най-ценните ви спомени завинаги.
+                {t('heroProseText')}
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <div className="text-center">
                 <div className="text-3xl font-heading text-sophisticated-dark">500+</div>
-                <div className="text-sm text-hierarchy-secondary">Щастливи клиенти</div>
+                <div className="text-sm text-hierarchy-secondary">{t('happyClients')}</div>
               </div>
               <div className="hidden sm:block w-px bg-border"></div>
               <div className="text-center">
                 <div className="text-3xl font-heading text-sophisticated-dark">8+</div>
-                <div className="text-sm text-hierarchy-secondary">Години опит</div>
+                <div className="text-sm text-hierarchy-secondary">{t('yearsExperience')}</div>
               </div>
               <div className="hidden sm:block w-px bg-border"></div>
               <div className="text-center">
                 <div className="text-3xl font-heading text-sophisticated-dark">15+</div>
-                <div className="text-sm text-hierarchy-secondary">Награди</div>
+                <div className="text-sm text-hierarchy-secondary">{t('awards')}</div>
               </div>
             </div>
           </div>
@@ -58,7 +58,7 @@ const HeroSection = () => {
               <div className="relative bg-background rounded-2xl overflow-hidden shadow-medium elegant-hover">
                 <Image
                   src="https://images.unsplash.com/photo-1494790108755-2616c9c1e5e5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-                  alt="Елена Роуз - Професионален фотограф"
+                  alt={`${t('photographerName')} - ${t('professionalPhotographer')}`}
                   className="w-full h-full object-cover"
                 />
               </div>

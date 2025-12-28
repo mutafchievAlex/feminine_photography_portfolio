@@ -1,8 +1,10 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 import { useBookingStats } from '../../../hooks/useBookings';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 export default function DashboardStats() {
+  const { t } = useLanguage();
   const { data: stats, isLoading, isError, error } = useBookingStats();
 
   // Loading state
@@ -26,7 +28,7 @@ export default function DashboardStats() {
         <div className="flex items-center space-x-3">
           <Icon name="AlertTriangle" size={24} className="text-red-600" />
           <div>
-            <h3 className="text-red-800 font-medium">Грешка при зареждане на статистика</h3>
+            <h3 className="text-red-800 font-medium">{t('loadingStats')}</h3>
             <p className="text-red-600 text-sm">{error?.message}</p>
           </div>
         </div>
@@ -39,7 +41,7 @@ export default function DashboardStats() {
     return (
       <div className="bg-background rounded-lg shadow-soft border border-border p-12 text-center">
         <Icon name="TrendingUp" size={48} className="mx-auto text-gray-300 mb-4" />
-        <p className="text-hierarchy-secondary">Няма налична статистика</p>
+        <p className="text-hierarchy-secondary">{t('noStatsAvailable')}</p>
       </div>
     );
   }

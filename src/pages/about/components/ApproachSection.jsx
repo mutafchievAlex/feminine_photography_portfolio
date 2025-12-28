@@ -1,60 +1,62 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const ApproachSection = () => {
+  const { t } = useLanguage();
   const approachPrinciples = [
     {
       icon: "Heart",
-      title: "Автентичност",
-      description: "Вярвам в улавянето на истински емоции и моменти, не в изкуствени пози. Всяка снимка трябва да разказва истинската ви история."
+      title: t('authenticity'),
+      description: t('authenticityDescription')
     },
     {
       icon: "Users",
-      title: "Сътрудничество",
-      description: "Работя в партньорство с клиентите си, създавайки комфортна атмосфера където можете да бъдете себе си пред камерата."
+      title: t('collaboration'),
+      description: t('collaborationDescription')
     },
     {
       icon: "Sparkles",
-      title: "Внимание към детайлите",
-      description: "От светлината до композицията, всеки елемент е важен за създаването на перфектната снимка."
+      title: t('attentionToDetail'),
+      description: t('attentionToDetailDescription')
     },
     {
       icon: "Clock",
-      title: "Търпение",
-      description: "Най-добрите моменти не могат да бъдат принудени. Чакам подходящия момент за всяка снимка."
+      title: t('patience'),
+      description: t('patienceDescription')
     }
   ];
 
   const processSteps = [
     {
       step: "01",
-      title: "Първоначална консултация",
-      description: "Запознаваме се и обсъждаме вашите идеи, очаквания и визия за фотосесията.",
-      duration: "30-60 мин"
+      title: t('initialConsultation'),
+      description: t('initialConsultationDescription'),
+      duration: t('duration3060min')
     },
     {
       step: "02", 
-      title: "Планиране",
-      description: "Избираме локация, обсъждаме стил и подготвяме всички детайли за перфектната сесия.",
-      duration: "1-2 седмици"
+      title: t('planning'),
+      description: t('planningDescription'),
+      duration: t('duration12weeks')
     },
     {
       step: "03",
-      title: "Фотосесията",
-      description: "Създаваме магията заедно в релаксирана и творческа атмосфера.",
-      duration: "1-4 часа"
+      title: t('photoshoot'),
+      description: t('photoshootDescription'),
+      duration: t('duration14hours')
     },
     {
       step: "04",
-      title: "Обработка",
-      description: "Професионално редактиране на снимките с внимание към всеки детайл.",
-      duration: "2-3 седмици"
+      title: t('processing'),
+      description: t('processingDescription'),
+      duration: t('duration23weeks')
     },
     {
       step: "05",
-      title: "Доставка",
-      description: "Получавате готовите снимки в онлайн галерия с възможност за печат.",
-      duration: "Веднага"
+      title: t('delivery'),
+      description: t('deliveryDescription'),
+      duration: t('durationImmediate')
     }
   ];
 
@@ -64,11 +66,10 @@ const ApproachSection = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-heading text-sophisticated-dark mb-6">
-            Моят подход
+            {t('myApproach')}
           </h2>
           <p className="text-lg text-hierarchy-secondary max-w-3xl mx-auto">
-            Фотографията е изкуство на емоциите. Моята философия се основава на създаването на 
-            автентични връзки и улавянето на истински моменти.
+            {t('approachDescription')}
           </p>
         </div>
 
@@ -78,20 +79,17 @@ const ApproachSection = () => {
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-heading text-sophisticated-dark mb-6">
-                  Философията ми
+                  {t('myPhilosophy')}
                 </h3>
                 <div className="prose prose-lg text-hierarchy-secondary max-w-none space-y-4">
                   <p>
-                    Вярвам, че най-красивите снимки се раждат от истински емоции и автентични моменти. 
-                    Не търся перфектни пози, а истински усмивки, естествени жестове и спонтанни реакции.
+                    {t('philosophyParagraph1')}
                   </p>
                   <p>
-                    Всеки клиент е уникален, затова и подходът ми е индивидуален. Отделям време да 
-                    разбера вашата история, характер и визия, за да създам снимки, които наистина ви представят.
+                    {t('philosophyParagraph2')}
                   </p>
                   <p>
-                    Фотографията е не само техника, но и емоционална връзка. Стремя се да създам 
-                    комфортна атмосфера, където можете да се чувствате свободни и естествени.
+                    {t('philosophyParagraph3')}
                   </p>
                 </div>
               </div>
@@ -118,7 +116,7 @@ const ApproachSection = () => {
         {/* Process */}
         <div>
           <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
-            Как работим заедно
+            {t('howWeWorkTogether')}
           </h3>
           
           <div className="space-y-8">
@@ -174,17 +172,17 @@ const ApproachSection = () => {
         <div className="mt-16 text-center">
           <div className="bg-gradient-to-r from-accent to-secondary p-8 rounded-3xl shadow-medium">
             <h3 className="text-2xl font-heading text-sophisticated-dark mb-4">
-              Готови ли сте да създадем нещо красиво заедно?
+              {t('readyToCreateTogether')}
             </h3>
             <p className="text-hierarchy-secondary mb-6 max-w-2xl mx-auto">
-              Нека се запознаем и обсъдим как мога да помогна за съхраняването на вашите най-ценни моменти.
+              {t('readyToCreateDescription')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="bg-sophisticated-dark text-background px-8 py-3 rounded-full font-sophisticated elegant-hover">
-                Резервирайте консултация
+                {t('bookConsultation')}
               </button>
               <button className="border border-sophisticated-dark text-sophisticated-dark px-8 py-3 rounded-full font-sophisticated elegant-hover">
-                Вижте портфолиото
+                {t('viewPortfolio')}
               </button>
             </div>
           </div>

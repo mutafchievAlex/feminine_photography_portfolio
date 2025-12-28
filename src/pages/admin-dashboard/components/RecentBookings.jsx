@@ -2,8 +2,10 @@ import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { useRecentBookings, useUpdateBookingStatus } from '../../../hooks/useBookings';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 export default function RecentBookings() {
+  const { t } = useLanguage();
   const { data: bookings, isLoading, isError, error } = useRecentBookings({
     refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
   });
@@ -101,12 +103,12 @@ export default function RecentBookings() {
       <div className="bg-background rounded-lg shadow-soft border border-border">
         <div className="px-6 py-4 border-b border-border">
           <h3 className="text-lg font-heading font-semibold text-sophisticated-dark">
-            Последни резервации
+            {t('recentBookings')}
           </h3>
         </div>
         <div className="p-12 text-center">
           <Icon name="Calendar" size={48} className="mx-auto text-gray-300 mb-4" />
-          <p className="text-hierarchy-secondary">Няма налични резервации</p>
+          <p className="text-hierarchy-secondary">{t('noBookingsAvailable')}</p>
         </div>
       </div>
     );
@@ -116,7 +118,7 @@ export default function RecentBookings() {
     <div className="bg-background rounded-lg shadow-soft border border-border">
       <div className="px-6 py-4 border-b border-border flex items-center justify-between">
         <h3 className="text-lg font-heading font-semibold text-sophisticated-dark">
-          Последни резервации
+          {t('recentBookings')}
         </h3>
         <Button variant="ghost" size="sm">
           <Icon name="MoreHorizontal" size={20} />
@@ -195,7 +197,7 @@ export default function RecentBookings() {
       </div>
       <div className="px-6 py-4 border-t border-border">
         <Button variant="ghost" fullWidth>
-          Виж всички резервации
+          {t('viewAllBookings')}
           <Icon name="ArrowRight" size={16} className="ml-2" />
         </Button>
       </div>

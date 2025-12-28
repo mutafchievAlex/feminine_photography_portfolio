@@ -1,7 +1,9 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const TrustSignals = () => {
+  const { t } = useLanguage();
   const trustFeatures = [
     {
       icon: 'Shield',
@@ -63,13 +65,10 @@ const TrustSignals = () => {
       <div className="bg-surface-elevation rounded-xl shadow-soft p-6 lg:p-8">
         <div className="text-center mb-6">
           <h3 className="text-elegant text-xl text-sophisticated-dark mb-2">
-            Защо да ме изберете / Why Choose Me
+            {t('whyChooseMe')}
           </h3>
           <p className="text-sophisticated text-hierarchy-secondary">
-            Вашето спокойствие и удовлетвореност са моят приоритет
-          </p>
-          <p className="text-sophisticated text-hierarchy-secondary text-sm mt-1">
-            Your peace of mind and satisfaction are my priority
+            {t('whyChooseMeDescription')}
           </p>
         </div>
 
@@ -118,7 +117,7 @@ const TrustSignals = () => {
       <div className="bg-surface-elevation rounded-xl shadow-soft p-6 lg:p-8">
         <div className="text-center mb-6">
           <h3 className="text-elegant text-xl text-sophisticated-dark mb-2">
-            Какво казват клиентите / What Clients Say
+            {t('testimonialsTitle')}
           </h3>
         </div>
 

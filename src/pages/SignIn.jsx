@@ -12,15 +12,29 @@ const SignIn = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
     setError('');
+    
+    if (!email || !password) {
+      setError('Моля попълнете имейл и парола');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await signIn(email, password);
-      navigate('/admin-dashboard');
+      const result = await signIn(email, password);
+      
+      // Determine role and navigate accordingly
+      const userRole = result?.user?.user_metadata?.role || 'client';
+      if (userRole === 'admin') {
+        navigate('/admin-dashboard');
+      } else {
+        navigate('/homepage');
+      }
     } catch (err) {
       console.error('Sign in error:', err);
       setError(err?.message || 'Грешка при влизане. Моля проверете имейл и парола.');
@@ -38,7 +52,7 @@ const SignIn = () => {
               Вход в системата
             </h1>
             <p className="text-hierarchy-secondary">
-              Влезте в административния панел
+              Влезте в административния панел или профила
             </p>
           </div>
 
@@ -54,18 +68,33 @@ const SignIn = () => {
               type="email"
               placeholder="your@email.com"
               value={email}
-              onChange={(e) => setEmail(e?.target?.value)}
+              onChange={(e) => {
+                setEmail(e?.target?.value);
+                setError('');
+              }}
               required
             />
 
-            <Input
-              label="Парола"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e?.target?.value)}
-              required
-            />
+            <div className="relative">
+              <Input
+                label="Парола"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e?.target?.value);
+                  setError('');
+                }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-10 text-hierarchy-secondary hover:text-sophisticated-dark"
+              >
+                <Icon name={showPassword ? 'EyeOff' : 'Eye'} size={18} />
+              </button>
+            </div>
 
             <Button
               type="submit"
@@ -85,26 +114,32 @@ const SignIn = () => {
           </form>
 
           <div className="mt-8 pt-6 border-t border-border">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm font-medium text-blue-900 mb-2">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <p className="text-sm font-medium text-blue-900 mb-3">
                 🔐 Демо акаунти за тестване:
               </p>
               <div className="space-y-2 text-sm">
-                <div className="bg-white rounded p-2">
-                  <p className="text-blue-800 font-medium">Администратор:</p>
-                  <p className="text-blue-700">
-                    📧 elena@elenarosephotography.bg<br />
-                    🔑 elena2024
+                <div className="bg-white rounded p-3 border border-blue-100">
+                  <p className="text-blue-800 font-medium mb-1">Администратор:</p>
+                  <p className="text-blue-700 text-xs space-y-1">
+                    <div>📧 <code className="bg-blue-50 px-2 py-1 rounded">elena@elenarosephotography.bg</code></div>
+                    <div>🔑 <code className="bg-blue-50 px-2 py-1 rounded">elena2024</code></div>
                   </p>
                 </div>
-                <div className="bg-white rounded p-2">
-                  <p className="text-blue-800 font-medium">Клиент:</p>
-                  <p className="text-blue-700">
-                    📧 maria.petrova@example.com<br />
-                    🔑 maria2024
+                <div className="bg-white rounded p-3 border border-blue-100">
+                  <p className="text-blue-800 font-medium mb-1">Клиент:</p>
+                  <p className="text-blue-700 text-xs space-y-1">
+                    <div>📧 <code className="bg-blue-50 px-2 py-1 rounded">maria.petrova@example.com</code></div>
+                    <div>🔑 <code className="bg-blue-50 px-2 py-1 rounded">maria2024</code></div>
                   </p>
                 </div>
               </div>
+            </div>
+
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-green-900">
+                ✅ Можете също да се регистрирате с нов акаунт като клиент
+              </p>
             </div>
           </div>
 
@@ -112,7 +147,7 @@ const SignIn = () => {
             <button
               type="button"
               onClick={() => navigate('/signup')}
-              className="text-accent hover:text-secondary text-sm font-medium"
+              className="text-accent hover:text-secondary text-sm font-medium transition-colors"
             >
               Нямате акаунт? Регистрирайте се
             </button>

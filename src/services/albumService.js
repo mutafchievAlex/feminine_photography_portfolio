@@ -1,5 +1,16 @@
 import { supabase } from '../lib/supabase';
 
+const IS_MOCK = import.meta.env.VITE_SUPABASE_URL?.includes('dummy') || import.meta.env.VITE_FORCE_LOCAL_MOCK === 'true';
+
+const generateId = () => `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});
+
 export const albumService = {
   // Get all albums (admin view)
   async getAll() {
@@ -104,6 +115,43 @@ export const albumService = {
 
   // Create new album
   async create(albumData) {
+    if (IS_MOCK) {
+      const albums = JSON.parse(localStorage.getItem('mock_albums') || '[]');
+      const newAlbum = {
+        id: generateId(),
+        title: albumData?.title || 'Untitled',
+        description: albumData?.description || '',
+        cover_image_url: albumData?.coverImageUrl || '',
+        session_type: albumData?.sessionType || 'other',
+        client_name: albumData?.clientName || '',
+        session_date: albumData?.sessionDate || new Date().toISOString(),
+        location: albumData?.location || '',
+        is_published: albumData?.isPublished || false,
+        display_order: albumData?.displayOrder || 0,
+        created_by: 'mock-user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        album_photos: []
+      };
+      albums.push(newAlbum);
+      localStorage.setItem('mock_albums', JSON.stringify(albums));
+      return {
+        id: newAlbum.id,
+        title: newAlbum.title,
+        description: newAlbum.description,
+        coverImageUrl: newAlbum.cover_image_url,
+        sessionType: newAlbum.session_type,
+        clientName: newAlbum.client_name,
+        sessionDate: newAlbum.session_date,
+        location: newAlbum.location,
+        isPublished: newAlbum.is_published,
+        displayOrder: newAlbum.display_order,
+        createdBy: newAlbum.created_by,
+        createdAt: newAlbum.created_at,
+        updatedAt: newAlbum.updated_at
+      };
+    }
+
     const { data: { user } } = await supabase?.auth?.getUser();
     if (!user) throw new Error('Not authenticated');
 
@@ -200,6 +248,24 @@ export const albumService = {
 
   // Upload photo to storage
   async uploadPhoto(file) {
+    if (IS_MOCK) {
+      // create data URL and store in localStorage as mock gallery image
+      const dataUrl = await readFileAsDataUrl(file);
+      const gallery = JSON.parse(localStorage.getItem('mock_gallery_images') || '[]');
+      const id = generateId();
+      const item = {
+        id,
+        image_url: dataUrl,
+        thumbnail_url: dataUrl,
+        title: file?.name?.split('.')?.[0],
+        alt_text: file?.name || '',
+        description: ''
+      };
+      gallery.push(item);
+      localStorage.setItem('mock_gallery_images', JSON.stringify(gallery));
+      return item.image_url;
+    }
+
     const fileExt = file?.name?.split('.')?.pop();
     const fileName = `${Date.now()}-${Math.random()?.toString(36)?.substring(7)}.${fileExt}`;
     const filePath = `${fileName}`;
@@ -209,12 +275,49 @@ export const albumService = {
     if (uploadError) throw uploadError;
 
     const { data } = supabase?.storage?.from('album-photos')?.getPublicUrl(filePath);
-
     return data?.publicUrl;
   },
 
   // Add photo to gallery_images and link to album
   async addPhotoToAlbum(albumId, photoData, imageFile) {
+    if (IS_MOCK) {
+      // store gallery image and album link in localStorage
+      const imageUrl = await this.uploadPhoto(imageFile);
+      const gallery = JSON.parse(localStorage.getItem('mock_gallery_images') || '[]');
+      const galleryImage = gallery[gallery.length - 1];
+
+      const albums = JSON.parse(localStorage.getItem('mock_albums') || '[]');
+      const album = albums.find(a => a.id === albumId);
+      if (!album) throw new Error('Album not found (mock)');
+
+      const albumPhoto = {
+        id: generateId(),
+        album_id: albumId,
+        image_id: galleryImage?.id,
+        caption: photoData?.caption || '',
+        is_featured: photoData?.isFeatured || false,
+        display_order: photoData?.displayOrder || 0,
+        gallery_images: galleryImage
+      };
+
+      album.album_photos = album.album_photos || [];
+      album.album_photos.push(albumPhoto);
+      album.updated_at = new Date().toISOString();
+      localStorage.setItem('mock_albums', JSON.stringify(albums));
+
+      return {
+        id: albumPhoto.id,
+        imageId: galleryImage?.id,
+        imageUrl: galleryImage?.image_url,
+        thumbnailUrl: galleryImage?.thumbnail_url,
+        title: galleryImage?.title,
+        altText: galleryImage?.alt_text,
+        caption: albumPhoto?.caption,
+        isFeatured: albumPhoto?.is_featured,
+        displayOrder: albumPhoto?.display_order
+      };
+    }
+
     // Upload image first
     const imageUrl = await this.uploadPhoto(imageFile);
 
@@ -260,6 +363,22 @@ export const albumService = {
 
   // Remove photo from album (but keep in gallery_images)
   async removePhotoFromAlbum(albumPhotoId) {
+    if (IS_MOCK) {
+      const albums = JSON.parse(localStorage.getItem('mock_albums') || '[]');
+      let found = false;
+      for (const album of albums) {
+        const idx = (album.album_photos || []).findIndex(p => p?.id === albumPhotoId);
+        if (idx !== -1) {
+          album.album_photos.splice(idx, 1);
+          found = true;
+          break;
+        }
+      }
+      if (!found) throw new Error('Photo not found (mock)');
+      localStorage.setItem('mock_albums', JSON.stringify(albums));
+      return;
+    }
+
     const { error } = await supabase?.from('album_photos')?.delete()?.eq('id', albumPhotoId);
 
     if (error) throw error;

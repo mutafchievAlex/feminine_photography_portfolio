@@ -46,7 +46,7 @@ export default function AlbumCard({ album, onEdit, onDelete, onManagePhotos, onB
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-visible">
       {/* Cover Image */}
       <div className="relative h-48 bg-gray-200">
         <AppImage

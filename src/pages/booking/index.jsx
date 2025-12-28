@@ -10,6 +10,8 @@ import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import Image from '../../components/AppImage';
 
+import { useLanguage } from '../../hooks/useLanguage';
+
 const BookingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -67,6 +69,8 @@ const BookingPage = () => {
     { id: 'trust', label: 'Отзиви / Reviews', icon: 'Star' }
   ];
 
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-gallery-canvas">
       <Header />
@@ -80,18 +84,13 @@ const BookingPage = () => {
               <div className="space-y-8">
                 <div>
                   <h1 className="text-elegant text-3xl lg:text-4xl xl:text-5xl text-sophisticated-dark mb-6">
-                    Започнете вашето пътуване
+                    {t('booking')}
                   </h1>
                   <h2 className="text-elegant text-2xl lg:text-3xl xl:text-4xl text-hierarchy-secondary mb-6">
-                    Start Your Journey
+                    {t('heroSubtitle')}
                   </h2>
                   <p className="text-sophisticated text-lg text-hierarchy-secondary leading-relaxed mb-4">
-                    Всяка история заслужава да бъде разказана с красота и автентичност. 
-                    Започнете с безплатна консултация, където ще обсъдим вашата визия и ще създадем план за перфектната фотосесия.
-                  </p>
-                  <p className="text-sophisticated text-hierarchy-secondary leading-relaxed">
-                    Every story deserves to be told with beauty and authenticity. 
-                    Start with a complimentary consultation where we'll discuss your vision and create a plan for the perfect photoshoot.
+                    {t('heroDescription')}
                   </p>
                 </div>
 
@@ -179,8 +178,8 @@ const BookingPage = () => {
               {/* Quick Contact */}
               <div className="bg-surface-elevation rounded-xl shadow-soft p-6">
                 <h3 className="text-sophisticated font-medium text-sophisticated-dark mb-4">
-                  Бърз контакт / Quick Contact
-                </h3>
+                    {t('contactMe')} / {t('phone')}
+                  </h3>
                 <div className="space-y-3">
                   <a 
                     href="tel:+359888123456"
@@ -192,7 +191,7 @@ const BookingPage = () => {
                         +359 888 123 456
                       </p>
                       <p className="text-xs text-hierarchy-secondary">
-                        Обадете се сега / Call now
+                        {t('phone')}
                       </p>
                     </div>
                   </a>
@@ -207,7 +206,7 @@ const BookingPage = () => {
                         elena@elenarosephotography.bg
                       </p>
                       <p className="text-xs text-hierarchy-secondary">
-                        Изпратете имейл / Send email
+                        {t('email')}
                       </p>
                     </div>
                   </a>
@@ -278,7 +277,7 @@ const BookingPage = () => {
                       }`}
                     >
                       <Icon name={tab?.icon} size={18} />
-                      <span className="hidden sm:inline">{tab?.label}</span>
+                      <span className="hidden sm:inline">{tab?.id === 'form' ? t('booking') : tab?.label}</span>
                     </button>
                   ))}
                 </div>

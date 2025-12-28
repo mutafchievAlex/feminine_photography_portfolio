@@ -2,38 +2,31 @@ import React, { useState, useEffect } from 'react';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import ErrorBoundary from '../../components/ErrorBoundary';
 import DashboardStats from './components/DashboardStats';
 import RecentBookings from './components/RecentBookings';
 import QuickActions from './components/QuickActions';
 import RecentActivity from './components/RecentActivity';
 import UpcomingSchedule from './components/UpcomingSchedule';
 import RevenueChart from './components/RevenueChart';
-
-// Development-only mock notifications (gated behind DEV flag)
-const MOCK_NOTIFICATIONS = import.meta.env?.DEV ? [
-  {
-    id: 1,
-    type: 'urgent',
-    message: 'Стефан Николов изисква потвърждение за утрешната сесия',
-    timestamp: new Date(Date.now() - 1800000)
-  },
-  {
-    id: 2,
-    type: 'info',
-    message: 'Нова галерия за Мария Петрова е готова за доставка',
-    timestamp: new Date(Date.now() - 3600000)
-  },
-  {
-    id: 3,
-    type: 'reminder',
-    message: 'Напомняне: Резервно копие на снимките днес в 18:00',
-    timestamp: new Date(Date.now() - 7200000)
-  }
-] : [];
+import { activityService } from '../../services/activityService';
+import { galleryService } from '../../services/galleryService';
+import { albumService } from '../../services/albumService';
+import { bookingService } from '../../services/bookingService';
+import { useLanguage } from '../../hooks/useLanguage';
+import pkg from '../../../package.json';
 
 const AdminDashboard = () => {
+  const { t } = useLanguage();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState([]);
+  const [systemInfo, setSystemInfo] = useState({
+    lastBackup: null,
+    imagesCount: 0,
+    albumsCount: 0,
+    bookingsCount: 0,
+    version: pkg?.version || 'v?.?.?'
+  });
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -69,6 +62,73 @@ const AdminDashboard = () => {
   const dismissNotification = (id) => {
     setNotifications(prev => prev?.filter(notif => notif?.id !== id));
   };
+
+  // Fetch notifications (recent activities) and simple system metrics
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        // Fetch activities separately and with error handling
+        let acts = [];
+        try {
+          acts = await activityService?.getRecentActivities?.(5) || [];
+        } catch (err) {
+          console.warn('Error loading activities:', err?.message);
+        }
+        
+        if (!mounted) return;
+        
+        const notifs = (acts || []).map(a => ({
+          id: a?.id,
+          type: a?.activityType || 'info',
+          message: a?.description || '',
+          timestamp: a?.createdAt
+        }));
+        setNotifications(notifs);
+
+        // Fetch system counts separately with fallbacks
+        let images = [];
+        let albums = [];
+        let stats = { total: 0 };
+        
+        try {
+          images = await galleryService?.getAll?.() || [];
+        } catch (err) {
+          console.warn('Error loading gallery:', err?.message);
+        }
+        
+        try {
+          albums = await albumService?.getAll?.() || [];
+        } catch (err) {
+          console.warn('Error loading albums:', err?.message);
+        }
+        
+        try {
+          stats = await bookingService?.getStats?.() || { total: 0 };
+        } catch (err) {
+          console.warn('Error loading booking stats:', err?.message);
+        }
+
+        if (!mounted) return;
+
+        // find last backup-like activity if any (fallback to most recent activity)
+        const backupAct = (acts || []).find(x => (x?.activityType || '').toLowerCase().includes('backup')) || acts?.[0];
+
+        setSystemInfo({
+          lastBackup: backupAct?.createdAt || null,
+          imagesCount: images?.length || 0,
+          albumsCount: albums?.length || 0,
+          bookingsCount: stats?.total || 0,
+          version: pkg?.version || 'v?.?.?'
+        });
+      } catch (err) {
+        console.warn('Error loading dashboard metadata', err);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, []);
 
   const getNotificationIcon = (type) => {
     switch (type) {
@@ -110,15 +170,18 @@ const AdminDashboard = () => {
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="text-right">
-                    <p className="text-sm text-hierarchy-secondary">Статус на системата</p>
+                    <p className="text-sm text-hierarchy-secondary">{t('systemInfo')}</p>
                     <div className="flex items-center space-x-2 mt-1">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm text-sophisticated-dark">Всичко работи</span>
+                      <span className="text-sm text-sophisticated-dark">{t('allRightsReserved')}</span>
                     </div>
+                    <p className="text-xs text-hierarchy-secondary mt-1">
+                      {systemInfo?.bookingsCount || 0} {t('bookingsCount')} • {systemInfo?.imagesCount || 0} {t('imagesCount')} • {systemInfo?.albumsCount || 0} {t('albumsCount')}
+                    </p>
                   </div>
                   <Button variant="outline" size="sm">
                     <Icon name="Settings" size={16} className="mr-2" />
-                    Настройки
+                    {t('learnMore')}
                   </Button>
                 </div>
               </div>
@@ -146,7 +209,7 @@ const AdminDashboard = () => {
                             {notification?.message}
                           </p>
                           <p className="text-xs opacity-75 mt-1">
-                            {notification?.timestamp?.toLocaleTimeString('bg-BG', {
+                            {new Date(notification?.timestamp)?.toLocaleTimeString('bg-BG', {
                               hour: '2-digit',
                               minute: '2-digit'
                             })}
@@ -208,11 +271,11 @@ const AdminDashboard = () => {
                         Последно резервно копие
                       </p>
                       <p className="text-xs text-hierarchy-secondary">
-                        Днес в 03:00 • Успешно
+                        {systemInfo?.lastBackup ? new Date(systemInfo.lastBackup).toLocaleString('bg-BG') : 'Няма данни'}
                       </p>
                     </div>
                   </div>
-                  <Icon name="CheckCircle" size={20} className="text-green-600" />
+                  <Icon name="CheckCircle" size={20} className={systemInfo?.lastBackup ? 'text-green-600' : 'text-gray-400'} />
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-surface-elevation rounded-lg">
@@ -223,7 +286,7 @@ const AdminDashboard = () => {
                         Облачно съхранение
                       </p>
                       <p className="text-xs text-hierarchy-secondary">
-                        2.3 TB използвани от 5 TB
+                        {systemInfo?.imagesCount || 0} снимки • {systemInfo?.albumsCount || 0} албума
                       </p>
                     </div>
                   </div>
@@ -250,7 +313,7 @@ const AdminDashboard = () => {
                 <div className="pt-4 border-t border-border">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-hierarchy-secondary">
-                      Версия на системата: v2.1.4
+                      Версия на системата: {systemInfo?.version}
                     </p>
                     <Button variant="outline" size="sm">
                       <Icon name="RefreshCw" size={16} className="mr-2" />
@@ -265,8 +328,8 @@ const AdminDashboard = () => {
           {/* Footer Info */}
           <div className="mt-12 text-center">
             <p className="text-sm text-hierarchy-secondary">
-              Административен панел • Elena Rose Photography • 
-              © {new Date()?.getFullYear()} Всички права запазени
+              {t('adminDashboardTitle')} • 
+              © {new Date()?.getFullYear()} {t('allRightsReserved')}
             </p>
           </div>
         </div>
@@ -275,4 +338,10 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+const AdminDashboardWrapped = () => (
+  <ErrorBoundary>
+    <AdminDashboard />
+  </ErrorBoundary>
+);
+
+export default AdminDashboardWrapped;

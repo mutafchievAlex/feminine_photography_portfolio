@@ -1,51 +1,115 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useBookings } from '../../../hooks/useBookings';
+import { useLanguage } from '../../../hooks/useLanguage';
+
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-background border border-border rounded-lg p-2 shadow-md">
+        <p className="text-sm text-sophisticated-dark font-medium">
+          €{payload[0]?.value?.toLocaleString()}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 const RevenueChart = () => {
+  const { t } = useLanguage();
   const [chartType, setChartType] = useState('bar');
   const [timeRange, setTimeRange] = useState('6months');
+  const { data: bookings = [], isLoading, isError } = useBookings({ retry: 1 });
 
-  const monthlyData = [
-    { month: 'Мар', revenue: 3200, sessions: 8, bookings: 12 },
-    { month: 'Апр', revenue: 4100, sessions: 11, bookings: 15 },
-    { month: 'Май', revenue: 3800, sessions: 9, bookings: 13 },
-    { month: 'Юни', revenue: 5200, sessions: 14, bookings: 18 },
-    { month: 'Юли', revenue: 4900, sessions: 13, bookings: 16 },
-    { month: 'Авг', revenue: 4850, sessions: 12, bookings: 17 }
-  ];
-
-  const sessionTypeData = [
-    { type: 'Сватби', revenue: 12500, percentage: 45, sessions: 5 },
-    { type: 'Семейни', revenue: 6800, percentage: 25, sessions: 19 },
-    { type: 'Матернитет', revenue: 4200, percentage: 15, sessions: 14 },
-    { type: 'Корпоративни', revenue: 2800, percentage: 10, sessions: 12 },
-    { type: 'Други', revenue: 1400, percentage: 5, sessions: 8 }
-  ];
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload?.length) {
-      return (
-        <div className="bg-background border border-border rounded-lg shadow-medium p-3">
-          <p className="text-sm font-medium text-sophisticated-dark">{`${label}`}</p>
-          <p className="text-sm text-hierarchy-secondary">
-            {`Приходи: €${payload?.[0]?.value?.toLocaleString()}`}
-          </p>
-          {payload?.[0]?.payload?.sessions && (
-            <p className="text-sm text-hierarchy-secondary">
-              {`Сесии: ${payload?.[0]?.payload?.sessions}`}
-            </p>
-          )}
-        </div>
-      );
-    }
-    return null;
+  // Mock pricing by session type (in euros)
+  const SESSION_PRICING = {
+    wedding: 1500,
+    maternity: 600,
+    family: 400,
+    engagement: 500,
+    individual: 350,
+    corporate: 800,
+    newborn: 500,
+    other: 400
   };
 
-  const totalRevenue = monthlyData?.reduce((sum, item) => sum + item?.revenue, 0);
-  const totalSessions = monthlyData?.reduce((sum, item) => sum + item?.sessions, 0);
-  const averagePerSession = totalRevenue / totalSessions;
+  // Generate monthly data from bookings
+  const { monthlyData, sessionTypeData, totalRevenue, totalSessions, averagePerSession } = useMemo(() => {
+    if (!bookings || bookings.length === 0) {
+      return {
+        monthlyData: [],
+        sessionTypeData: [],
+        totalRevenue: 0,
+        totalSessions: 0,
+        averagePerSession: 0
+      };
+    }
+
+    // Filter confirmed/completed bookings only
+    const confirmedBookings = bookings.filter(b => 
+      b?.status === 'confirmed' || b?.status === 'completed'
+    );
+
+    // Group by month
+    const monthlyMap = {};
+    confirmedBookings.forEach(booking => {
+      if (!booking?.preferredDate) return;
+      const date = new Date(booking.preferredDate);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthLabel = date.toLocaleDateString('bg-BG', { month: 'short' });
+
+      if (!monthlyMap[monthKey]) {
+        monthlyMap[monthKey] = { month: monthLabel, revenue: 0, sessions: 0, bookings: 0 };
+      }
+      const price = SESSION_PRICING[booking.sessionType] || 400;
+      monthlyMap[monthKey].revenue += price;
+      monthlyMap[monthKey].sessions += 1;
+      monthlyMap[monthKey].bookings += 1;
+    });
+
+    const monthlyDataList = Object.values(monthlyMap)
+      .sort((a, b) => a.month.localeCompare(b.month))
+      .slice(-6); // Last 6 months
+
+    // Group by session type
+    const sessionTypeMap = {};
+    confirmedBookings.forEach(booking => {
+      const type = booking.sessionType || 'other';
+      const price = SESSION_PRICING[type] || 400;
+      
+      if (!sessionTypeMap[type]) {
+        sessionTypeMap[type] = { 
+          type: type.charAt(0).toUpperCase() + type.slice(1), 
+          revenue: 0, 
+          sessions: 0 
+        };
+      }
+      sessionTypeMap[type].revenue += price;
+      sessionTypeMap[type].sessions += 1;
+    });
+
+    const sessionTypeList = Object.values(sessionTypeMap)
+      .sort((a, b) => b.revenue - a.revenue)
+      .map(item => ({
+        ...item,
+        percentage: Math.round((item.revenue / 
+          Object.values(sessionTypeMap).reduce((sum, s) => sum + s.revenue, 0)) * 100)
+      }));
+
+    const totalRev = monthlyDataList.reduce((sum, item) => sum + item.revenue, 0);
+    const totalSess = monthlyDataList.reduce((sum, item) => sum + item.sessions, 0);
+
+    return {
+      monthlyData: monthlyDataList.length ? monthlyDataList : [],
+      sessionTypeData: sessionTypeList,
+      totalRevenue: totalRev,
+      totalSessions: totalSess,
+      averagePerSession: totalSess > 0 ? Math.round(totalRev / totalSess) : 0
+    };
+  }, [bookings]);
 
   return (
     <div className="bg-background rounded-lg shadow-soft border border-border">
@@ -53,10 +117,10 @@ const RevenueChart = () => {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-heading font-semibold text-sophisticated-dark">
-              Финансов преглед
+              {t('financialOverview')}
             </h3>
             <p className="text-sm text-hierarchy-secondary mt-1">
-              Приходи и статистики за последните 6 месеца
+              {t('revenueAndStats')}
             </p>
           </div>
           <div className="flex items-center space-x-2">
@@ -83,7 +147,7 @@ const RevenueChart = () => {
           <div className="bg-accent rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-hierarchy-secondary">Общо приходи</p>
+                <p className="text-sm text-hierarchy-secondary">{t('totalRevenue')}</p>
                 <p className="text-2xl font-heading font-semibold text-sophisticated-dark">
                   €{totalRevenue?.toLocaleString()}
                 </p>
@@ -95,7 +159,7 @@ const RevenueChart = () => {
           <div className="bg-secondary rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-hierarchy-secondary">Общо сесии</p>
+                <p className="text-sm text-hierarchy-secondary">{t('totalSessions')}</p>
                 <p className="text-2xl font-heading font-semibold text-sophisticated-dark">
                   {totalSessions}
                 </p>
@@ -107,7 +171,7 @@ const RevenueChart = () => {
           <div className="bg-surface-elevation rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-hierarchy-secondary">Средно на сесия</p>
+                <p className="text-sm text-hierarchy-secondary">{t('averagePerSession')}</p>
                 <p className="text-2xl font-heading font-semibold text-sophisticated-dark">
                   €{Math.round(averagePerSession)}
                 </p>
@@ -119,62 +183,68 @@ const RevenueChart = () => {
 
         {/* Chart */}
         <div className="h-64 mb-6">
-          <ResponsiveContainer width="100%" height="100%">
-            {chartType === 'bar' ? (
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EFD5D5" opacity={0.3} />
-                <XAxis 
-                  dataKey="month" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#6B7280', fontSize: 12 }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#6B7280', fontSize: 12 }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar 
-                  dataKey="revenue" 
-                  fill="#EFD5D5" 
-                  radius={[4, 4, 0, 0]}
-                  stroke="#2C3E50"
-                  strokeWidth={1}
-                />
-              </BarChart>
-            ) : (
-              <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EFD5D5" opacity={0.3} />
-                <XAxis 
-                  dataKey="month" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#6B7280', fontSize: 12 }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#6B7280', fontSize: 12 }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Line 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#2C3E50" 
-                  strokeWidth={3}
-                  dot={{ fill: '#EFD5D5', strokeWidth: 2, r: 6 }}
-                  activeDot={{ r: 8, fill: '#2C3E50' }}
-                />
-              </LineChart>
-            )}
-          </ResponsiveContainer>
+          {monthlyData.length === 0 ? (
+            <div className="flex items-center justify-center h-full bg-surface-elevation rounded-lg">
+              <p className="text-hierarchy-secondary">{t('noRevenueData')}</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              {chartType === 'bar' ? (
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EFD5D5" opacity={0.3} />
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar 
+                    dataKey="revenue" 
+                    fill="#EFD5D5" 
+                    radius={[4, 4, 0, 0]}
+                    stroke="#2C3E50"
+                    strokeWidth={1}
+                  />
+                </BarChart>
+              ) : (
+                <LineChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EFD5D5" opacity={0.3} />
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke="#2C3E50" 
+                    strokeWidth={3}
+                    dot={{ fill: '#EFD5D5', strokeWidth: 2, r: 6 }}
+                    activeDot={{ r: 8, fill: '#2C3E50' }}
+                  />
+                </LineChart>
+              )}
+            </ResponsiveContainer>
+          )}
         </div>
 
         {/* Session Type Breakdown */}
         <div>
           <h4 className="text-sm font-medium text-sophisticated-dark mb-3">
-            Разпределение по тип сесии
+            {t('sessionTypeBreakdown')}
           </h4>
           <div className="space-y-3">
             {sessionTypeData?.map((item, index) => (
@@ -203,11 +273,11 @@ const RevenueChart = () => {
       <div className="px-6 py-4 border-t border-border bg-surface-elevation rounded-b-lg">
         <div className="flex items-center justify-between">
           <p className="text-sm text-hierarchy-secondary">
-            Данните са актуализирани преди 2 часа
+            {t('dataUpdated')}
           </p>
           <Button variant="outline" size="sm">
             <Icon name="Download" size={16} className="mr-2" />
-            Експортирай отчет
+            {t('exportReport')}
           </Button>
         </div>
       </div>

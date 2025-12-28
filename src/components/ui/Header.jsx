@@ -34,11 +34,16 @@ const Header = () => {
   }, []);
 
   const navigationItems = [
-  { name: t('home'), path: '/homepage', icon: 'Home' },
-  { name: t('gallery'), path: '/gallery', icon: 'Camera' },
-  { name: t('about'), path: '/about', icon: 'User' },
-  { name: t('investment'), path: '/investment', icon: 'DollarSign' },
-  { name: t('booking'), path: '/booking', icon: 'Calendar' }];
+    { name: t('home'), path: '/homepage', icon: 'Home' },
+    { name: t('gallery'), path: '/gallery', icon: 'Camera' },
+    { name: t('about'), path: '/about', icon: 'User' },
+    { name: t('investment'), path: '/investment', icon: 'DollarSign' },
+    { name: t('booking'), path: '/booking', icon: 'Calendar' },
+    ...(user?.user_metadata?.role === 'admin' || profile?.role === 'admin' ? [
+      { name: 'Album Management', path: '/album-management', icon: 'LayoutGrid' },
+      { name: 'Admin Dashboard', path: '/admin-dashboard', icon: 'BarChart3' }
+    ] : [])
+  ];
 
 
   const isActivePath = (path) => location?.pathname === path;
