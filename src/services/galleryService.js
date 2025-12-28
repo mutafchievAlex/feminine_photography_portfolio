@@ -18,6 +18,7 @@ export const galleryService = {
       imageUrl: image?.image_url,
       thumbnailUrl: image?.thumbnail_url,
       category: image?.category,
+      albumId: image?.album_id,
       altText: image?.alt_text,
       displayOrder: image?.display_order,
       isFeatured: image?.is_featured,
@@ -42,6 +43,7 @@ export const galleryService = {
       thumbnailUrl: image?.thumbnail_url,
       category: image?.category,
       altText: image?.alt_text,
+      albumId: image?.album_id,
       displayOrder: image?.display_order,
       isFeatured: image?.is_featured,
       createdAt: image?.created_at
@@ -60,6 +62,7 @@ export const galleryService = {
       imageUrl: image?.image_url,
       thumbnailUrl: image?.thumbnail_url,
       category: image?.category,
+      albumId: image?.album_id,
       altText: image?.alt_text,
       isFeatured: image?.is_featured
     })) || [];
@@ -76,6 +79,7 @@ export const galleryService = {
         thumbnail_url: imageData?.thumbnailUrl || imageData?.imageUrl,
         category: imageData?.category,
         alt_text: imageData?.altText,
+        album_id: imageData?.albumId || null,
         display_order: imageData?.displayOrder || 0,
         is_featured: imageData?.isFeatured || false,
         uploaded_by: user?.id
@@ -103,6 +107,7 @@ export const galleryService = {
         title: updates?.title,
         description: updates?.description,
         category: updates?.category,
+        album_id: updates?.albumId,
         alt_text: updates?.altText,
         display_order: updates?.displayOrder,
         is_featured: updates?.isFeatured,

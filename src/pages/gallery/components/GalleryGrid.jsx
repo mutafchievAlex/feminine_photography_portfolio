@@ -22,16 +22,31 @@ export default function GalleryGrid({ selectedCategory, searchQuery }) {
   useEffect(() => {
     const subscription = realtimeService?.subscribeToGalleryDeliveries((data) => {
       const { image, type } = data;
+        const normalizedImage = image
+        ? {
+            id: image?.id,
+            title: image?.title,
+            description: image?.description,
+            imageUrl: image?.image_url ?? image?.imageUrl,
+            thumbnailUrl: image?.thumbnail_url ?? image?.thumbnailUrl,
+            category: image?.category,
+            albumId: image?.album_id ?? image?.albumId,
+            altText: image?.alt_text ?? image?.altText,
+            displayOrder: image?.display_order ?? image?.displayOrder,
+            isFeatured: image?.is_featured ?? image?.isFeatured,
+            createdAt: image?.created_at ?? image?.createdAt
+          }
+        : null;
 
       // Only add/update if it matches current category or category is 'all'
-      if (selectedCategory === 'all' || image?.category === selectedCategory) {
+      if (selectedCategory === 'all' || normalizedImage?.category === selectedCategory) {
         if (type === 'published' || !type) {
           setImages(prev => {
-            const exists = prev?.find(img => img?.id === image?.id);
+             const exists = prev?.find(img => img?.id === normalizedImage?.id);
             if (exists) {
               return prev?.map(img => (img?.id === image?.id ? image : img));
             }
-            return [image, ...prev];
+            return normalizedImage ? [normalizedImage, ...prev] : prev;
           });
         }
       }
@@ -55,7 +70,8 @@ export default function GalleryGrid({ selectedCategory, searchQuery }) {
 
   const handleImageClick = (image) => {
     // Navigate to individual album page with category and image ID
-    navigate(`/individual-photography-album/${image?.category}`, {
+    const albumId = image?.albumId || image?.album_id;
+    navigate(`/individual-photography-album/${image?.albumId}`, {
       state: { imageId: image?.id }
     });
   };

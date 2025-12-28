@@ -54,7 +54,8 @@ export default function GalleryPage() {
     : images?.filter(img => img?.category === selectedCategory);
 
   const handleImageClick = (image) => {
-    navigate(`/individual-photography-album/${image?.category}`, {
+     const albumId = image?.albumId || image?.album_id;
+    navigate(`/individual-photography-album/${albumId}`, {
       state: { imageId: image?.id }
     });
   };
