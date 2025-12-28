@@ -1,22 +1,96 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLanguage } from '../../../hooks/useLanguage';
+import { realtimeService } from '../../../services/realtimeService';
 import { AppImage } from '../../../components/AppImage';
+import { galleryService } from '../../../services/galleryService';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
-export default function GalleryGrid({ images = [], loading = false, onImageClick }) {
+export default function GalleryGrid({
+  selectedCategory = 'all',
+  searchQuery,
+  images: propImages,
+  loading: propLoading,
+  onImageClick
+}) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const [images, setImages] = useState(propImages || []);
+  const [loading, setLoading] = useState(propLoading ?? true);
+
+  // Зарежда снимки, ако не са подадени като проп
+  useEffect(() => {
+    if (propImages) {
+      setImages(propImages);
+      setLoading(!!propLoading);
+      return;
+    }
+    const fetchImages = async () => {
+      try {
+        setLoading(true);
+        const data = await galleryService.getAll(
+          selectedCategory === 'all' ? null : selectedCategory
+        );
+        setImages(data || []);
+      } catch (error) {
+        console.error('Error fetching images:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchImages();
+  }, [propImages, propLoading, selectedCategory, searchQuery]);
+
+  // Реално‑времеви абонамент за нови снимки/публикации
+  useEffect(() => {
+    const subscription = realtimeService.subscribeToGalleryDeliveries((data) => {
+      const { image, type } = data;
+      if (!image) return;
+      // нормализиране на snake_case полетата към camelCase
+      const normalizedImage = {
+        id: image.id,
+        title: image.title,
+        description: image.description,
+        imageUrl: image.image_url ?? image.imageUrl,
+        thumbnailUrl: image.thumbnail_url ?? image.thumbnailUrl,
+        category: image.category,
+        albumId: image.album_id ?? image.albumId,
+        altText: image.alt_text ?? image.altText,
+        displayOrder: image.display_order ?? image.displayOrder,
+        isFeatured: image.is_featured ?? image.isFeatured,
+        createdAt: image.created_at ?? image.createdAt
+      };
+      // добавя или обновява само ако попада в текущата категория
+      if (selectedCategory !== 'all' && normalizedImage.category !== selectedCategory) {
+        return;
+      }
+      if (type === 'published' || !type) {
+        setImages((prev) => {
+          const idx = prev.findIndex((img) => img.id === normalizedImage.id);
+          if (idx >= 0) {
+            const updated = [...prev];
+            updated[idx] = normalizedImage;
+            return updated;
+          }
+          return [normalizedImage, ...prev];
+        });
+      }
+    });
+    return () => subscription?.unsubscribe();
+  }, [selectedCategory, propImages]);
 
   const handleClick = (image) => {
-    // използвай подадения callback, ако има такъв
     if (typeof onImageClick === 'function') {
       onImageClick(image);
     } else {
-      const albumId = image?.albumId || image?.album_id;
+      const albumId = image?.albumId;
       if (!albumId) {
-        window.alert('Album not available for this image.');
+        alert(t('album_not_available', 'Album not available for this image.'));
         return;
       }
-      navigate(`/individual-photography-album/${albumId}`, { state: { imageId: image?.id } });
+      navigate(`/individual-photography-album/${albumId}`, {
+        state: { imageId: image.id }
+      });
     }
   };
 
@@ -30,10 +104,12 @@ export default function GalleryGrid({ images = [], loading = false, onImageClick
     );
   }
 
-  if (images.length === 0) {
+  if (!images || images.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="text-hierarchy-secondary text-lg">Няма налични снимки в тази категория</p>
+        <p className="text-hierarchy-secondary text-lg">
+          {t('no_images', 'Няма налични снимки в тази категория')}
+        </p>
       </div>
     );
   }
@@ -55,7 +131,16 @@ export default function GalleryGrid({ images = [], loading = false, onImageClick
             alt={image.altText}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           />
-          {/* overlay и текст */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute bottom-4 left-4 right-4">
+              <h3 className="text-white font-heading font-semibold text-lg mb-1">
+                {image.title}
+              </h3>
+              {image.description && (
+                <p className="text-white/80 text-sm line-clamp-2">{image.description}</p>
+              )}
+            </div>
+          </div>
         </motion.div>
       ))}
     </div>
