@@ -1,75 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { useLanguage } from '../../../hooks/useLanguage';
-import { realtimeService } from '../../../services/realtimeService';
+import React from 'react';
 import { AppImage } from '../../../components/AppImage';
-import { galleryService } from '../../../services/galleryService';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
-export default function GalleryGrid({ selectedCategory, searchQuery }) {
+export default function GalleryGrid({ images, loading, onImageClick }) {
   const navigate = useNavigate();
-  const { t } = useLanguage();
-  const [images, setImages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState(null);
-
-  // Fetch initial images
-  useEffect(() => {
-    fetchImages();
-  }, [selectedCategory, searchQuery]);
-
-  // Setup real-time subscription for gallery updates
-  useEffect(() => {
-    const subscription = realtimeService?.subscribeToGalleryDeliveries((data) => {
-      const { image, type } = data;
-        const normalizedImage = image
-        ? {
-            id: image?.id,
-            title: image?.title,
-            description: image?.description,
-            imageUrl: image?.image_url ?? image?.imageUrl,
-            thumbnailUrl: image?.thumbnail_url ?? image?.thumbnailUrl,
-            category: image?.category,
-            albumId: image?.album_id ?? image?.albumId,
-            altText: image?.alt_text ?? image?.altText,
-            displayOrder: image?.display_order ?? image?.displayOrder,
-            isFeatured: image?.is_featured ?? image?.isFeatured,
-            createdAt: image?.created_at ?? image?.createdAt
-          }
-        : null;
-
-      // Only add/update if it matches current category or category is 'all'
-      if (selectedCategory === 'all' || normalizedImage?.category === selectedCategory) {
-        if (type === 'published' || !type) {
-          setImages(prev => {
-             const exists = prev?.find(img => img?.id === normalizedImage?.id);
-            if (exists) {
-              return prev?.map(img => (img?.id === image?.id ? image : img));
-            }
-            return normalizedImage ? [normalizedImage, ...prev] : prev;
-          });
-        }
-      }
-    });
-
-    return () => subscription?.unsubscribe();
-  }, [selectedCategory, searchQuery]);
-
-  const fetchImages = async () => {
-    try {
-      setLoading(true);
-      // Fixed: Use getAll() instead of getAllImages() or getImagesByCategory()
-      const data = await galleryService?.getAll(selectedCategory === 'all' ? null : selectedCategory);
-      setImages(data || []);
-    } catch (error) {
-      console.error('Error fetching images:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleImageClick = (image) => {
-    // Navigate to individual album page with category and image ID
+    if (onImageClick) {
+      onImageClick(image);
+      return;
+    }
     const albumId = image?.albumId || image?.album_id;
     if (!albumId) {
       window.alert('Album not available for this image.');
@@ -93,7 +33,7 @@ export default function GalleryGrid({ selectedCategory, searchQuery }) {
     );
   }
 
-  if (images?.length === 0) {
+  if (!images || images?.length === 0) {
     return (
       <div className="text-center py-16">
         <p className="text-hierarchy-secondary text-lg">
