@@ -228,6 +228,7 @@ export const albumService = {
         image_url: imageUrl,
         thumbnail_url: imageUrl,
         category: photoData?.category || 'weddings',
+        album_id: albumId,
         uploaded_by: user?.id
       })?.select()?.single();
 

@@ -358,6 +358,13 @@ BEGIN
          'Обичам естествения ви стил на заснемане',
          'Церемонията ще бъде в планина', 'confirmed');
 
+    -- Backfill gallery_images.album_id for images linked via album_photos
+    UPDATE public.gallery_images AS gi
+    SET album_id = ap.album_id
+    FROM public.album_photos AS ap
+    WHERE gi.id = ap.image_id
+    AND gi.album_id IS NULL;
+    
     -- Create sample gallery images
     INSERT INTO public.gallery_images (
         title, description, image_url, thumbnail_url, category, 
