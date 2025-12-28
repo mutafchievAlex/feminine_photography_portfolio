@@ -1,6 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
-import { useLanguage, useTranslations } from '../../hooks/useLanguage';
+import { useLanguage } from '../../hooks/useLanguage';
 import Header from '../../components/ui/Header';
 import HeroGallery from './components/HeroGallery';
 import RecentStories from './components/RecentStories';
@@ -10,8 +10,7 @@ import InstagramFeed from './components/InstagramFeed';
 import Footer from './components/Footer';
 
 const Homepage = () => {
-  const { language, isEnglish } = useLanguage();
-  const { t } = useTranslations();
+  const { language, isEnglish, t } = useLanguage();
 
   return (
     <>

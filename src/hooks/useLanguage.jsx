@@ -1,54 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Language context
-const LanguageContext = createContext();
-
-// Language provider
-export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState(() => {
-    // Get saved language from localStorage or default to 'bg'
-    return localStorage.getItem('language') || 'bg';
-  });
-
-  // Save language to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem('language', language);
-    document.documentElement.lang = language;
-  }, [language]);
-
-  const toggleLanguage = () => {
-    setLanguage(prev => prev === 'bg' ? 'en' : 'bg');
-  };
-
-  const value = {
-    language,
-    setLanguage,
-    toggleLanguage,
-    isEnglish: language === 'en',
-    isBulgarian: language === 'bg'
-  };
-
-  return (
-    <LanguageContext.Provider value={value}>
-      {children}
-    </LanguageContext.Provider>
-  );
-};
-
-// Hook to use language context
-export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
-};
-
-// Translation hook
-export const useTranslations = () => {
-  const { language } = useLanguage();
-  
-  const translations = {
+const translations = {
     en: {
       // Navigation
       home: 'Home',
@@ -202,7 +154,61 @@ export const useTranslations = () => {
       }
     }
   };
-  
+
+// Language context
+const LanguageContext = createContext();
+
+// Language provider
+export const LanguageProvider = ({ children }) => {
+  const [language, setLanguage] = useState(() => {
+    // Get saved language from localStorage or default to 'bg'
+    return localStorage.getItem('language') || 'bg';
+  });
+
+  // Save language to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('language', language);
+    document.documentElement.lang = language;
+  }, [language]);
+
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'bg' ? 'en' : 'bg');
+  };
+
+const t = (key, fallback) =>
+    translations?.[language]?.[key] ??
+    translations?.bg?.[key] ??
+    fallback ??
+    key;
+
+  const value = {
+    language,
+    setLanguage,
+    toggleLanguage,
+     t,
+    isEnglish: language === 'en',
+    isBulgarian: language === 'bg'
+  };
+
+  return (
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+// Hook to use language context
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
+};
+
+// Translation hook
+export const useTranslations = () => {
+  const { language } = useLanguage();
   const t = (key) => {
     return translations?.[language]?.[key] || translations?.bg?.[key] || key;
   };

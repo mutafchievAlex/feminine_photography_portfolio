@@ -8,18 +8,20 @@ import { useLanguage } from '../../hooks/useLanguage';
  * Displays real-time notifications with unread count badge
  */
 const NotificationBell = () => {
-  const { t } = useLanguage();
+  const { t, translations } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   
+  // Add defensive default values to prevent undefined errors
+  const notificationHook = useRealtimeNotifications();
   const {
-    notifications,
-    unreadCount,
-    markAsRead,
-    markAllAsRead,
-    clearNotification,
-    clearAll
-  } = useRealtimeNotifications();
+    notifications = [],
+    unreadCount = 0,
+    markAsRead = () => {},
+    markAllAsRead = () => {},
+    clearNotification = () => {},
+    clearAll = () => {}
+  } = notificationHook || {};
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -59,10 +61,10 @@ const NotificationBell = () => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return t?.notifications?.justNow || 'Just now';
-    if (diffMins < 60) return `${diffMins}${t?.notifications?.minutesAgo || 'm ago'}`;
-    if (diffHours < 24) return `${diffHours}${t?.notifications?.hoursAgo || 'h ago'}`;
-    if (diffDays < 7) return `${diffDays}${t?.notifications?.daysAgo || 'd ago'}`;
+    if (diffMins < 1) return translations?.notifications?.justNow || 'Just now';
+    if (diffMins < 60) return `${diffMins}${translations?.notifications?.minutesAgo || 'm ago'}`;
+    if (diffHours < 24) return `${diffHours}${translations?.notifications?.hoursAgo || 'h ago'}`;
+    if (diffDays < 7) return `${diffDays}${translations?.notifications?.daysAgo || 'd ago'}`;
     return date?.toLocaleDateString();
   };
 
@@ -78,7 +80,7 @@ const NotificationBell = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
-        aria-label={t?.notifications?.label || 'Notifications'}
+       aria-label={t('notifications', translations?.notifications?.label)}
       >
         <Bell size={24} />
         {unreadCount > 0 && (
@@ -93,21 +95,21 @@ const NotificationBell = () => {
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
             <h3 className="text-lg font-semibold text-gray-900">
-              {t?.notifications?.title || 'Notifications'}
+              {translations?.notifications?.title || 'Notifications'}
             </h3>
             {notifications?.length > 0 && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={markAllAsRead}
                   className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                  title={t?.notifications?.markAllRead || 'Mark all as read'}
+                  title={translations?.notifications?.markAllRead || 'Mark all as read'}
                 >
                   <CheckCheck size={16} />
                 </button>
                 <button
                   onClick={clearAll}
                   className="text-sm text-red-600 hover:text-red-700"
-                  title={t?.notifications?.clearAll || 'Clear all'}
+                  title={translations?.notifications?.clearAll || 'Clear all'}
                 >
                   <X size={16} />
                 </button>
@@ -120,7 +122,7 @@ const NotificationBell = () => {
             {notifications?.length === 0 ? (
               <div className="px-4 py-8 text-center text-gray-500">
                 <Bell size={48} className="mx-auto mb-2 text-gray-300" />
-                <p>{t?.notifications?.noNotifications || 'No notifications yet'}</p>
+                <p>{translations?.notifications?.noNotifications || 'No notifications yet'}</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
@@ -165,7 +167,7 @@ const NotificationBell = () => {
                               markAsRead(notification?.id);
                             }}
                             className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                            title={t?.notifications?.markRead || 'Mark as read'}
+                            title={translations?.notifications?.markRead || 'Mark as read'}
                           >
                             <Check size={16} />
                           </button>
@@ -176,7 +178,7 @@ const NotificationBell = () => {
                             clearNotification(notification?.id);
                           }}
                           className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                          title={t?.notifications?.clear || 'Clear'}
+                          title={translations?.notifications?.clear || 'Clear'}
                         >
                           <X size={16} />
                         </button>
