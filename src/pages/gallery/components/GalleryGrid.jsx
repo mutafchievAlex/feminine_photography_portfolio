@@ -71,7 +71,11 @@ export default function GalleryGrid({ selectedCategory, searchQuery }) {
   const handleImageClick = (image) => {
     // Navigate to individual album page with category and image ID
     const albumId = image?.albumId || image?.album_id;
-    navigate(`/individual-photography-album/${image?.albumId}`, {
+    if (!albumId) {
+      window.alert('Album not available for this image.');
+      return;
+    }
+    navigate(`/individual-photography-album/${albumId}`, {
       state: { imageId: image?.id }
     });
   };
