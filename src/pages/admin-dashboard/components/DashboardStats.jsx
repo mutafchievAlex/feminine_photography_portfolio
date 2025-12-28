@@ -1,60 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Icon from '../../../components/AppIcon';
-import { bookingService } from '../../../services/bookingService';
-import { realtimeService } from '../../../services/realtimeService';
-import { useLanguage } from '../../../hooks/useLanguage';
+import { useBookingStats } from '../../../hooks/useBookings';
 
 export default function DashboardStats() {
-  const { t } = useLanguage();
-  const [stats, setStats] = useState({
-    totalBookings: 0,
-    pendingBookings: 0,
-    completedBookings: 0,
-    totalRevenue: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const { data: stats, isLoading, isError, error } = useBookingStats();
 
-  // Fetch initial stats
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  // Setup real-time subscription for booking updates
-  useEffect(() => {
-    const subscription = realtimeService?.subscribeToBookingUpdates(() => {
-      // Refresh stats when any booking changes
-      fetchStats();
-    });
-
-    return () => subscription?.unsubscribe();
-  }, []);
-
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const bookings = await bookingService?.getAllBookings();
-      
-      const totalBookings = bookings?.length || 0;
-      const pendingBookings = bookings?.filter(b => b?.status === 'pending')?.length || 0;
-      const completedBookings = bookings?.filter(b => b?.status === 'completed')?.length || 0;
-      const totalRevenue = bookings
-        ?.filter(b => b?.status === 'completed')
-        ?.reduce((sum, b) => sum + (parseFloat(b?.total_amount) || 0), 0) || 0;
-
-      setStats({
-        totalBookings,
-        pendingBookings,
-        completedBookings,
-        totalRevenue,
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  // Loading state
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[1, 2, 3, 4]?.map(i => (
@@ -67,18 +19,43 @@ export default function DashboardStats() {
     );
   }
 
+  // Error state
+  if (isError) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="flex items-center space-x-3">
+          <Icon name="AlertTriangle" size={24} className="text-red-600" />
+          <div>
+            <h3 className="text-red-800 font-medium">Грешка при зареждане на статистика</h3>
+            <p className="text-red-600 text-sm">{error?.message}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (!stats) {
+    return (
+      <div className="bg-background rounded-lg shadow-soft border border-border p-12 text-center">
+        <Icon name="TrendingUp" size={48} className="mx-auto text-gray-300 mb-4" />
+        <p className="text-hierarchy-secondary">Няма налична статистика</p>
+      </div>
+    );
+  }
+
   const statCards = [
     {
       title: 'Общо резервации',
-      value: stats?.totalBookings,
+      value: stats?.total || 0,
       icon: 'Calendar',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
-      trend: `+${stats?.thisMonth} този месец`
+      trend: `+${stats?.thisMonth || 0} този месец`
     },
     {
       title: 'Чакащи потвърждение',
-      value: stats?.pendingBookings,
+      value: stats?.pending || 0,
       icon: 'Clock',
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-50',
@@ -86,7 +63,7 @@ export default function DashboardStats() {
     },
     {
       title: 'Потвърдени',
-      value: stats?.completedBookings,
+      value: stats?.confirmed || 0,
       icon: 'CheckCircle',
       color: 'text-green-600',
       bgColor: 'bg-green-50',
@@ -94,7 +71,7 @@ export default function DashboardStats() {
     },
     {
       title: 'Завършени',
-      value: stats?.completedBookings,
+      value: stats?.completed || 0,
       icon: 'Award',
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',

@@ -29,7 +29,7 @@ function Routes() {
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/individual-photography-album/:category" element={<IndividualPhotographyAlbum />} />
+          <Route path="/individual-photography-album/:albumId" element={<IndividualPhotographyAlbum />} />
           <Route path="/album-management" element={<AlbumManagement />} />
           <Route path="*" element={<NotFound />} />
         </RouterRoutes>

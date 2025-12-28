@@ -31,19 +31,28 @@ const IndividualPhotographyAlbum = () => {
     try {
       setLoading(true);
       const data = await albumService?.getById(albumId);
+      
+      if (!data) {
+        throw new Error('Album not found');
+      }
+      
       setAlbum(data);
+      
+      // Ensure photos is always an array
       const photos = Array.isArray(data?.photos) ? data?.photos : [];
       setImages(photos);
       
       // Set initial image if provided
       if (initialImageId && photos?.length > 0) {
         const imageIndex = photos?.findIndex(img => img?.imageId === initialImageId);
-        if (imageIndex !== -1) {
+        if (imageIndex >= 0) {
           setCurrentIndex(imageIndex);
         }
       }
     } catch (error) {
       console.error('Error loading album:', error);
+      setImages([]);
+      setAlbum(null);
     } finally {
       setLoading(false);
     }
@@ -75,15 +84,15 @@ const IndividualPhotographyAlbum = () => {
   // Navigation handlers - simplified with proper state management
   const handlePrevious = useCallback(() => {
     setCurrentIndex(prev => {
-      const length = images?.length || 0;
-      return length > 0 ? (prev - 1 + length) % length : prev;
+      const length = images?.length;
+      return length > 0 ? (prev - 1 + length) % length : 0;
     });
   }, [images?.length]);
 
   const handleNext = useCallback(() => {
     setCurrentIndex(prev => {
-      const length = images?.length || 0;
-      return length > 0 ? (prev + 1) % length : prev;
+      const length = images?.length;
+      return length > 0 ? (prev + 1) % length : 0;
     });
   }, [images?.length]);
 
@@ -110,7 +119,7 @@ const IndividualPhotographyAlbum = () => {
     const handleKeyPress = (e) => {
       if (!e) return;
       
-      const length = images?.length || 0;
+      const length = images?.length;
       if (length === 0) return;
       
       switch(e?.key) {

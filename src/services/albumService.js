@@ -68,6 +68,22 @@ export const albumService = {
     // Safely handle album_photos array with proper null checks
     const albumPhotos = Array.isArray(data?.album_photos) ? data?.album_photos : [];
     
+    // Filter out entries without gallery images, then sort and map
+    const validPhotos = albumPhotos?.filter(p => p?.gallery_images);
+    const sortedPhotos = validPhotos?.sort((a, b) => (a?.display_order || 0) - (b?.display_order || 0));
+    const mappedPhotos = sortedPhotos?.map(p => ({
+      id: p?.id,
+      imageId: p?.gallery_images?.id,
+      imageUrl: p?.gallery_images?.image_url,
+      thumbnailUrl: p?.gallery_images?.thumbnail_url,
+      title: p?.gallery_images?.title || 'Untitled',
+      altText: p?.gallery_images?.alt_text || '',
+      description: p?.gallery_images?.description || '',
+      caption: p?.caption || '',
+      isFeatured: p?.is_featured || false,
+      displayOrder: p?.display_order || 0
+    }));
+    
     return {
       id: data?.id,
       title: data?.title,
@@ -82,19 +98,7 @@ export const albumService = {
       createdBy: data?.created_by,
       createdAt: data?.created_at,
       updatedAt: data?.updated_at,
-      photos: // Remove entries without gallery images
-      albumPhotos?.filter(p => p?.gallery_images)?.sort((a, b) => (a?.display_order || 0) - (b?.display_order || 0))?.map(p => ({
-          id: p?.id,
-          imageId: p?.gallery_images?.id,
-          imageUrl: p?.gallery_images?.image_url,
-          thumbnailUrl: p?.gallery_images?.thumbnail_url,
-          title: p?.gallery_images?.title || 'Untitled',
-          altText: p?.gallery_images?.alt_text || '',
-          description: p?.gallery_images?.description || '',
-          caption: p?.caption || '',
-          isFeatured: p?.is_featured || false,
-          displayOrder: p?.display_order || 0
-        }))
+      photos: mappedPhotos
     };
   },
 

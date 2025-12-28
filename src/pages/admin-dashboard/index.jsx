@@ -9,28 +9,31 @@ import RecentActivity from './components/RecentActivity';
 import UpcomingSchedule from './components/UpcomingSchedule';
 import RevenueChart from './components/RevenueChart';
 
+// Development-only mock notifications (gated behind DEV flag)
+const MOCK_NOTIFICATIONS = import.meta.env?.DEV ? [
+  {
+    id: 1,
+    type: 'urgent',
+    message: 'Стефан Николов изисква потвърждение за утрешната сесия',
+    timestamp: new Date(Date.now() - 1800000)
+  },
+  {
+    id: 2,
+    type: 'info',
+    message: 'Нова галерия за Мария Петрова е готова за доставка',
+    timestamp: new Date(Date.now() - 3600000)
+  },
+  {
+    id: 3,
+    type: 'reminder',
+    message: 'Напомняне: Резервно копие на снимките днес в 18:00',
+    timestamp: new Date(Date.now() - 7200000)
+  }
+] : [];
+
 const AdminDashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'urgent',
-      message: 'Стефан Николов изисква потвърждение за утрешната сесия',
-      timestamp: new Date(Date.now() - 1800000) // 30 minutes ago
-    },
-    {
-      id: 2,
-      type: 'info',
-      message: 'Нова галерия за Мария Петрова е готова за доставка',
-      timestamp: new Date(Date.now() - 3600000) // 1 hour ago
-    },
-    {
-      id: 3,
-      type: 'reminder',
-      message: 'Напомняне: Резервно копие на снимките днес в 18:00',
-      timestamp: new Date(Date.now() - 7200000) // 2 hours ago
-    }
-  ]);
+  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -122,7 +125,7 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {/* Notifications */}
+          {/* Mock Notifications (DEV only) */}
           {notifications?.length > 0 && (
             <div className="mb-8">
               <div className="space-y-3">
