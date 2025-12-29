@@ -128,13 +128,13 @@ const TrustSignals = () => {
             </a>
             
             <a 
-              href="https://instagram.com/elenarosephotography" 
+              href="https://www.instagram.com/tepavicharovaphotography?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center space-x-2 text-sophisticated-dark hover:text-hierarchy-secondary transition-colors elegant-hover"
             >
               <Icon name="Instagram" size={18} />
-              <span className="font-sophisticated">@elenarosephotography</span>
+              <span className="font-sophisticated">@tepavicharovaphotography</span>
             </a>
           </div>
         </div>

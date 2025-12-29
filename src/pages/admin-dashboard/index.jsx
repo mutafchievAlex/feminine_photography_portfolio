@@ -15,9 +15,11 @@ import { albumService } from '../../services/albumService';
 import { bookingService } from '../../services/bookingService';
 import { useLanguage } from '../../hooks/useLanguage';
 import pkg from '../../../package.json';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const AdminDashboard = () => {
   const { t } = useLanguage();
+  const { theme, toggleTheme, setTheme } = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [notifications, setNotifications] = useState([]);
   const [systemInfo, setSystemInfo] = useState({
@@ -179,10 +181,12 @@ const AdminDashboard = () => {
                       {systemInfo?.bookingsCount || 0} {t('bookingsCount')} • {systemInfo?.imagesCount || 0} {t('imagesCount')} • {systemInfo?.albumsCount || 0} {t('albumsCount')}
                     </p>
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Icon name="Settings" size={16} className="mr-2" />
-                    {t('learnMore')}
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" onClick={toggleTheme}>
+                      <Icon name="Contrast" size={16} className="mr-2" />
+                      {theme === 'bw' ? 'Класическа тема: ВКЛ' : 'Класическа тема: ИЗКЛ'}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

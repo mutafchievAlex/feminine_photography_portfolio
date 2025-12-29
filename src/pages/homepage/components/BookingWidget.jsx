@@ -90,7 +90,7 @@ const BookingWidget = () => {
   };
 
   return (
-    <section className="py-20 bg-gallery-canvas">
+    <section className="py-20 bg-black">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

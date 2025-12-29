@@ -58,7 +58,7 @@ const Footer = () => {
   };
 
   const socialLinks = [
-    { name: 'Instagram', icon: 'Instagram', url: 'https://instagram.com/elenarose_photography' },
+    { name: 'Instagram', icon: 'Instagram', url: 'https://www.instagram.com/tepavicharovaphotography?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' },
     { name: 'Facebook', icon: 'Facebook', url: 'https://facebook.com/elenarose.photography' },
     { name: 'Pinterest', icon: 'Image', url: 'https://pinterest.com/elenarose_photography' },
     { name: 'LinkedIn', icon: 'Linkedin', url: 'https://linkedin.com/in/elena-rose-photographer' }

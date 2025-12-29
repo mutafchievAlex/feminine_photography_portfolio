@@ -55,6 +55,38 @@
     --radius: 0.5rem; /* 8px */
   }
 
+  /* Black & White Theme Overrides (admin switchable) */
+  .theme-bw {
+    --color-background: #FFFFFF;
+    --color-foreground: #000000;
+    --color-card: #FFFFFF;
+    --color-card-foreground: #000000;
+    --color-popover: #FFFFFF;
+    --color-popover-foreground: #000000;
+    --color-primary: #FFFFFF;
+    --color-primary-foreground: #000000;
+    --color-secondary: #F5F5F5; /* light gray */
+    --color-secondary-foreground: #000000;
+    --color-muted: #F5F5F5;
+    --color-muted-foreground: #4B5563; /* gray-600 */
+    --color-accent: #111111; /* near black for accents */
+    --color-accent-foreground: #FFFFFF;
+    --color-destructive: #111111;
+    --color-destructive-foreground: #FFFFFF;
+    --color-border: rgba(0,0,0,0.15);
+    --color-input: #FFFFFF;
+    --color-ring: #111111;
+
+    /* Fonts: classic serif */
+    --font-heading: 'Georgia', 'Times New Roman', serif;
+    --font-body: 'Georgia', 'Times New Roman', serif;
+
+    /* Shadows a bit subtler in BW */
+    --shadow-soft: 0 4px 16px rgba(0,0,0,0.08);
+    --shadow-medium: 0 8px 24px rgba(0,0,0,0.12);
+    --shadow-strong: 0 12px 40px rgba(0,0,0,0.16);
+  }
+
   * {
     @apply border-border;
   }
@@ -196,4 +228,13 @@
   .shadow-soft { box-shadow: var(--shadow-soft); }
   .shadow-medium { box-shadow: var(--shadow-medium); }
   .shadow-strong { box-shadow: var(--shadow-strong); }
+
+  /* Hide scrollbars while keeping scroll */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

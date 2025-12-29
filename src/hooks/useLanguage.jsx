@@ -159,7 +159,7 @@ const translations = {
       limitedOffer: 'Limited Offer',
       seasonalPromoTitle: 'Autumn Promotion 2024',
       seasonalPromoDescription: 'Book your autumn photoshoot by October 15th and get a free second location',
-      bookNow: 'Book Now',
+      
 
       // Investment Page - Packages
       essentialSubtitle: 'Perfect for small events',
@@ -272,7 +272,6 @@ const translations = {
       includedHighResDesc: 'All photos are delivered in full resolution, ready for print and sharing.',
       includedSupportTitle: 'Ongoing support',
       includedSupportDesc: 'We’re always available for questions and additional services.',
-      testimonialsTitle: 'What our clients say',
       testimonialsDescription: 'Our clients’ stories speak to the value of investing in professional photography and the unforgettable memories we create together.',
       finalCtaTitle: 'Ready to make the investment?',
       finalCtaDescription: 'Let’s start the conversation about your dreams and how we can turn them into beautiful, lasting memories. The first consultation is always free.',

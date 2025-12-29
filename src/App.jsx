@@ -3,14 +3,17 @@ import Routes from './Routes';
 import QueryProvider from './providers/QueryProvider';
 import { LanguageProvider } from './hooks/useLanguage';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <QueryProvider>
-          <Routes />
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <Routes />
+          </QueryProvider>
+        </ThemeProvider>
       </LanguageProvider>
     </AuthProvider>
   );
