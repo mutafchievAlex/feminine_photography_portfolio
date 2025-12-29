@@ -272,32 +272,47 @@ const InstagramFeed = () => {
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
 
-  // Auto-scroll effect - every 3 seconds
+  // Ensure we start in the middle copy for seamless looping
   useEffect(() => {
-    if (!sliderRef.current || normalizedPosts.length === 0) return;
+    const slider = sliderRef.current;
+    if (!slider || normalizedPosts.length === 0) return;
 
-    const autoScroll = setInterval(() => {
-      const slider = sliderRef.current;
-      if (!slider) return;
+    const cardWidth = slider.firstChild?.getBoundingClientRect()?.width || 300;
+    const styles = getComputedStyle(slider);
+    const gap = parseFloat(styles.columnGap) || 12;
+    const scrollAmount = cardWidth + gap;
+    const singleRowWidth = scrollAmount * normalizedPosts.length;
 
+    // Start centered on the middle copy
+    if (slider.scrollLeft < singleRowWidth || slider.scrollLeft > singleRowWidth * 2) {
+      slider.scrollLeft = singleRowWidth;
+    }
+  }, [normalizedPosts.length]);
+
+  // Auto-scroll effect with seamless loop - every 3 seconds
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider || normalizedPosts.length === 0) return;
+
+    const interval = setInterval(() => {
       const cardWidth = slider.firstChild?.getBoundingClientRect()?.width || 300;
-      const gap = 12; // gap-3 = 12px
+      const styles = getComputedStyle(slider);
+      const gap = parseFloat(styles.columnGap) || 12; // read actual flex gap
       const scrollAmount = cardWidth + gap;
-      
-      // Check if we're at or near the end
-      const isAtEnd = slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 10;
-      
-      if (isAtEnd) {
-        // Reset to beginning
-        slider.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        // Scroll one card forward
-        slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      const singleRowWidth = scrollAmount * normalizedPosts.length;
+
+      // Keep scrollLeft within the middle copy range for infinite loop
+      if (slider.scrollLeft >= singleRowWidth * 2) {
+        slider.scrollLeft -= singleRowWidth;
+      } else if (slider.scrollLeft <= 0) {
+        slider.scrollLeft += singleRowWidth;
       }
+
+      slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }, 3000);
 
-    return () => clearInterval(autoScroll);
-  }, [normalizedPosts]);
+    return () => clearInterval(interval);
+  }, [normalizedPosts.length]);
 
   return (
     <section className="py-20 bg-black">
@@ -330,10 +345,13 @@ const InstagramFeed = () => {
                 className="flex gap-3 overflow-x-auto scrollbar-hide pb-4 cursor-grab select-none px-4 sm:px-6 lg:px-8"
                 style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
               >
-                {normalizedPosts?.map((post, index) => (
+                {(normalizedPosts?.length > 0 ? [...normalizedPosts, ...normalizedPosts, ...normalizedPosts] : [])?.map((post, index) => {
+                  const baseIndex = index % normalizedPosts.length;
+                  const basePost = normalizedPosts[baseIndex];
+                  return (
                   <motion.div
-                    key={post?.id}
-                    onClick={() => !hasDragged && openModal(post, index)}
+                    key={`${post?.id || basePost?.id}-${index}`}
+                    onClick={() => !hasDragged && openModal(basePost || post, baseIndex)}
                     variants={itemVariants}
                     initial="hidden"
                     whileInView="visible"
@@ -341,17 +359,17 @@ const InstagramFeed = () => {
                     className="group relative flex-shrink-0 w-72 sm:w-80 lg:w-96 h-[420px] overflow-hidden bg-black cursor-pointer"
                   >
                     <AppImage
-                      src={post?.image}
-                      alt={post?.caption || 'Instagram post'}
+                      src={basePost?.image || post?.image}
+                      alt={basePost?.caption || post?.caption || 'Instagram post'}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
 
                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[1]" />
 
-                    {post?.caption && (
+                    {(basePost?.caption || post?.caption) && (
                       <div className="absolute top-0 left-0 right-0 pt-4 px-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[2]">
                         <p className="text-white text-xs text-center line-clamp-2">
-                          {post?.caption}
+                          {basePost?.caption || post?.caption}
                         </p>
                       </div>
                     )}
@@ -383,7 +401,8 @@ const InstagramFeed = () => {
                       </div>
                     </div>
                   </motion.div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

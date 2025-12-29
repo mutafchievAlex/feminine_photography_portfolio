@@ -182,7 +182,7 @@ const IndividualPhotographyAlbum = () => {
   const currentImage = images?.[currentIndex];
 
   return (
-    <div className="min-h-screen bg-[#FBF7F4]">
+    <div className="h-screen bg-black overflow-hidden">
       {/* Hero Section - Horizontal Image Carousel */}
       <AlbumHero 
         images={images}

@@ -57,34 +57,20 @@ const Header = () => {
 
   const isActivePath = (path) => location?.pathname === path;
 
-  const LanguageToggle = () =>
-  <div className="flex items-center">
-      <Button
-      variant="ghost"
-      size="sm"
+  const LanguageToggle = () => (
+    <button
       onClick={toggleLanguage}
-      className={`flex items-center space-x-2 elegant-hover px-3 py-2 ${isHeroTransparent ? 'text-white bg-white/10 hover:bg-white/15' : ''}`}
-      aria-label={`Switch to ${isEnglish ? 'Bulgarian' : 'English'}`}>
-
-        <Icon name="Globe" size={16} className={isHeroTransparent ? 'text-white/80' : 'text-hierarchy-secondary'} />
-        <span className={`text-sm font-sophisticated ${isHeroTransparent ? 'text-white' : 'text-hierarchy-secondary'}`}>
-          {language?.toUpperCase()}
-        </span>
-        <div className="flex items-center space-x-1">
-          <div
-          className={`w-8 h-4 bg-surface-elevation rounded-full relative transition-all duration-elegant ${
-          isEnglish ? 'bg-accent' : 'bg-surface-muted'}`
-          }>
-
-            <div
-            className={`absolute top-0.5 w-3 h-3 bg-background rounded-full shadow-soft transition-all duration-elegant ${
-            isEnglish ? 'translate-x-4' : 'translate-x-0.5'}`
-            } />
-
-          </div>
-        </div>
-      </Button>
-    </div>;
+      aria-label={`Switch to ${isEnglish ? 'Bulgarian' : 'English'}`}
+      className={`flex items-center gap-2 text-sm transition-opacity ${
+        isHeroTransparent ? 'text-white hover:opacity-80' : 'text-hierarchy-secondary hover:text-sophisticated-dark'
+      }`}
+    >
+      <Icon name="Globe" size={16} className={isHeroTransparent ? 'text-white/80' : 'text-hierarchy-secondary'} />
+      <span className={`font-sophisticated ${isHeroTransparent ? 'text-white' : 'text-hierarchy-secondary'}`}>
+        {language?.toUpperCase()}
+      </span>
+    </button>
+  );
 
   const headerClasses = `fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
     isHeroTransparent
