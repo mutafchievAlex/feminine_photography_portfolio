@@ -1,10 +1,13 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
+import EditableText from '../../../components/EditableText';
 import { useLanguage } from '../../../hooks/useLanguage';
+import { usePageContent } from '../../../hooks/usePageContent';
 
 const LocationsSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { getText, updateContent } = usePageContent('about', language);
   const favoriteLocations = [
     {
       name: t('oldTownPlovdiv'),
@@ -81,9 +84,16 @@ const LocationsSection = () => {
           <h2 className="text-3xl md:text-4xl font-heading text-sophisticated-dark mb-6">
             {t('favoriteLocations')}
           </h2>
-          <p className="text-lg text-hierarchy-secondary max-w-3xl mx-auto">
-            {t('locationsDescription')}
-          </p>
+          <EditableText
+            contentKey="locations_description"
+            onUpdate={updateContent}
+            getText={getText}
+            className="text-lg text-hierarchy-secondary max-w-3xl mx-auto"
+            as="p"
+            multiline={true}
+          >
+            {getText('locations_description', t('locationsDescription'))}
+          </EditableText>
         </div>
 
         {/* Location Grid */}

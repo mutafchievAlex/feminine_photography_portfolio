@@ -1,10 +1,19 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
+import EditableText from '../../../components/EditableText';
 import { useLanguage } from '../../../hooks/useLanguage';
+import { usePageContent } from '../../../hooks/usePageContent';
+import { useAuth } from '../../../contexts/AuthContext';
 
 
 const RecognitionSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { getText, updateContent } = usePageContent('about', language);
+  const { profile, user } = useAuth();
+  
+  // Get role from profile or user metadata
+  const userRole = profile?.role || user?.user_metadata?.role || null;
+  const isAdmin = userRole === 'admin';
 
   const awards = [
     {
@@ -92,77 +101,100 @@ const RecognitionSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-heading text-sophisticated-dark mb-6">
-            {t('recognitionTitle')}
-          </h2>
-          <p className="text-lg text-hierarchy-secondary max-w-3xl mx-auto">
-            {t('recognitionDescription')}
-          </p>
+          <EditableText
+            contentKey="recognition_title"
+            onUpdate={updateContent}
+            getText={getText}
+            className="text-3xl md:text-4xl font-heading text-sophisticated-dark mb-6"
+            as="h2"
+          >
+            {getText('recognition_title', t('recognitionTitle'))}
+          </EditableText>
+          <EditableText
+            contentKey="recognition_description"
+            onUpdate={updateContent}
+            getText={getText}
+            className="text-lg text-hierarchy-secondary max-w-3xl mx-auto"
+            as="p"
+            multiline={true}
+          >
+            {getText('recognition_description', t('recognitionDescription'))}
+          </EditableText>
         </div>
 
         {/* Awards Section */}
-        <div className="mb-20">
-          <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
-            {t('awardsTitle')}
-          </h3>
-          
-          <div className="grid md:grid-cols-2 gap-8">
-            {awards?.map((award, index) => (
-              <div key={index} className="bg-surface-elevation p-6 rounded-2xl shadow-soft elegant-hover">
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-gradient-to-br from-accent to-secondary rounded-full flex items-center justify-center">
-                      <Icon name="Award" size={24} className="text-sophisticated-dark" />
+        {isAdmin && (
+          <div className="mb-20">
+            <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
+              {t('awardsTitle')}
+            </h3>
+            
+            <div className="grid md:grid-cols-2 gap-8">
+              {awards?.map((award, index) => (
+                <div key={index} className="bg-surface-elevation p-6 rounded-2xl shadow-soft elegant-hover">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-gradient-to-br from-accent to-secondary rounded-full flex items-center justify-center">
+                        <Icon name="Award" size={24} className="text-sophisticated-dark" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className="text-sm font-sophisticated text-accent">{award?.year}</span>
-                      <span className="text-xs text-hierarchy-secondary">•</span>
-                      <span className="text-xs text-hierarchy-secondary">{award?.category}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="text-sm font-sophisticated text-accent">{award?.year}</span>
+                        <span className="text-xs text-hierarchy-secondary">•</span>
+                        <span className="text-xs text-hierarchy-secondary">{award?.category}</span>
+                      </div>
+                      <h4 className="text-lg font-heading text-sophisticated-dark mb-2">
+                        {award?.title}
+                      </h4>
+                      <p className="text-hierarchy-secondary text-sm">
+                        {award?.organization}
+                      </p>
                     </div>
-                    <h4 className="text-lg font-heading text-sophisticated-dark mb-2">
-                      {award?.title}
-                    </h4>
-                    <p className="text-hierarchy-secondary text-sm">
-                      {award?.organization}
-                    </p>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Publications & Media */}
-        <div className="mb-20">
-          <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
-            {t('publicationsTitle')}
-          </h3>
-          
-          <div className="grid lg:grid-cols-3 gap-8">
-            {publications?.map((publication, index) => (
-              <div key={index} className="bg-warm-section p-6 rounded-2xl shadow-soft elegant-hover">
-                <div className="flex items-center space-x-3 mb-4">
-                  <Icon name="BookOpen" size={20} className="text-accent" />
-                  <span className="text-sm font-sophisticated text-accent">{publication?.date}</span>
+        {isAdmin && (
+          <div className="mb-20">
+            <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
+              {t('publicationsTitle')}
+            </h3>
+            
+            <div className="grid lg:grid-cols-3 gap-8">
+              {publications?.map((publication, index) => (
+                <div key={index} className="bg-warm-section p-6 rounded-2xl shadow-soft elegant-hover">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Icon name="BookOpen" size={20} className="text-accent" />
+                    <span className="text-sm font-sophisticated text-accent">{publication?.date}</span>
+                  </div>
+                  <h4 className="text-lg font-heading text-sophisticated-dark mb-3">
+                    {publication?.title}
+                  </h4>
+                  <p className="text-hierarchy-secondary text-sm">
+                    {publication?.description}
+                  </p>
                 </div>
-                <h4 className="text-lg font-heading text-sophisticated-dark mb-3">
-                  {publication?.title}
-                </h4>
-                <p className="text-hierarchy-secondary text-sm">
-                  {publication?.description}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Education & Certifications */}
         <div className="mb-20">
-          <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
-            {t('educationTitle')}
-          </h3>
+          <EditableText
+            contentKey="education_title"
+            onUpdate={updateContent}
+            getText={getText}
+            className="text-2xl font-heading text-sophisticated-dark text-center mb-12"
+            as="h3"
+          >
+            {getText('education_title', t('educationTitle'))}
+          </EditableText>
           
           <div className="bg-feminine-accent p-8 rounded-3xl">
             <div className="grid md:grid-cols-3 gap-8">
@@ -188,9 +220,15 @@ const RecognitionSection = () => {
 
         {/* Client Testimonials */}
         <div className="mb-20">
-          <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
-            {t('testimonialsTitle')}
-          </h3>
+          <EditableText
+            contentKey="testimonials_title"
+            onUpdate={updateContent}
+            getText={getText}
+            className="text-2xl font-heading text-sophisticated-dark text-center mb-12"
+            as="h3"
+          >
+            {getText('testimonials_title', t('testimonialsTitle'))}
+          </EditableText>
           
           <div className="grid lg:grid-cols-3 gap-8">
             {testimonialHighlights?.map((testimonial, index) => (

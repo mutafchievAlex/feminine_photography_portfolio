@@ -91,15 +91,15 @@ const InstagramFeed = () => {
             : [];
 
     return rawList.map((post, index) => {
-      const image =
-        post?.media_type === 'VIDEO' 
-          ? post?.thumbnail_url || post?.media_url
-          : post?.media_url ||
-            post?.mediaUrl ||
-            post?.thumbnail_url ||
-            post?.image ||
-            post?.url ||
-            post?.source;
+      const isVideo = post?.media_type === 'VIDEO';
+      const image = isVideo
+        ? post?.thumbnail_url || post?.media_url
+        : post?.media_url ||
+          post?.mediaUrl ||
+          post?.thumbnail_url ||
+          post?.image ||
+          post?.url ||
+          post?.source;
 
       const rawCaption =
         (typeof post?.caption === 'string' && post?.caption) ||
@@ -111,6 +111,8 @@ const InstagramFeed = () => {
       return {
         id: post?.id || `post-${index}`,
         image,
+        videoUrl: isVideo ? post?.media_url : null,
+        thumbnail: post?.thumbnail_url || image,
         caption: rawCaption,
         likes: post?.like_count ?? post?.likes,
         comments: post?.comments_count ?? post?.comments,
@@ -205,7 +207,12 @@ const InstagramFeed = () => {
   const openModal = async (post, index) => {
     setSelectedPost(post);
     setCurrentImageIndex(0);
-    setPostMedias([{ image: post.image, mediaType: post.mediaType }]);
+    setPostMedias([{ 
+      image: post.image, 
+      mediaType: post.mediaType,
+      videoUrl: post.videoUrl || (post.mediaType === 'VIDEO' ? post.image : null),
+      thumbnail: post.thumbnail || post.image 
+    }]);
     document.body.style.overflow = 'hidden';
 
     // Fetch all media from the post if it's a carousel
@@ -226,7 +233,9 @@ const InstagramFeed = () => {
           const json = await response.json();
           if (json?.data && json.data.length > 0) {
             const medias = json.data.map((media) => ({
-              image: media.media_type === 'VIDEO' ? media.thumbnail_url || media.media_url : media.media_url,
+              image: media.media_type === 'VIDEO' ? media.thumbnail_url : media.media_url,
+              videoUrl: media.media_type === 'VIDEO' ? media.media_url : null,
+              thumbnail: media.thumbnail_url || media.media_url,
               mediaType: media.media_type,
               id: media.id,
             }));
@@ -292,35 +301,6 @@ const InstagramFeed = () => {
 
   return (
     <section className="py-20 bg-black">
-      {/* Section Header with Link */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <a 
-            href={INSTAGRAM_CONFIG.profileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center space-x-3 mb-4 hover:opacity-80 transition-opacity"
-          >
-            <Icon name="Instagram" size={32} className="text-accent" />
-            <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl text-sophisticated-dark hover:text-accent transition-colors">
-              @{INSTAGRAM_CONFIG.username}
-            </h2>
-          </a>
-          <p className="font-sophisticated text-lg text-hierarchy-secondary max-w-3xl mx-auto">
-            {language === 'bg' 
-              ? 'Следете ме в Instagram за ежедневни вдъхновения, зад кулисите моменти и най-новите ми творения.' 
-              : 'Follow me on Instagram for daily inspiration, behind-the-scenes moments and my latest creations.'
-            }
-          </p>
-        </motion.div>
-      </div>
-
       {/* Instagram Carousel (single row with navigation) - Full Width */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -408,38 +388,6 @@ const InstagramFeed = () => {
             </div>
           )}
       </motion.div>
-
-      {/* Follow Button CTA */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          viewport={{ once: true }}
-          className="text-center"
-        >
-          <a 
-            href={INSTAGRAM_CONFIG.profileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button
-              variant="default"
-              className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 text-lg magnetic-hover pulse-cta hover:shadow-lg transition-shadow"
-            >
-              <Icon name="Instagram" size={20} className="mr-2" />
-              {language === 'bg' ? 'Последвай в Instagram' : 'Follow on Instagram'}
-            </Button>
-          </a>
-
-          <p className="mt-4 text-hierarchy-secondary font-sophisticated">
-            {language === 'bg' 
-              ? `Присъединете се към ${INSTAGRAM_CONFIG.followersCount} последователи` 
-              : `Join ${INSTAGRAM_CONFIG.followersCount} followers`
-            }
-          </p>
-        </motion.div>
-      </div>
 
       {/* Instagram Post Modal */}
       {selectedPost && (
@@ -577,12 +525,35 @@ const InstagramModal = ({ selectedPost, currentImageIndex, postMedias, closeModa
                   </button>
                 )}
 
-                {/* Main Image */}
-                <AppImage
-                  src={postMedias[currentImageIndex]?.image}
-                  alt={selectedPost?.caption || 'Instagram post'}
-                  className="h-[76vh] w-auto object-contain"
-                />
+                {/* Main Media (Image or Video) */}
+                {postMedias[currentImageIndex]?.mediaType === 'VIDEO' ? (
+                  <video
+                    key={postMedias[currentImageIndex]?.videoUrl}
+                    src={postMedias[currentImageIndex]?.videoUrl || postMedias[currentImageIndex]?.image}
+                    controls
+                    autoPlay
+                    loop
+                    playsInline
+                    className="h-[76vh] w-auto object-contain"
+                    poster={postMedias[currentImageIndex]?.thumbnail}
+                    onError={(e) => {
+                      console.error('Video load error:', e);
+                      console.log('Video URL:', postMedias[currentImageIndex]?.videoUrl);
+                      console.log('Image URL:', postMedias[currentImageIndex]?.image);
+                    }}
+                    onLoadedData={() => {
+                      console.log('Video loaded successfully');
+                    }}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <AppImage
+                    src={postMedias[currentImageIndex]?.image}
+                    alt={selectedPost?.caption || 'Instagram post'}
+                    className="h-[76vh] w-auto object-contain"
+                  />
+                )}
 
                 {/* Media Dots Navigation */}
                 {postMedias.length > 1 && (
@@ -601,13 +572,7 @@ const InstagramModal = ({ selectedPost, currentImageIndex, postMedias, closeModa
                   </div>
                 )}
 
-                {/* Video indicator */}
-                {postMedias[currentImageIndex]?.mediaType === 'VIDEO' && (
-                  <div className="absolute top-4 left-4 flex items-center space-x-2 text-white bg-black/50 px-3 py-1.5 rounded-full text-sm z-10">
-                    <Icon name="Play" size={16} className="text-white fill-white" />
-                    <span>{language === 'bg' ? 'Видео' : 'Video'}</span>
-                  </div>
-                )}
+
               </div>
 
               {/* Details Section - Instagram-style sidebar */}
@@ -626,9 +591,14 @@ const InstagramModal = ({ selectedPost, currentImageIndex, postMedias, closeModa
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="font-semibold text-sm text-white">
+                    <a
+                      href={INSTAGRAM_CONFIG.profileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-sm text-white hover:opacity-70 transition-opacity"
+                    >
                       {INSTAGRAM_CONFIG.username}
-                    </p>
+                    </a>
                   </div>
                 </div>
 

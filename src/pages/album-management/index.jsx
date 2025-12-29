@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { albumService } from '../../services/albumService';
 import AlbumCard from './components/AlbumCard';
 import AlbumModal from './components/AlbumModal';
+import ManagePhotosModal from './components/ManagePhotosModal';
 import PhotoUploadModal from './components/PhotoUploadModal';
 import BulkMetadataEditor from './components/BulkMetadataEditor';
 import AlbumTemplateModal from './components/AlbumTemplateModal';
 import PhotoReorderModal from './components/PhotoReorderModal';
+import Icon from '../../components/AppIcon';
 import { Helmet } from 'react-helmet';
 
 export default function AlbumManagement() {
@@ -14,12 +16,14 @@ export default function AlbumManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAlbumModal, setShowAlbumModal] = useState(false);
+  const [showManagePhotosModal, setShowManagePhotosModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [showBulkEditor, setShowBulkEditor] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showReorderModal, setShowReorderModal] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
   const [albumPhotos, setAlbumPhotos] = useState([]);
+  const [loadingAlbumDetails, setLoadingAlbumDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const navigate = useNavigate();
@@ -38,6 +42,22 @@ export default function AlbumManagement() {
       setError(err?.message || 'Failed to load albums');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAlbumDetails = async (albumId) => {
+    if (!albumId) return null;
+    try {
+      setLoadingAlbumDetails(true);
+      const albumData = await albumService?.getById(albumId);
+      setSelectedAlbum(albumData);
+      setAlbumPhotos(albumData?.photos || []);
+      return albumData;
+    } catch (err) {
+      setError(err?.message || 'Failed to load album photos');
+      throw err;
+    } finally {
+      setLoadingAlbumDetails(false);
     }
   };
 
@@ -78,15 +98,18 @@ export default function AlbumManagement() {
     }
   };
 
-  const handleManagePhotos = (album) => {
-    navigate(`/admin/albums/${album?.id}/photos`);
+  const handleManagePhotos = async (album) => {
+    try {
+      await loadAlbumDetails(album?.id);
+      setShowManagePhotosModal(true);
+    } catch (err) {
+      // error already set by loadAlbumDetails
+    }
   };
 
   const handleBulkEdit = async (album) => {
     try {
-      const albumData = await albumService?.getById(album?.id);
-      setSelectedAlbum(album);
-      setAlbumPhotos(albumData?.photos || []);
+      await loadAlbumDetails(album?.id);
       setShowBulkEditor(true);
     } catch (err) {
       setError(err?.message || 'Failed to load album photos');
@@ -98,6 +121,7 @@ export default function AlbumManagement() {
       await albumService?.bulkUpdatePhotoMetadata(updates);
       setShowBulkEditor(false);
       await loadAlbums();
+      await loadAlbumDetails(selectedAlbum?.id);
     } catch (err) {
       throw err;
     }
@@ -119,9 +143,7 @@ export default function AlbumManagement() {
 
   const handleReorderPhotos = async (album) => {
     try {
-      const albumData = await albumService?.getById(album?.id);
-      setSelectedAlbum(album);
-      setAlbumPhotos(albumData?.photos || []);
+      await loadAlbumDetails(album?.id);
       setShowReorderModal(true);
     } catch (err) {
       setError(err?.message || 'Failed to load album photos');
@@ -133,8 +155,22 @@ export default function AlbumManagement() {
       await albumService?.reorderPhotos(selectedAlbum?.id, photoOrders);
       setShowReorderModal(false);
       await loadAlbums();
+      await loadAlbumDetails(selectedAlbum?.id);
     } catch (err) {
       throw err;
+    }
+  };
+
+  const handleDeletePhoto = async (albumPhotoId) => {
+    if (!albumPhotoId) return;
+    if (!window.confirm('Are you sure you want to delete this photo?')) return;
+
+    try {
+      await albumService?.removePhotoFromAlbum(albumPhotoId);
+      await loadAlbums();
+      await loadAlbumDetails(selectedAlbum?.id);
+    } catch (err) {
+      setError(err?.message || 'Failed to delete photo');
     }
   };
 
@@ -163,6 +199,17 @@ export default function AlbumManagement() {
       </Helmet>
       <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
+          {/* Back Button */}
+          <div className="mb-6">
+            <button 
+              onClick={() => navigate('/admin-dashboard')}
+              className="inline-flex items-center gap-2 text-accent hover:opacity-70 transition-opacity"
+            >
+              <Icon name="ChevronLeft" size={20} />
+              <span className="text-sm font-medium">Вернете се към дашбор</span>
+            </button>
+          </div>
+
           {/* Header */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -299,11 +346,29 @@ export default function AlbumManagement() {
           />
         )}
 
+        {showManagePhotosModal && selectedAlbum && (
+          <ManagePhotosModal
+            album={selectedAlbum}
+            photos={albumPhotos}
+            loading={loadingAlbumDetails}
+            onClose={() => {
+              setShowManagePhotosModal(false);
+              setAlbumPhotos([]);
+            }}
+            onAddPhotos={() => setShowPhotoModal(true)}
+            onReorder={() => handleReorderPhotos(selectedAlbum)}
+            onDeletePhoto={handleDeletePhoto}
+          />
+        )}
+
         {showPhotoModal && (
           <PhotoUploadModal
             albumId={selectedAlbum?.id}
             onClose={() => setShowPhotoModal(false)}
-            onUploadComplete={loadAlbums}
+            onUploadComplete={async () => {
+              await loadAlbums();
+              await loadAlbumDetails(selectedAlbum?.id);
+            }}
           />
         )}
 

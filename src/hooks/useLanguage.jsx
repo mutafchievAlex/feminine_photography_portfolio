@@ -4,7 +4,7 @@ const translations = {
     en: {
       // Navigation
       home: 'Home',
-      gallery: 'Gallery',
+      gallery: 'Portfolio',
       about: 'About',
       investment: 'Investment',
       booking: 'Booking',
@@ -551,7 +551,7 @@ const translations = {
     bg: {
       // Navigation
       home: 'Начало',
-      gallery: 'Галерия',
+      gallery: 'Портфолио',
       about: 'За мен',
       investment: 'Инвестиция',
       booking: 'Резервация',

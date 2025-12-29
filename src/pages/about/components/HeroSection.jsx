@@ -1,9 +1,12 @@
 import React from 'react';
 import Image from '../../../components/AppImage';
+import EditableText from '../../../components/EditableText';
 import { useLanguage } from '../../../hooks/useLanguage';
+import { usePageContent } from '../../../hooks/usePageContent';
 
 const HeroSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { getText, updateContent } = usePageContent('about', language);
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gallery-canvas overflow-hidden">
       {/* Background Pattern */}
@@ -22,31 +25,92 @@ const HeroSection = () => {
                 {t('helloIAm')}
                 <span className="block text-accent font-medium">{t('photographerName')}</span>
               </h1>
-              <p className="text-xl md:text-2xl text-hierarchy-secondary font-sophisticated">
-                {t('heroSubtitle')}
-              </p>
+              <EditableText
+                contentKey="hero_subtitle"
+                onUpdate={updateContent}
+                getText={getText}
+                className="text-xl md:text-2xl text-hierarchy-secondary font-sophisticated"
+                as="p"
+              >
+                {getText('hero_subtitle', t('heroSubtitle'))}
+              </EditableText>
             </div>
             
             <div className="prose prose-lg text-hierarchy-secondary max-w-none">
-              <p>
-                {t('heroProseText')}
-              </p>
+              <EditableText
+                contentKey="hero_prose_text"
+                onUpdate={updateContent}
+                getText={getText}
+                className="text-lg leading-relaxed"
+                as="p"
+                multiline={true}
+              >
+                {getText('hero_prose_text', t('heroProseText'))}
+              </EditableText>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <div className="text-center">
-                <div className="text-3xl font-heading text-sophisticated-dark">500+</div>
-                <div className="text-sm text-hierarchy-secondary">{t('happyClients')}</div>
+                <EditableText
+                  contentKey="hero_stat_clients_value"
+                  onUpdate={updateContent}
+                  getText={getText}
+                  className="text-3xl font-heading text-sophisticated-dark"
+                  as="div"
+                >
+                  {getText('hero_stat_clients_value', '500+')}
+                </EditableText>
+                <EditableText
+                  contentKey="hero_stat_clients_label"
+                  onUpdate={updateContent}
+                  getText={getText}
+                  className="text-sm text-hierarchy-secondary"
+                  as="div"
+                >
+                  {getText('hero_stat_clients_label', t('happyClients'))}
+                </EditableText>
               </div>
               <div className="hidden sm:block w-px bg-border"></div>
               <div className="text-center">
-                <div className="text-3xl font-heading text-sophisticated-dark">8+</div>
-                <div className="text-sm text-hierarchy-secondary">{t('yearsExperience')}</div>
+                <EditableText
+                  contentKey="hero_stat_experience_value"
+                  onUpdate={updateContent}
+                  getText={getText}
+                  className="text-3xl font-heading text-sophisticated-dark"
+                  as="div"
+                >
+                  {getText('hero_stat_experience_value', '8+')}
+                </EditableText>
+                <EditableText
+                  contentKey="hero_stat_experience_label"
+                  onUpdate={updateContent}
+                  getText={getText}
+                  className="text-sm text-hierarchy-secondary"
+                  as="div"
+                >
+                  {getText('hero_stat_experience_label', t('yearsExperience'))}
+                </EditableText>
               </div>
               <div className="hidden sm:block w-px bg-border"></div>
               <div className="text-center">
-                <div className="text-3xl font-heading text-sophisticated-dark">15+</div>
-                <div className="text-sm text-hierarchy-secondary">{t('awards')}</div>
+                <EditableText
+                  contentKey="hero_stat_awards_value"
+                  onUpdate={updateContent}
+                  getText={getText}
+                  className="text-3xl font-heading text-sophisticated-dark"
+                  as="div"
+                >
+                  {getText('hero_stat_awards_value', '15+')}
+                </EditableText>
+                <EditableText
+                  contentKey="hero_stat_awards_label"
+                  onUpdate={updateContent}
+                  getText={getText}
+                  className="text-sm text-hierarchy-secondary"
+                  as="div"
+                >
+                  {getText('hero_stat_awards_label', t('awards'))}
+                </EditableText>
               </div>
             </div>
           </div>

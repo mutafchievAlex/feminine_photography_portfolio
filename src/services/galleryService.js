@@ -53,7 +53,8 @@ export const galleryService = {
             alt_text
           )
         `)
-        ?.eq('is_published', true);
+        ?.eq('is_published', true)
+        ?.neq('title', 'Hero'); // Exclude Hero album from public gallery
 
       console.log('Albums query result:', { data: albums, error: albumError });
 
@@ -62,6 +63,8 @@ export const galleryService = {
       // Flatten the photos from all albums into a single gallery array
       const allPhotos = [];
       albums?.forEach(album => {
+        // Skip Hero album (reserved for homepage hero carousel only)
+        if (album?.title === 'Hero') return;
         console.log('Processing album:', album?.title, 'photos count:', album?.photos?.length);
         if (album?.photos && Array.isArray(album.photos)) {
           album.photos.forEach(photo => {

@@ -5,7 +5,6 @@ import HeroSection from './components/HeroSection';
 import StorySection from './components/StorySection';
 import ApproachSection from './components/ApproachSection';
 import RecognitionSection from './components/RecognitionSection';
-import LocationsSection from './components/LocationsSection';
 
 import { useLanguage } from '../../hooks/useLanguage';
 
@@ -34,7 +33,6 @@ const AboutPage = () => {
           <StorySection />
           <ApproachSection />
           <RecognitionSection />
-          <LocationsSection />
         </main>
 
         {/* Footer */}

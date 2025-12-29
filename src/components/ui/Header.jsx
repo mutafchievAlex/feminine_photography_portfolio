@@ -8,7 +8,7 @@ import NotificationBell from './NotificationBell';
 
 const Header = () => {
   const navigate = useNavigate();
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [isHeroTransparent, setIsHeroTransparent] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { user, profile, signOut } = useAuth();
@@ -24,14 +24,23 @@ const Header = () => {
     }
   };
 
+  const isHomepage = location?.pathname === '/' || location?.pathname === '/homepage';
+
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      const threshold = Math.max(window.innerHeight - 120, 320);
+      const pastHero = window.scrollY > threshold;
+      setIsHeroTransparent(isHomepage ? !pastHero : false);
     };
 
+    handleScroll();
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    window.addEventListener('resize', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [isHomepage]);
 
   const navigationItems = [
     { name: t('home'), path: '/homepage', icon: 'Home' },
@@ -48,36 +57,17 @@ const Header = () => {
 
   const isActivePath = (path) => location?.pathname === path;
 
-  const Logo = () =>
-  <Link to="/homepage" className="flex items-center space-x-3 group">
-      <div className="relative">
-        <div className="w-10 h-10 bg-gradient-to-br from-accent to-secondary rounded-full flex items-center justify-center shadow-soft group-hover:shadow-medium transition-all duration-elegant">
-          <Icon name="Camera" size={20} className="text-sophisticated-dark" />
-        </div>
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-feminine-accent rounded-full border-2 border-background"></div>
-      </div>
-      <div className="flex flex-col">
-        <span className="font-heading font-medium text-lg text-sophisticated-dark leading-none">Desislava Tepavicharova
-
-      </span>
-        <span className="font-body text-xs text-hierarchy-secondary leading-none">
-          Photography
-        </span>
-      </div>
-    </Link>;
-
-
   const LanguageToggle = () =>
   <div className="flex items-center">
       <Button
       variant="ghost"
       size="sm"
       onClick={toggleLanguage}
-      className="flex items-center space-x-2 elegant-hover px-3 py-2"
+      className={`flex items-center space-x-2 elegant-hover px-3 py-2 ${isHeroTransparent ? 'text-white bg-white/10 hover:bg-white/15' : ''}`}
       aria-label={`Switch to ${isEnglish ? 'Bulgarian' : 'English'}`}>
 
-        <Icon name="Globe" size={16} className="text-hierarchy-secondary" />
-        <span className="text-sm font-sophisticated text-hierarchy-secondary">
+        <Icon name="Globe" size={16} className={isHeroTransparent ? 'text-white/80' : 'text-hierarchy-secondary'} />
+        <span className={`text-sm font-sophisticated ${isHeroTransparent ? 'text-white' : 'text-hierarchy-secondary'}`}>
           {language?.toUpperCase()}
         </span>
         <div className="flex items-center space-x-1">
@@ -96,17 +86,22 @@ const Header = () => {
       </Button>
     </div>;
 
+  const headerClasses = `fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+    isHeroTransparent
+      ? 'bg-transparent border-transparent backdrop-blur-none shadow-none'
+      : 'bg-white/90 backdrop-blur-md border-b border-pink-100 shadow-sm'
+  }`;
+
+  const linkActiveClass = isHeroTransparent ? 'text-white' : 'text-sophisticated-dark';
+  const linkIdleClass = isHeroTransparent ? 'text-white/80 hover:text-white' : 'text-hierarchy-secondary hover:text-sophisticated-dark';
+  const indicatorClass = isHeroTransparent ? 'from-white to-white' : 'from-accent to-secondary';
+  const authBtnClass = isHeroTransparent ? 'text-white hover:text-white/80' : 'text-sophisticated-dark hover:text-accent';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-pink-100">
+    <header className={headerClasses}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <Logo />
-          </div>
-
-          {/* Desktop Navigation */}
+          {/* Navigation and controls */}
           <nav className="hidden md:flex items-center space-x-8">
             {navigationItems?.map((item) =>
             <Link
@@ -114,45 +109,15 @@ const Header = () => {
               to={item?.path}
               className={`relative px-3 py-2 text-sm font-sophisticated transition-all duration-elegant elegant-hover ${
               isActivePath(item?.path) ?
-              'text-sophisticated-dark' : 'text-hierarchy-secondary hover:text-sophisticated-dark'}`
+              linkActiveClass : linkIdleClass}`
               }>
 
                 <span className="relative z-10">{item?.name}</span>
                 {isActivePath(item?.path) &&
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent to-secondary rounded-full"></div>
+              <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${indicatorClass} rounded-full`}></div>
               }
               </Link>
             )}
-            
-            {user ?
-            <div className="flex items-center space-x-4 ml-4 pl-4 border-l border-border">
-                <div className="text-right">
-                  <p className="text-sm font-medium text-sophisticated-dark">
-                    {profile?.full_name || user?.email}
-                  </p>
-                  {profile?.role &&
-                <p className="text-xs text-hierarchy-secondary">
-                      {profile?.role === 'admin' ? 'Администратор' : 'Клиент'}
-                    </p>
-                }
-                </div>
-                <button
-                onClick={handleSignOut}
-                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-sophisticated-dark hover:text-accent transition-colors">
-
-                  <span>Изход</span>
-                  <Icon name="LogOut" size={16} />
-                </button>
-              </div> :
-
-            <button
-              onClick={() => navigate('/signin')}
-              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-sophisticated-dark hover:text-accent transition-colors">
-
-                <span>Вход</span>
-                <Icon name="LogIn" size={16} />
-              </button>
-            }
           </nav>
 
           {/* Right side - Language selector, Notification Bell, and Auth buttons */}
@@ -163,7 +128,24 @@ const Header = () => {
             {/* Notification Bell - Only show when user is logged in */}
             {user && <NotificationBell />}
 
-            {/* ... keep existing auth buttons code ... */}
+            {/* Sign In / Sign Out Button */}
+            {user ? (
+              <button
+                onClick={handleSignOut}
+                className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors ${authBtnClass}`}
+              >
+                <span>Sign Out</span>
+                <Icon name="LogOut" size={16} />
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/signin')}
+                className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors ${authBtnClass}`}
+              >
+                <span>Sign In</span>
+                <Icon name="LogIn" size={16} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -221,7 +203,7 @@ const Header = () => {
                   </p>
                   {profile?.role &&
               <p className="text-xs text-hierarchy-secondary">
-                      {profile?.role === 'admin' ? 'Администратор' : 'Клиент'}
+                      {profile?.role === 'admin' ? 'Administrator' : 'Client'}
                     </p>
               }
                 </div>
@@ -230,7 +212,7 @@ const Header = () => {
               className="w-full text-left px-4 py-2 text-sophisticated-dark hover:bg-surface-elevation flex items-center space-x-2">
 
                   <Icon name="LogOut" size={16} />
-                  <span>Изход</span>
+                  <span>Sign Out</span>
                 </button>
               </div> :
 
@@ -243,7 +225,7 @@ const Header = () => {
               className="w-full text-left px-4 py-2 text-sophisticated-dark hover:bg-surface-elevation flex items-center space-x-2">
 
                   <Icon name="LogIn" size={16} />
-                  <span>Вход</span>
+                  <span>Sign In</span>
                 </button>
               </div>
           }

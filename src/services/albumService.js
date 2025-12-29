@@ -12,7 +12,7 @@ const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
 });
 
 export const albumService = {
-  // Get all albums (admin view)
+  // Get all albums (admin view - includes Hero album for management)
   async getAll() {
     const { data, error } = await supabase?.from('albums')?.select(`
         *,
@@ -34,6 +34,7 @@ export const albumService = {
     if (error) throw error;
 
     // Convert to camelCase and flatten structure
+    // Note: Hero album is included here for admin management only
     return data?.map(album => ({
       id: album?.id,
       title: album?.title,
@@ -423,6 +424,15 @@ export const albumService = {
   async getTemplates() {
     return [
       {
+        id: 'hero-carousel',
+        name: 'Hero Carousel',
+        sessionType: 'other',
+        description: 'Homepage hero section carousel - displays featured images on the hero banner (only one allowed)',
+        photoCount: 4,
+        isSpecial: true,
+        warning: 'Only one Hero Carousel album can exist. Creating this will replace any existing hero carousel.'
+      },
+      {
         id: 'wedding-classic',
         name: 'Classic Wedding',
         sessionType: 'wedding',
@@ -460,6 +470,23 @@ export const albumService = {
     ];
   },
 
+  // Check if Hero album exists
+  async getHeroAlbum() {
+    try {
+      const { data, error } = await supabase
+        ?.from('albums')
+        ?.select('*')
+        ?.eq('title', 'Hero')
+        ?.single();
+
+      if (error && error?.code !== 'PGRST116') throw error; // PGRST116 = no rows found
+      return data;
+    } catch (error) {
+      if (error?.code === 'PGRST116') return null;
+      throw error;
+    }
+  },
+
   // Create album from template
   async createFromTemplate(templateId, customData) {
     const templates = await this.getTemplates();
@@ -467,14 +494,22 @@ export const albumService = {
     
     if (!template) throw new Error('Template not found');
 
+    // Check if creating a Hero album - enforce only one
+    if (templateId === 'hero-carousel') {
+      const existingHero = await this.getHeroAlbum();
+      if (existingHero) {
+        throw new Error('A Hero album already exists. Please delete it first if you want to create a new one.');
+      }
+    }
+
     const albumData = {
-      title: customData?.title || template?.name,
+      title: templateId === 'hero-carousel' ? 'Hero' : (customData?.title || template?.name),
       description: customData?.description || template?.description,
       sessionType: template?.sessionType,
       clientName: customData?.clientName || '',
       sessionDate: customData?.sessionDate || new Date()?.toISOString()?.split('T')?.[0],
       location: customData?.location || '',
-      isPublished: false,
+      isPublished: templateId === 'hero-carousel' ? true : false, // Auto-publish Hero albums
       displayOrder: 0
     };
 
@@ -515,7 +550,7 @@ export const albumService = {
             category
           )
         )
-      `)?.eq('is_published', true)?.order('created_at', { ascending: false });
+      `)?.eq('is_published', true)?.neq('title', 'Hero')?.order('created_at', { ascending: false });
 
     if (error) throw error;
 

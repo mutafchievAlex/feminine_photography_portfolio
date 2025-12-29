@@ -34,10 +34,11 @@ export default function GalleryPage() {
       console.log('Gallery data loaded:', galleryData);
       setImages(galleryData || []);
       
-      // Fetch published albums
+      // Fetch published albums (excluding Hero)
       const albumsData = await albumService?.getPublishedAlbums();
-      console.log('Albums data loaded:', albumsData);
-      setPublishedAlbums(albumsData || []);
+      const filteredAlbums = albumsData?.filter(album => album?.title !== 'Hero') || [];
+      console.log('Albums data loaded:', filteredAlbums);
+      setPublishedAlbums(filteredAlbums);
     } catch (error) {
       console.error('Error loading gallery data:', error);
       setImages([]);

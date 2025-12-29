@@ -23,8 +23,11 @@ const RecentStories = () => {
         setLoading(true);
         const publishedAlbums = await albumService?.getPublishedAlbums();
         
+        // Filter out Hero album (should never appear in recent stories)
+        const nonHeroAlbums = publishedAlbums?.filter(album => album?.title !== 'Hero');
+        
         // Get last 4 albums sorted by created_at
-        const recentAlbums = publishedAlbums
+        const recentAlbums = nonHeroAlbums
           ?.sort((a, b) => new Date(b?.createdAt) - new Date(a?.createdAt))
           ?.slice(0, 4);
         
@@ -120,7 +123,7 @@ const RecentStories = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+          viewport={{ amount: 0.3 }}
           className="text-center mb-16"
         >
           <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl text-sophisticated-dark mb-6">
@@ -132,64 +135,35 @@ const RecentStories = () => {
           </p>
         </motion.div>
 
-        {/* Stories Grid */}
+        {/* Stories Grid - 2x2 with hover description */}
         <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
+          className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10"
         >
-          {stories?.map((story, index) => (
+          {stories?.slice(0, 4)?.map((story, index) => (
             <motion.article
               key={story?.id}
-              variants={itemVariants}
-              className={`group ${index % 2 === 0 ? 'lg:mt-0' : 'lg:mt-12'}`}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: index * 0.1 }}
+              viewport={{ amount: 0.3 }}
+              className="group cursor-pointer"
+              onClick={() => handleViewAlbum(story?.albumId)}
             >
-              <div className="bg-white rounded-2xl shadow-soft overflow-hidden elegant-hover">
-                {/* Image */}
-                <div className="relative h-64 md:h-80 overflow-hidden cursor-pointer" onClick={() => handleViewAlbum(story?.albumId)}>
+              <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
+                <div className="relative aspect-[4/3] overflow-hidden">
                   <Image
                     src={story?.image}
                     alt={story?.title?.[language]}
-                    className="w-full h-full object-cover gallery-image"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-sophisticated text-sophisticated-dark">
-                      {story?.category?.charAt(0)?.toUpperCase() + story?.category?.slice(1)}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-4 right-4">
-                    <div className="flex items-center space-x-2 text-white/90 text-sm">
-                      <Icon name="MapPin" size={16} />
-                      <span className="font-sophisticated">{story?.location}</span>
-                    </div>
-                  </div>
                 </div>
-
-                {/* Content */}
-                <div className="p-6 md:p-8">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-heading text-xl md:text-2xl text-sophisticated-dark">
-                      {story?.title?.[language]}
-                    </h3>
-                    <span className="text-sm text-hierarchy-secondary font-sophisticated">
-                      {new Date(story?.date)?.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-US')}
-                    </span>
-                  </div>
-                  
-                  <p className="text-hierarchy-secondary font-sophisticated leading-relaxed mb-6 whitespace-pre-line line-clamp-3">
+                <div className="px-5 py-4 bg-white transition-all duration-300 max-h-0 opacity-0 group-hover:max-h-40 group-hover:opacity-100">
+                  <h3 className="font-heading text-lg text-sophisticated-dark mb-2">
+                    {story?.title?.[language]}
+                  </h3>
+                  <p className="text-sm text-hierarchy-secondary font-sophisticated leading-relaxed line-clamp-3">
                     {story?.description?.[language]}
                   </p>
-
-                  <Button
-                    variant="outline"
-                    className="group-hover:bg-accent group-hover:border-accent group-hover:text-sophisticated-dark transition-all duration-300"
-                    onClick={() => handleViewAlbum(story?.albumId)}
-                  >
-                    <Icon name="Eye" size={16} className="mr-2" />
-                    {language === 'bg' ? 'Виж повече' : 'View More'}
-                  </Button>
                 </div>
               </div>
             </motion.article>
@@ -201,7 +175,7 @@ const RecentStories = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          viewport={{ once: true }}
+          viewport={{ amount: 0.3 }}
           className="text-center mt-16"
         >
           <Button

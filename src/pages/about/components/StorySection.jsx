@@ -1,9 +1,12 @@
 import React from 'react';
 import Image from '../../../components/AppImage';
+import EditableText from '../../../components/EditableText';
 import { useLanguage } from '../../../hooks/useLanguage';
+import { usePageContent } from '../../../hooks/usePageContent';
 
 const StorySection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { getText, updateContent } = usePageContent('about', language);
   const storyMilestones = [
     {
       year: "2016",
@@ -37,39 +40,98 @@ const StorySection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-heading text-sophisticated-dark mb-6">
-            {t('myStory')}
-          </h2>
-          <p className="text-lg text-hierarchy-secondary max-w-3xl mx-auto">
-            {t('storyDescription')}
-          </p>
+          <EditableText
+            contentKey="story_title"
+            onUpdate={updateContent}
+            getText={getText}
+            className="text-3xl md:text-4xl font-heading text-sophisticated-dark mb-6"
+            as="h2"
+          >
+            {getText('story_title', t('myStory'))}
+          </EditableText>
+          <EditableText
+            contentKey="story_description"
+            onUpdate={updateContent}
+            getText={getText}
+            className="text-lg text-hierarchy-secondary max-w-3xl mx-auto"
+            as="p"
+            multiline={true}
+          >
+            {getText('story_description', t('storyDescription'))}
+          </EditableText>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-16 items-start">
           {/* Story Content */}
           <div className="space-y-8">
             <div className="prose prose-lg text-hierarchy-secondary max-w-none">
-              <p>{t('storyParagraph1')}</p>
-              <p>{t('storyParagraph2')}</p>
-              <p>{t('storyParagraph3')}</p>
+              <EditableText
+                contentKey="story_paragraph_1"
+                onUpdate={updateContent}
+                getText={getText}
+                className="text-lg leading-relaxed mb-4"
+                as="p"
+                multiline={true}
+              >
+                {getText('story_paragraph_1', t('storyParagraph1'))}
+              </EditableText>
+              <EditableText
+                contentKey="story_paragraph_2"
+                onUpdate={updateContent}
+                getText={getText}
+                className="text-lg leading-relaxed mb-4"
+                as="p"
+                multiline={true}
+              >
+                {getText('story_paragraph_2', t('storyParagraph2'))}
+              </EditableText>
+              <EditableText
+                contentKey="story_paragraph_3"
+                onUpdate={updateContent}
+                getText={getText}
+                className="text-lg leading-relaxed"
+                as="p"
+                multiline={true}
+              >
+                {getText('story_paragraph_3', t('storyParagraph3'))}
+              </EditableText>
             </div>
 
             {/* Personal Touch */}
             <div className="bg-warm-section p-6 rounded-2xl">
-              <h3 className="text-xl font-heading text-sophisticated-dark mb-4">
-                {t('whyIChosePhotography')}
-              </h3>
-              <p className="text-hierarchy-secondary">
-                {t('photographyQuote')}
-              </p>
+              <EditableText
+                contentKey="why_i_chose_photography"
+                onUpdate={updateContent}
+                getText={getText}
+                className="text-xl font-heading text-sophisticated-dark mb-4"
+                as="h3"
+              >
+                {getText('why_i_chose_photography', t('whyIChosePhotography'))}
+              </EditableText>
+              <EditableText
+                contentKey="photography_quote"
+                onUpdate={updateContent}
+                getText={getText}
+                className="text-hierarchy-secondary"
+                as="p"
+                multiline={true}
+              >
+                {getText('photography_quote', t('photographyQuote'))}
+              </EditableText>
             </div>
           </div>
 
           {/* Timeline */}
           <div className="space-y-8">
-            <h3 className="text-2xl font-heading text-sophisticated-dark mb-8">
-              {t('keyMoments')}
-            </h3>
+            <EditableText
+              contentKey="key_moments_title"
+              onUpdate={updateContent}
+              getText={getText}
+              className="text-2xl font-heading text-sophisticated-dark mb-8"
+              as="h3"
+            >
+              {getText('key_moments_title', t('keyMoments'))}
+            </EditableText>
             
             <div className="relative">
               {/* Timeline Line */}
@@ -92,61 +154,29 @@ const StorySection = () => {
                           {milestone?.year}
                         </span>
                       </div>
-                      <h4 className="text-lg font-heading text-sophisticated-dark mb-2">
-                        {milestone?.title}
-                      </h4>
-                      <p className="text-hierarchy-secondary text-sm">
-                        {milestone?.description}
-                      </p>
+                      <EditableText
+                        contentKey={`milestone_${milestone?.year}_title`}
+                        onUpdate={updateContent}
+                        getText={getText}
+                        className="text-lg font-heading text-sophisticated-dark mb-2"
+                        as="h4"
+                      >
+                        {getText(`milestone_${milestone?.year}_title`, milestone?.title)}
+                      </EditableText>
+                      <EditableText
+                        contentKey={`milestone_${milestone?.year}_description`}
+                        onUpdate={updateContent}
+                        getText={getText}
+                        className="text-hierarchy-secondary text-sm"
+                        as="p"
+                        multiline={true}
+                      >
+                        {getText(`milestone_${milestone?.year}_description`, milestone?.description)}
+                      </EditableText>
                     </div>
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Behind the Scenes Images */}
-        <div className="mt-20">
-          <h3 className="text-2xl font-heading text-sophisticated-dark text-center mb-12">
-            {t('behindTheScenes')}
-          </h3>
-          
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="relative aspect-square rounded-2xl overflow-hidden shadow-medium elegant-hover">
-              <Image
-                src="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt={t('studioWorkAlt')}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-              <div className="absolute bottom-4 left-4 text-white">
-                <p className="font-sophisticated">{t('inTheStudio')}</p>
-              </div>
-            </div>
-            
-            <div className="relative aspect-square rounded-2xl overflow-hidden shadow-medium elegant-hover">
-              <Image
-                src="https://images.unsplash.com/photo-1554048612-b6a482b224b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt={t('weddingPhotoshootAlt')}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-              <div className="absolute bottom-4 left-4 text-white">
-                <p className="font-sophisticated">{t('atAWedding')}</p>
-              </div>
-            </div>
-            
-            <div className="relative aspect-square rounded-2xl overflow-hidden shadow-medium elegant-hover">
-              <Image
-                src="https://images.unsplash.com/photo-1471341971476-ae15ff5dd4ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt={t('outdoorPhotoshootAlt')}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-              <div className="absolute bottom-4 left-4 text-white">
-                <p className="font-sophisticated">{t('onLocationText')}</p>
-              </div>
             </div>
           </div>
         </div>

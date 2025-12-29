@@ -95,7 +95,7 @@ const WhyChooseSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+          viewport={{ amount: 0.3 }}
           className="text-center mb-16"
         >
           <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl text-sophisticated-dark mb-6">
@@ -112,7 +112,7 @@ const WhyChooseSection = () => {
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true }}
+          viewport={{ amount: 0.3 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-8"
         >
           {differentiators?.map((item) => (
@@ -189,7 +189,7 @@ const WhyChooseSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          viewport={{ once: true }}
+          viewport={{ amount: 0.3 }}
           className="text-center mt-16"
         >
           <p className="font-sophisticated text-hierarchy-secondary mb-6">

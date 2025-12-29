@@ -155,6 +155,14 @@ const AdminDashboard = () => {
       <Header />
       <main className="pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Back Button */}
+          <div className="mb-6">
+            <a href="/" className="inline-flex items-center gap-2 text-accent hover:opacity-70 transition-opacity">
+              <Icon name="ChevronLeft" size={20} />
+              <span className="text-sm font-medium">Към главното меню</span>
+            </a>
+          </div>
+
           {/* Welcome Section */}
           <div className="mb-8">
             <div className="bg-background rounded-lg shadow-soft border border-border p-6">
