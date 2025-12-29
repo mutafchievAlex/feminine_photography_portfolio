@@ -1,45 +1,92 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 const AlbumNavigation = ({ images, currentIndex, album, onThumbnailClick }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      // Show menu if mouse is in bottom 150px of viewport
+      const isNearBottom = window.innerHeight - e.clientY < 150;
+      if (isNearBottom) {
+        setIsHovered(true);
+        // Clear existing timeout
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    // Set timeout to hide menu after 3 seconds when hovered
+    if (isHovered) {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        setIsHovered(false);
+      }, 3000);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isHovered]);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 3000);
+  };
+
   return (
     <motion.div
       initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
+      animate={{ y: isHovered ? 0 : 100, opacity: isHovered ? 1 : 0 }}
       exit={{ y: 100, opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-[#8B7355]/20 z-30"
+      transition={{ duration: 0.5, type: 'tween' }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="fixed bottom-0 left-0 right-0 bg-black/40 backdrop-blur-sm z-30 will-change-transform py-4"
     >
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        {/* Album Info */}
-        <div className="mb-3 text-center">
-          <h3 className="text-lg font-medium text-[#8B7355]">{album?.title}</h3>
-          <p className="text-sm text-[#8B7355]/70">
-            {images?.length} {images?.length === 1 ? 'Photo' : 'Photos'}
-            {album?.location && ` • ${album?.location}`}
-          </p>
-        </div>
-
-        {/* Thumbnail Strip */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {images?.map((image, index) => (
-            <button
-              key={image?.id || index}
-              onClick={() => onThumbnailClick?.(index)}
-              className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden transition-all ${
-                index === currentIndex
-                  ? 'ring-2 ring-[#8B7355] scale-110'
-                  : 'opacity-60 hover:opacity-100'
-              }`}
-            >
-              <img
-                src={image?.thumbnailUrl || image?.imageUrl}
-                alt={image?.altText || image?.title || `Thumbnail ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-            </button>
-          ))}
-        </div>
+      {/* Thumbnail Strip - No Background Box */}
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-6 justify-center">
+        {images?.map((image, index) => (
+          <motion.button
+            key={image?.id || index}
+            onClick={() => onThumbnailClick?.(index)}
+            layout
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden transition-all ${
+              index === currentIndex
+                ? 'ring-2 ring-white/80 opacity-100 scale-105'
+                : 'opacity-50 hover:opacity-75'
+            }`}
+          >
+            <img
+              src={image?.thumbnailUrl || image?.imageUrl}
+              alt={image?.altText || image?.title || `Thumbnail ${index + 1}`}
+              className="w-full h-full object-cover"
+            />
+          </motion.button>
+        ))}
       </div>
     </motion.div>
   );

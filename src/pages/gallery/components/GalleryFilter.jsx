@@ -124,46 +124,38 @@ const GalleryFilter = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Style Filter */}
         <div>
-          
-
-
           <div className="flex flex-wrap gap-2">
-            {styles?.map((style) => {}
-
-
-
-
-
-
-
-
-
-            )}
+            {styles?.map((style) => (
+              <Button
+                key={style?.key}
+                variant={activeStyle === style?.key ? "default" : "outline"}
+                size="sm"
+                onClick={() => onStyleChange(style?.key)}
+              >
+                {style?.label}
+              </Button>
+            ))}
           </div>
         </div>
 
         {/* Season Filter */}
         <div>
-          
-
-
           <div className="flex flex-wrap gap-2">
-            {seasons?.map((season) => {}
-
-
-
-
-
-
-
-
-
-            )}
+            {seasons?.map((season) => (
+              <Button
+                key={season?.key}
+                variant={activeSeason === season?.key ? "default" : "outline"}
+                size="sm"
+                onClick={() => onSeasonChange(season?.key)}
+              >
+                {season?.label}
+              </Button>
+            ))}
           </div>
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 };
 
 export default GalleryFilter;

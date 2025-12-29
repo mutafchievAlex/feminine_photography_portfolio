@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
-function Image({
+function AppImage({
   src,
   alt = "Image Name",
   className = "",
@@ -20,18 +20,5 @@ function Image({
   );
 }
 
-export default Image;
-
-const AppImage = () => {
-  React.useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.warn('Placeholder: AppImage is not implemented yet.');
-  }, []);
-  return (
-    <div>
-      {/* AppImage placeholder */}
-    </div>
-  );
-};
-
+export default AppImage;
 export { AppImage };

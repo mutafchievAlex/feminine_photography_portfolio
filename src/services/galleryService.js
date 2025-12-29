@@ -2,28 +2,101 @@ import { supabase } from '../lib/supabase';
 
 export const galleryService = {
   async getAll(category = null) {
-    let query = supabase?.from('gallery_images')?.select('*')?.order('display_order', { ascending: true });
+    try {
+      console.log('galleryService.getAll() called with category:', category);
+      
+      // First try to get from gallery_images table
+      let query = supabase?.from('gallery_images')?.select('*')?.order('display_order', { ascending: true });
 
-    if (category) {
-      query = query?.eq('category', category);
+      if (category) {
+        query = query?.eq('category', category);
+      }
+
+      const { data: galleryData, error: galleryError } = await query;
+      console.log('gallery_images query result:', { data: galleryData, error: galleryError });
+      
+      // If gallery_images table exists and has data, use it
+      if (!galleryError && galleryData && galleryData.length > 0) {
+        const mapped = galleryData?.map(image => ({
+          id: image?.id,
+          title: image?.title,
+          description: image?.description,
+          imageUrl: image?.image_url,
+          thumbnailUrl: image?.thumbnail_url,
+          category: image?.category,
+          albumId: image?.album_id,
+          altText: image?.alt_text,
+          displayOrder: image?.display_order,
+          isFeatured: image?.is_featured,
+          createdAt: image?.created_at
+        })) || [];
+        console.log('Using gallery_images data:', mapped);
+        return mapped;
+      }
+
+      // Otherwise, get images from album_photos and expand albums
+      console.log('Fetching from albums table instead...');
+      const { data: albums, error: albumError } = await supabase
+        ?.from('albums')
+        ?.select(`
+          id,
+          title,
+          description,
+          category,
+          cover_image_url,
+          photos (
+            id,
+            image_url,
+            thumbnail_url,
+            title,
+            description,
+            alt_text
+          )
+        `)
+        ?.eq('is_published', true);
+
+      console.log('Albums query result:', { data: albums, error: albumError });
+
+      if (albumError) throw albumError;
+
+      // Flatten the photos from all albums into a single gallery array
+      const allPhotos = [];
+      albums?.forEach(album => {
+        console.log('Processing album:', album?.title, 'photos count:', album?.photos?.length);
+        if (album?.photos && Array.isArray(album.photos)) {
+          album.photos.forEach(photo => {
+            allPhotos.push({
+              id: photo?.id,
+              title: photo?.title || album?.title,
+              description: photo?.description || album?.description,
+              imageUrl: photo?.image_url,
+              thumbnailUrl: photo?.thumbnail_url || photo?.image_url,
+              category: album?.category || category,
+              albumId: album?.id,
+              altText: photo?.alt_text,
+              displayOrder: 0,
+              isFeatured: false,
+              createdAt: photo?.created_at
+            });
+          });
+        }
+      });
+
+      console.log('Total photos flattened:', allPhotos.length);
+
+      // Filter by category if specified
+      if (category) {
+        const filtered = allPhotos.filter(p => p.category === category);
+        console.log('Filtered by category:', category, 'result:', filtered.length);
+        return filtered;
+      }
+
+      console.log('Final gallery data:', allPhotos);
+      return allPhotos;
+    } catch (error) {
+      console.error('Error fetching gallery images:', error);
+      return [];
     }
-
-    const { data, error } = await query;
-    if (error) throw error;
-
-    return data?.map(image => ({
-      id: image?.id,
-      title: image?.title,
-      description: image?.description,
-      imageUrl: image?.image_url,
-      thumbnailUrl: image?.thumbnail_url,
-      category: image?.category,
-      albumId: image?.album_id,
-      altText: image?.alt_text,
-      displayOrder: image?.display_order,
-      isFeatured: image?.is_featured,
-      createdAt: image?.created_at
-    })) || [];
   },
 
   async getByCategory(category) {

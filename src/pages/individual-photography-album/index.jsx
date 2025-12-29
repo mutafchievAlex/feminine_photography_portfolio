@@ -183,9 +183,11 @@ const IndividualPhotographyAlbum = () => {
 
   return (
     <div className="min-h-screen bg-[#FBF7F4]">
-      {/* Hero Section - Full Screen First Image */}
+      {/* Hero Section - Horizontal Image Carousel */}
       <AlbumHero 
-        image={currentImage}
+        images={images}
+        currentIndex={currentIndex}
+        onImageChange={setCurrentIndex}
         album={album}
         showNavigation={showNavigation}
       />
