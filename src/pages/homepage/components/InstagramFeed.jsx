@@ -23,6 +23,9 @@ const InstagramFeed = () => {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [hasDragged, setHasDragged] = useState(false);
+  const [postMedias, setPostMedias] = useState([]);
+  const [loadingPostMedias, setLoadingPostMedias] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
   
   const accessToken = import.meta.env.VITE_INSTAGRAM_ACCESS_TOKEN;
   const useDirectFetch = !!accessToken;
@@ -41,11 +44,25 @@ const InstagramFeed = () => {
   useEffect(() => {
     if (!useDirectFetch) return;
 
+    const fetchInstagramProfile = async () => {
+      try {
+        const response = await fetch(
+          `https://graph.instagram.com/me?fields=profile_picture_url&access_token=${accessToken}`
+        );
+        const json = await response.json();
+        if (json?.profile_picture_url) {
+          setProfileImage(json.profile_picture_url);
+        }
+      } catch (error) {
+        console.error('Error fetching profile picture:', error);
+      }
+    };
+
     const fetchInstagramDirect = async () => {
       setDirectLoading(true);
       try {
         const response = await fetch(
-          `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp&access_token=${accessToken}&limit=12`
+          `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count&access_token=${accessToken}&limit=12`
         );
         const json = await response.json();
         setDirectPosts(json?.data || []);
@@ -57,6 +74,7 @@ const InstagramFeed = () => {
       }
     };
 
+    fetchInstagramProfile();
     fetchInstagramDirect();
   }, [accessToken, useDirectFetch]);
 
@@ -74,12 +92,14 @@ const InstagramFeed = () => {
 
     return rawList.map((post, index) => {
       const image =
-        post?.media_url ||
-        post?.mediaUrl ||
-        post?.thumbnail_url ||
-        post?.image ||
-        post?.url ||
-        post?.source;
+        post?.media_type === 'VIDEO' 
+          ? post?.thumbnail_url || post?.media_url
+          : post?.media_url ||
+            post?.mediaUrl ||
+            post?.thumbnail_url ||
+            post?.image ||
+            post?.url ||
+            post?.source;
 
       const rawCaption =
         (typeof post?.caption === 'string' && post?.caption) ||
@@ -96,6 +116,7 @@ const InstagramFeed = () => {
         comments: post?.comments_count ?? post?.comments,
         timestamp: post?.timestamp || post?.taken_at || post?.createdAt,
         url: post?.permalink || post?.url || INSTAGRAM_CONFIG.profileUrl,
+        mediaType: post?.media_type || 'IMAGE',
       };
     });
   }, [language, directPosts, backendPosts, useDirectFetch]);
@@ -181,22 +202,56 @@ const InstagramFeed = () => {
     sliderRef.current.scrollLeft = scrollLeft - walk;
   };
 
-  const openModal = (post, index) => {
+  const openModal = async (post, index) => {
     setSelectedPost(post);
-    setCurrentImageIndex(index);
+    setCurrentImageIndex(0);
+    setPostMedias([{ image: post.image, mediaType: post.mediaType }]);
     document.body.style.overflow = 'hidden';
+
+    // Fetch all media from the post if it's a carousel
+    if (useDirectFetch && accessToken) {
+      setLoadingPostMedias(true);
+      try {
+        // First get the post details to check media type
+        const postResponse = await fetch(
+          `https://graph.instagram.com/${post.id}?fields=id,media_type,media_url,thumbnail_url&access_token=${accessToken}`
+        );
+        const postData = await postResponse.json();
+        
+        // If it's a carousel album, fetch all children
+        if (postData.media_type === 'CAROUSEL_ALBUM') {
+          const response = await fetch(
+            `https://graph.instagram.com/${post.id}/children?fields=id,media_type,media_url,thumbnail_url&access_token=${accessToken}`
+          );
+          const json = await response.json();
+          if (json?.data && json.data.length > 0) {
+            const medias = json.data.map((media) => ({
+              image: media.media_type === 'VIDEO' ? media.thumbnail_url || media.media_url : media.media_url,
+              mediaType: media.media_type,
+              id: media.id,
+            }));
+            setPostMedias(medias);
+          }
+        }
+        // Otherwise keep the single media we already have
+      } catch (error) {
+        console.error('Error fetching post media:', error);
+      } finally {
+        setLoadingPostMedias(false);
+      }
+    }
   };
 
   const closeModal = () => {
     setSelectedPost(null);
+    setPostMedias([]);
     document.body.style.overflow = 'unset';
   };
 
   const navigateImage = (direction) => {
     const newIndex = currentImageIndex + direction;
-    if (newIndex >= 0 && newIndex < normalizedPosts.length) {
+    if (newIndex >= 0 && newIndex < postMedias.length) {
       setCurrentImageIndex(newIndex);
-      setSelectedPost(normalizedPosts[newIndex]);
     }
   };
 
@@ -207,6 +262,33 @@ const InstagramFeed = () => {
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
+
+  // Auto-scroll effect - every 3 seconds
+  useEffect(() => {
+    if (!sliderRef.current || normalizedPosts.length === 0) return;
+
+    const autoScroll = setInterval(() => {
+      const slider = sliderRef.current;
+      if (!slider) return;
+
+      const cardWidth = slider.firstChild?.getBoundingClientRect()?.width || 300;
+      const gap = 12; // gap-3 = 12px
+      const scrollAmount = cardWidth + gap;
+      
+      // Check if we're at or near the end
+      const isAtEnd = slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 10;
+      
+      if (isAtEnd) {
+        // Reset to beginning
+        slider.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        // Scroll one card forward
+        slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      }
+    }, 3000);
+
+    return () => clearInterval(autoScroll);
+  }, [normalizedPosts]);
 
   return (
     <section className="py-20 bg-black">
@@ -265,7 +347,7 @@ const InstagramFeed = () => {
                 onMouseLeave={handleMouseLeave}
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
-                className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 cursor-grab select-none px-4 sm:px-6 lg:px-8"
+                className="flex gap-3 overflow-x-auto scrollbar-hide pb-4 cursor-grab select-none px-4 sm:px-6 lg:px-8"
                 style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
               >
                 {normalizedPosts?.map((post, index) => (
@@ -284,29 +366,39 @@ const InstagramFeed = () => {
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
 
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[1]" />
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[1]" />
 
-                    <div className="absolute top-4 right-4 flex items-center justify-center w-6 h-6 z-[3]">
-                      <Icon name="Copy" size={20} className="text-white drop-shadow-lg" />
-                    </div>
+                    {post?.caption && (
+                      <div className="absolute top-0 left-0 right-0 pt-4 px-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[2]">
+                        <p className="text-white text-xs text-center line-clamp-2">
+                          {post?.caption}
+                        </p>
+                      </div>
+                    )}
 
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-[2]">
-                      <div className="flex items-center space-x-8 text-white">
-                        {(post?.likes !== undefined || post?.like_count !== undefined) && (
-                          <div className="flex items-center space-x-2">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                            <span className="text-2xl font-bold">{post?.like_count || post?.likes || 0}</span>
-                          </div>
-                        )}
-                        {(post?.comments !== undefined || post?.comments_count !== undefined) && (
-                          <div className="flex items-center space-x-2">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-                            </svg>
-                            <span className="text-2xl font-bold">{post?.comments_count || post?.comments || 0}</span>
-                          </div>
+                    <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[2]">
+                      <div className="flex items-center space-x-4 text-white">
+                        {post?.mediaType === 'VIDEO' ? (
+                          <Icon name="Play" size={20} className="text-white fill-white" />
+                        ) : (
+                          <>
+                            {post?.likes !== undefined && post?.likes !== null && (
+                              <div className="flex items-center space-x-1">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                </svg>
+                                <span className="text-xs font-medium">{post?.likes || 0}</span>
+                              </div>
+                            )}
+                            {post?.comments !== undefined && post?.comments !== null && (
+                              <div className="flex items-center space-x-1">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                                </svg>
+                                <span className="text-xs font-medium">{post?.comments || 0}</span>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -354,10 +446,11 @@ const InstagramFeed = () => {
         <InstagramModal
           selectedPost={selectedPost}
           currentImageIndex={currentImageIndex}
-          normalizedPosts={normalizedPosts}
+          postMedias={postMedias}
           closeModal={closeModal}
           navigateImage={navigateImage}
           language={language}
+          profileImage={profileImage}
         />
       )}
     </section>
@@ -367,8 +460,65 @@ const InstagramFeed = () => {
 export default InstagramFeed;
 
 // Modal Component (moved outside main component for better organization)
-const InstagramModal = ({ selectedPost, currentImageIndex, normalizedPosts, closeModal, navigateImage, language }) => {
-  if (!selectedPost) return null;
+const InstagramModal = ({ selectedPost, currentImageIndex, postMedias, closeModal, navigateImage, language, profileImage }) => {
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const commentsRef = useRef(null);
+  const accessToken = import.meta.env.VITE_INSTAGRAM_ACCESS_TOKEN;
+
+  const fetchComments = async () => {
+    if (loadingComments || comments.length > 0) return;
+    
+    setLoadingComments(true);
+    try {
+      const url = `https://graph.instagram.com/${selectedPost?.id}/comments?fields=text,from.fields(username),timestamp&limit=20&access_token=${accessToken}`;
+      console.log('Fetching comments from:', url);
+      
+      const response = await fetch(url);
+      const json = await response.json();
+      
+      console.log('Comments response:', json);
+      
+      if (json?.data && json.data.length > 0) {
+        // Transform the data to match our expected format
+        const transformedComments = json.data.map(comment => ({
+          text: comment.text,
+          username: comment.from?.username || 'Unknown',
+          timestamp: comment.timestamp
+        }));
+        setComments(transformedComments);
+        console.log('Transformed comments:', transformedComments);
+      } else if (json?.data && json.data.length === 0) {
+        // No comments found - show empty state
+        console.log('No comments found for this post');
+        setComments([]);
+      } else if (json?.error) {
+        console.error('Instagram API Error:', json.error);
+        // Show fallback message with error details
+        setComments([]);
+      }
+      
+      // Scroll to comments with smooth animation
+      setTimeout(() => {
+        commentsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      setComments([]);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleShowComments = () => {
+    if (!showComments) {
+      fetchComments();
+    }
+    setShowComments(!showComments);
+  };
+  
+  if (!selectedPost || postMedias.length === 0) return null;
 
   const formatTimeAgo = (timestamp) => {
     const now = new Date();
@@ -390,129 +540,213 @@ const InstagramModal = ({ selectedPost, currentImageIndex, normalizedPosts, clos
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
       onClick={closeModal}
     >
       <div 
-        className="relative max-w-6xl w-full h-full max-h-[90vh] flex items-center justify-center"
+        className="relative flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
       >
-            {/* Close Button */}
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-colors"
-            >
-              <Icon name="X" size={24} className="text-white" />
-            </button>
-
-            {/* Navigation Arrows */}
-            {currentImageIndex > 0 && (
-              <button
-                onClick={() => navigateImage(-1)}
-                className="absolute left-4 z-10 w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-colors"
-              >
-                <Icon name="ChevronLeft" size={28} className="text-white" />
-              </button>
-            )}
-
-            {currentImageIndex < normalizedPosts.length - 1 && (
-              <button
-                onClick={() => navigateImage(1)}
-                className="absolute right-4 z-10 w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-colors"
-              >
-                <Icon name="ChevronRight" size={28} className="text-white" />
-              </button>
-            )}
-
             {/* Main Content - Instagram-style layout */}
-            <div className="bg-black w-full h-full max-h-[90vh] flex flex-col md:flex-row overflow-hidden shadow-2xl">
-              {/* Image Section */}
-              <div className="flex-1 flex items-center justify-center bg-black p-4 md:p-8">
+            <div className="relative w-full flex flex-col md:flex-row items-stretch bg-transparent">
+              {/* Close Button - in top right corner of the post */}
+              <button
+                onClick={closeModal}
+                className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full transition-colors"
+              >
+                <Icon name="X" size={16} className="text-white" />
+              </button>
+              {/* Image Section with Carousel */}
+              <div className="relative flex items-center justify-center">
+                {/* Navigation Arrows - Inside Image Section */}
+                {postMedias.length > 1 && currentImageIndex > 0 && (
+                  <button
+                    onClick={() => navigateImage(-1)}
+                    className="absolute left-4 z-10 w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-all"
+                  >
+                    <Icon name="ChevronLeft" size={20} className="text-white" />
+                  </button>
+                )}
+
+                {postMedias.length > 1 && currentImageIndex < postMedias.length - 1 && (
+                  <button
+                    onClick={() => navigateImage(1)}
+                    className="absolute right-4 z-10 w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-all"
+                  >
+                    <Icon name="ChevronRight" size={20} className="text-white" />
+                  </button>
+                )}
+
+                {/* Main Image */}
                 <AppImage
-                  src={selectedPost?.image}
+                  src={postMedias[currentImageIndex]?.image}
                   alt={selectedPost?.caption || 'Instagram post'}
-                  className="max-w-full max-h-full object-contain"
+                  className="h-[76vh] w-auto object-contain"
                 />
+
+                {/* Media Dots Navigation */}
+                {postMedias.length > 1 && (
+                  <div className="flex items-center justify-center gap-1 absolute bottom-3 left-1/2 transform -translate-x-1/2 z-10">
+                    {postMedias.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => navigateImage(index - currentImageIndex)}
+                        className={`w-1.5 h-1.5 rounded-full transition-all ${
+                          index === currentImageIndex
+                            ? 'bg-white w-4'
+                            : 'bg-white/40 hover:bg-white/60'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Video indicator */}
+                {postMedias[currentImageIndex]?.mediaType === 'VIDEO' && (
+                  <div className="absolute top-4 left-4 flex items-center space-x-2 text-white bg-black/50 px-3 py-1.5 rounded-full text-sm z-10">
+                    <Icon name="Play" size={16} className="text-white fill-white" />
+                    <span>{language === 'bg' ? 'Видео' : 'Video'}</span>
+                  </div>
+                )}
               </div>
 
               {/* Details Section - Instagram-style sidebar */}
-              <div className="w-full md:w-[400px] bg-white flex flex-col max-h-[50vh] md:max-h-full">
+              <div className="w-full md:w-[280px] bg-black flex flex-col max-h-[92vh] overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center space-x-3 p-4 border-b border-gray-200">
-                  <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <Icon name="Instagram" size={20} className="text-white" />
-                  </div>
+                <div className="flex items-center space-x-3 p-4 border-b border-gray-800">
+                  {profileImage ? (
+                    <img 
+                      src={profileImage} 
+                      alt="Profile"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Icon name="Instagram" size={20} className="text-white" />
+                    </div>
+                  )}
                   <div className="flex-1">
-                    <p className="font-semibold text-sm text-sophisticated-dark">
+                    <p className="font-semibold text-sm text-white">
                       {INSTAGRAM_CONFIG.username}
                     </p>
                   </div>
-                  <a
-                    href={selectedPost?.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                  >
-                    {language === 'bg' ? 'Виж в Instagram' : 'View on Instagram'}
-                  </a>
                 </div>
 
                 {/* Caption */}
                 <div className="flex-1 overflow-y-auto p-4">
-                  <div className="flex space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Icon name="User" size={16} className="text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm">
-                        <span className="font-semibold text-sophisticated-dark mr-2">
-                          {INSTAGRAM_CONFIG.username}
-                        </span>
-                        <span className="text-gray-700 whitespace-pre-wrap">
-                          {selectedPost?.caption || (language === 'bg' ? 'Без описание' : 'No caption')}
-                        </span>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-300 whitespace-pre-wrap">
+                      {selectedPost?.caption || (language === 'bg' ? 'Без описание' : 'No caption')}
+                    </p>
+                    {selectedPost?.timestamp && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        {formatTimeAgo(selectedPost?.timestamp)}
                       </p>
-                      {selectedPost?.timestamp && (
-                        <p className="text-xs text-gray-500 mt-2">
-                          {formatTimeAgo(selectedPost?.timestamp)}
-                        </p>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Actions Footer */}
-                <div className="border-t border-gray-200 p-4 space-y-2">
-                  <div className="flex items-center space-x-4">
-                    <button className="flex items-center space-x-1 hover:opacity-70 transition-opacity">
-                      <Icon name="Heart" size={24} className="text-sophisticated-dark" />
-                      {selectedPost?.likes !== undefined && (
-                        <span className="text-sm font-semibold">{selectedPost?.likes}</span>
-                      )}
-                    </button>
-                    <button className="flex items-center space-x-1 hover:opacity-70 transition-opacity">
-                      <Icon name="MessageCircle" size={24} className="text-sophisticated-dark" />
-                      {selectedPost?.comments !== undefined && (
-                        <span className="text-sm font-semibold">{selectedPost?.comments}</span>
-                      )}
+                {/* Divider Line */}
+                <div className="border-t border-gray-800"></div>
+
+                {/* Share and View on Instagram buttons */}
+                <div className="p-4">
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: 'Instagram Post',
+                            url: selectedPost?.url
+                          });
+                        }
+                      }}
+                      className="flex items-center gap-1.5 text-white hover:opacity-70 transition-opacity"
+                    >
+                      <Icon name="Share2" size={18} />
+                      <span className="text-sm font-medium">{language === 'bg' ? 'Сподели' : 'Share'}</span>
                     </button>
                     <a
                       href={selectedPost?.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="ml-auto hover:opacity-70 transition-opacity"
+                      className="flex items-center gap-1.5 text-white hover:opacity-70 transition-opacity"
                     >
-                      <Icon name="ExternalLink" size={22} className="text-sophisticated-dark" />
+                      <Icon name="Instagram" size={18} />
+                      <span className="text-sm font-medium">Instagram</span>
                     </a>
                   </div>
-                  {selectedPost?.timestamp && (
-                    <p className="text-xs text-gray-500 uppercase">
-                      {new Date(selectedPost?.timestamp).toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
+                </div>
+
+                {/* Comments Section */}
+                <div className="border-t border-gray-800" ref={commentsRef}>
+                  <button
+                    onClick={handleShowComments}
+                    className="w-full p-4 flex items-center justify-between hover:bg-gray-900 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon name="MessageCircle" size={18} className="text-white" />
+                      <span className="text-sm font-medium text-white">
+                        {language === 'bg' ? 'Коментари' : 'Comments'}
+                        {selectedPost?.comments !== undefined && (
+                          <span className="text-gray-400 ml-1">({selectedPost?.comments})</span>
+                        )}
+                      </span>
+                    </div>
+                    <Icon 
+                      name={showComments ? "ChevronUp" : "ChevronDown"} 
+                      size={18} 
+                      className="text-gray-400" 
+                    />
+                  </button>
+
+                  {showComments && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="border-t border-gray-800"
+                    >
+                      <div className="px-4 py-4 max-h-48 overflow-y-auto space-y-3">
+                        {loadingComments ? (
+                          <p className="text-sm text-gray-400 text-center py-4">
+                            {language === 'bg' ? 'Зареждане коментари...' : 'Loading comments...'}
+                          </p>
+                        ) : comments.length > 0 ? (
+                          comments.map((comment, idx) => (
+                            <div key={idx} className="space-y-1 pb-3 border-b border-gray-800 last:border-b-0">
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-sm font-semibold text-white">
+                                  {comment.username}
+                                </span>
+                                {comment.timestamp && (
+                                  <span className="text-xs text-gray-500">
+                                    {formatTimeAgo(comment.timestamp)}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-300">
+                                {comment.text}
+                              </p>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-4">
+                            <p className="text-sm text-gray-400 mb-2">
+                              {language === 'bg' 
+                                ? '📝 Няма коментари на този пост' 
+                                : '📝 No comments on this post'}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {language === 'bg' 
+                                ? 'Коментарите ще се покажат тук, когато хората напишат коментари' 
+                                : 'Comments will appear here once people comment'}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
                   )}
                 </div>
               </div>
@@ -521,5 +755,3 @@ const InstagramModal = ({ selectedPost, currentImageIndex, normalizedPosts, clos
         </div>
   );
 };
-
-export default InstagramFeed;
