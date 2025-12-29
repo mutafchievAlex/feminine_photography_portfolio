@@ -8,53 +8,53 @@ const ConsultationProcess = () => {
     {
       id: 1,
       icon: 'MessageCircle',
-      title: 'Първоначален разговор / Initial Conversation',
-      description: `Започваме с 30-минутен разговор за вашата визия, очаквания и специални моменти, които искате да запечатаме.\n\nWe start with a 30-minute conversation about your vision, expectations, and special moments you want to capture.`,
-      duration: '30 мин / 30 min'
+      title: t('initialConversationTitle'),
+      description: t('initialConversationDesc'),
+      duration: t('initialConversationDuration')
     },
     {
       id: 2,
       icon: 'MapPin',
-      title: 'Планиране на локацията / Location Planning',
-      description: `Обсъждаме най-подходящите места за вашата фотосесия - студио, природа или специално място с значение за вас.\n\nWe discuss the most suitable locations for your photoshoot - studio, nature, or a special place meaningful to you.`,
-      duration: '15 мин / 15 min'
+      title: t('locationPlanningTitle'),
+      description: t('locationPlanningDesc'),
+      duration: t('locationPlanningDuration')
     },
     {
       id: 3,
       icon: 'Palette',
-      title: 'Стилизиране и подготовка / Styling & Preparation',
-      description: `Получавате персонализиран гид за облекло, аксесоари и подготовка, за да се чувствате уверени и красиви.\n\nYou receive a personalized guide for clothing, accessories, and preparation to feel confident and beautiful.`,
-      duration: '10 мин / 10 min'
+      title: t('stylingPrepTitle'),
+      description: t('stylingPrepDesc'),
+      duration: t('stylingPrepDuration')
     },
     {
       id: 4,
       icon: 'Calendar',
-      title: 'Финализиране на детайлите / Finalizing Details',
-      description: `Уточняваме окончателната дата, час, пакет и всички специални заявки за перфектното изживяване.\n\nWe confirm the final date, time, package, and all special requests for the perfect experience.`,
-      duration: '15 мин / 15 min'
+      title: t('finalizingDetailsTitle'),
+      description: t('finalizingDetailsDesc'),
+      duration: t('finalizingDetailsDuration')
     }
   ];
 
   const whatToExpect = [
     {
       icon: 'Clock',
-      title: 'Времетраене / Duration',
-      description: 'Консултацията продължава 60-90 минути / Consultation lasts 60-90 minutes'
+      title: t('expectDurationTitle'),
+      description: t('expectDurationDesc')
     },
     {
       icon: 'Video',
-      title: 'Формат / Format',
-      description: 'Видео разговор или среща в студиото / Video call or studio meeting'
+      title: t('expectFormatTitle'),
+      description: t('expectFormatDesc')
     },
     {
       icon: 'Gift',
-      title: 'Безплатно / Complimentary',
-      description: 'Консултацията е напълно безплатна / Consultation is completely free'
+      title: t('expectComplimentaryTitle'),
+      description: t('expectComplimentaryDesc')
     },
     {
       icon: 'Heart',
-      title: 'Персонализирано / Personalized',
-      description: 'Фокус върху вашите уникални нужди / Focus on your unique needs'
+      title: t('expectPersonalizedTitle'),
+      description: t('expectPersonalizedDesc')
     }
   ];
 
@@ -144,19 +144,19 @@ const ConsultationProcess = () => {
           <div className="space-y-6">
             {[
               {
-                day: 'Ден 1 / Day 1',
-                title: 'Консултация / Consultation',
-                description: 'Безплатен разговор и планиране / Free consultation and planning'
+                day: t('timelineDay1'),
+                title: t('timelineDay1Title'),
+                description: t('timelineDay1Desc')
               },
               {
-                day: 'Ден 7-14 / Day 7-14',
-                title: 'Фотосесия / Photoshoot',
-                description: 'Професионална фотосесия / Professional photoshoot session'
+                day: t('timelineDay2'),
+                title: t('timelineDay2Title'),
+                description: t('timelineDay2Desc')
               },
               {
-                day: 'Ден 21-28 / Day 21-28',
-                title: 'Галерия / Gallery',
-                description: 'Получавате готовите снимки / Receive your finished images'
+                day: t('timelineDay3'),
+                title: t('timelineDay3Title'),
+                description: t('timelineDay3Desc')
               }
             ]?.map((item, index) => (
               <div key={index} className="relative flex items-center">

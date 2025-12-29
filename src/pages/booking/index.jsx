@@ -33,7 +33,7 @@ const BookingPage = () => {
       }, 5000);
     } catch (error) {
       console.error('Booking error:', error);
-      setSubmitError(error?.message || 'Възникна грешка при създаването на резервацията. Моля опитайте отново.');
+      setSubmitError(error?.message || t('bookingErrorMessage'));
     } finally {
       setIsSubmitting(false);
     }
@@ -52,7 +52,7 @@ const BookingPage = () => {
       }, 5000);
     } catch (error) {
       console.error('Booking error:', error);
-      setSubmitError(error?.message || 'Възникна грешка при създаването на резервацията. Моля опитайте отново.');
+      setSubmitError(error?.message || t('bookingErrorMessage'));
     } finally {
       setIsSubmitting(false);
     }
@@ -62,14 +62,14 @@ const BookingPage = () => {
     setSelectedDate(date);
   };
 
-  const tabs = [
-    { id: 'form', label: 'Резервация / Booking', icon: 'Calendar' },
-    { id: 'calendar', label: 'Календар / Calendar', icon: 'Calendar' },
-    { id: 'process', label: 'Процес / Process', icon: 'Info' },
-    { id: 'trust', label: 'Отзиви / Reviews', icon: 'Star' }
-  ];
-
   const { t } = useLanguage();
+
+  const tabs = [
+    { id: 'form', label: t('tabBooking'), icon: 'Calendar' },
+    { id: 'calendar', label: t('tabCalendar'), icon: 'Calendar' },
+    { id: 'process', label: t('tabProcess'), icon: 'Info' },
+    { id: 'trust', label: t('tabReviews'), icon: 'Star' }
+  ];
 
   return (
     <div className="min-h-screen bg-gallery-canvas">
@@ -96,9 +96,9 @@ const BookingPage = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
-                    { icon: 'Clock', title: '60-90 мин', subtitle: 'Консултация' },
-                    { icon: 'Gift', title: 'Безплатно', subtitle: 'Без задължения' },
-                    { icon: 'Heart', title: 'Персонално', subtitle: 'За вашите нужди' }
+                    { icon: 'Clock', title: t('bookingHeroFeature1Title'), subtitle: t('bookingHeroFeature1Subtitle') },
+                    { icon: 'Gift', title: t('bookingHeroFeature2Title'), subtitle: t('bookingHeroFeature2Subtitle') },
+                    { icon: 'Heart', title: t('bookingHeroFeature3Title'), subtitle: t('bookingHeroFeature3Subtitle') }
                   ]?.map((item, index) => (
                     <div key={index} className="text-center">
                       <div className="w-12 h-12 bg-gradient-to-br from-accent to-secondary rounded-full flex items-center justify-center mx-auto mb-3 shadow-soft">
@@ -122,14 +122,14 @@ const BookingPage = () => {
                     <div className="aspect-[4/5] rounded-xl overflow-hidden shadow-medium elegant-hover">
                       <Image
                         src="https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800&h=600&fit=crop"
-                        alt="Консултация за фотосесия"
+                        alt={t('booking')}
                         className="w-full h-full object-cover gallery-image"
                       />
                     </div>
                     <div className="aspect-[4/3] rounded-xl overflow-hidden shadow-medium elegant-hover">
                       <Image
                         src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=800&h=600&fit=crop"
-                        alt="Планиране на фотосесия"
+                        alt={t('booking')}
                         className="w-full h-full object-cover gallery-image"
                       />
                     </div>
@@ -138,7 +138,7 @@ const BookingPage = () => {
                     <div className="aspect-[4/6] rounded-xl overflow-hidden shadow-medium elegant-hover">
                       <Image
                         src="https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=800&h=600&fit=crop"
-                        alt="Професионална фотография"
+                        alt={t('booking')}
                         className="w-full h-full object-cover gallery-image"
                       />
                     </div>
@@ -154,7 +154,7 @@ const BookingPage = () => {
           {submitSuccess && (
             <div className="mb-8 bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-green-800 text-center">
-                ✓ Вашата резервация беше изпратена успешно! Ще се свържем с вас скоро.
+                {t('bookingSuccessMessage')}
               </p>
             </div>
           )}
@@ -164,101 +164,6 @@ const BookingPage = () => {
               <p className="text-red-800 text-center">{submitError}</p>
             </div>
           )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-            <div className="lg:col-span-2">
-              <BookingForm 
-                onSubmit={handleBookingSubmit} 
-                isSubmitting={isSubmitting}
-              />
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Quick Contact */}
-              <div className="bg-surface-elevation rounded-xl shadow-soft p-6">
-                <h3 className="text-sophisticated font-medium text-sophisticated-dark mb-4">
-                    {t('contactMe')} / {t('phone')}
-                  </h3>
-                <div className="space-y-3">
-                  <a 
-                    href="tel:+359888123456"
-                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gallery-canvas transition-colors elegant-hover"
-                  >
-                    <Icon name="Phone" size={18} className="text-accent" />
-                    <div>
-                      <p className="text-sm font-sophisticated text-sophisticated-dark">
-                        +359 888 123 456
-                      </p>
-                      <p className="text-xs text-hierarchy-secondary">
-                        {t('phone')}
-                      </p>
-                    </div>
-                  </a>
-                  
-                  <a 
-                    href="mailto:elena@elenarosephotography.bg"
-                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gallery-canvas transition-colors elegant-hover"
-                  >
-                    <Icon name="Mail" size={18} className="text-accent" />
-                    <div>
-                      <p className="text-sm font-sophisticated text-sophisticated-dark">
-                        elena@elenarosephotography.bg
-                      </p>
-                      <p className="text-xs text-hierarchy-secondary">
-                        {t('email')}
-                      </p>
-                    </div>
-                  </a>
-                </div>
-              </div>
-
-              {/* Selected Date Display */}
-              {selectedDate && (
-                <div className="bg-gradient-to-r from-accent to-secondary rounded-xl shadow-soft p-6">
-                  <h3 className="text-sophisticated font-medium text-sophisticated-dark mb-2">
-                    Избрана дата / Selected Date
-                  </h3>
-                  <p className="text-sophisticated text-sophisticated-dark">
-                    {new Date(selectedDate)?.toLocaleDateString('bg-BG', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </p>
-                  <p className="text-sm text-sophisticated-dark mt-1">
-                    {new Date(selectedDate)?.toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </p>
-                </div>
-              )}
-
-              {/* Inspiration */}
-              <div className="bg-warm-section rounded-xl shadow-soft p-6">
-                <h3 className="text-sophisticated font-medium text-sophisticated-dark mb-4">
-                  Вдъхновение / Inspiration
-                </h3>
-                <div className="aspect-square rounded-lg overflow-hidden mb-4">
-                  <Image
-                    src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=400&h=400&fit=crop"
-                    alt="Фотография вдъхновение"
-                    className="w-full h-full object-cover gallery-image"
-                  />
-                </div>
-                <p className="text-sm text-hierarchy-secondary">
-                  "Всеки момент е уникален и заслужава да бъде запечатан с любов и внимание към детайла."
-                </p>
-                <p className="text-xs text-hierarchy-secondary mt-2 italic">
-                  "Every moment is unique and deserves to be captured with love and attention to detail."
-                </p>
-              </div>
-            </div>
-          </div>
 
           {/* Main Content */}
           <section className="pb-16">
@@ -311,7 +216,7 @@ const BookingPage = () => {
                   {/* Quick Contact */}
                   <div className="bg-surface-elevation rounded-xl shadow-soft p-6">
                     <h3 className="text-sophisticated font-medium text-sophisticated-dark mb-4">
-                      Бърз контакт / Quick Contact
+                      {t('quickContact')}
                     </h3>
                     <div className="space-y-3">
                       <a 
@@ -324,7 +229,7 @@ const BookingPage = () => {
                             +359 888 123 456
                           </p>
                           <p className="text-xs text-hierarchy-secondary">
-                            Обадете се сега / Call now
+                            {t('callNow')}
                           </p>
                         </div>
                       </a>
@@ -339,7 +244,7 @@ const BookingPage = () => {
                             elena@elenarosephotography.bg
                           </p>
                           <p className="text-xs text-hierarchy-secondary">
-                            Изпратете имейл / Send email
+                            {t('sendEmail')}
                           </p>
                         </div>
                       </a>
@@ -350,18 +255,10 @@ const BookingPage = () => {
                   {selectedDate && (
                     <div className="bg-gradient-to-r from-accent to-secondary rounded-xl shadow-soft p-6">
                       <h3 className="text-sophisticated font-medium text-sophisticated-dark mb-2">
-                        Избрана дата / Selected Date
+                        {t('selectedDate')}
                       </h3>
                       <p className="text-sophisticated text-sophisticated-dark">
                         {new Date(selectedDate)?.toLocaleDateString('bg-BG', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
-                      <p className="text-sm text-sophisticated-dark mt-1">
-                        {new Date(selectedDate)?.toLocaleDateString('en-US', {
                           weekday: 'long',
                           year: 'numeric',
                           month: 'long',
@@ -374,20 +271,17 @@ const BookingPage = () => {
                   {/* Inspiration */}
                   <div className="bg-warm-section rounded-xl shadow-soft p-6">
                     <h3 className="text-sophisticated font-medium text-sophisticated-dark mb-4">
-                      Вдъхновение / Inspiration
+                      {t('inspiration')}
                     </h3>
                     <div className="aspect-square rounded-lg overflow-hidden mb-4">
                       <Image
                         src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=400&h=400&fit=crop"
-                        alt="Фотография вдъхновение"
+                        alt={t('inspiration')}
                         className="w-full h-full object-cover gallery-image"
                       />
                     </div>
                     <p className="text-sm text-hierarchy-secondary">
-                      "Всеки момент е уникален и заслужава да бъде запечатан с любов и внимание към детайла."
-                    </p>
-                    <p className="text-xs text-hierarchy-secondary mt-2 italic">
-                      "Every moment is unique and deserves to be captured with love and attention to detail."
+                      "{t('inspirationQuote')}"
                     </p>
                   </div>
                 </div>
@@ -399,13 +293,10 @@ const BookingPage = () => {
           <section className="py-16 bg-gradient-to-r from-accent to-secondary">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <h2 className="text-elegant text-2xl lg:text-3xl text-sophisticated-dark mb-4">
-                Готови да започнем? / Ready to Begin?
+                {t('readyToBegin')}
               </h2>
               <p className="text-sophisticated text-sophisticated-dark mb-8 max-w-2xl mx-auto">
-                Вашата история чака да бъде разказана. Резервирайте консултацията си днес и направете първата стъпка към незабравими спомени.
-              </p>
-              <p className="text-sophisticated text-sophisticated-dark mb-8 max-w-2xl mx-auto">
-                Your story is waiting to be told. Book your consultation today and take the first step toward unforgettable memories.
+                {t('bookingCtaDescription')}
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
@@ -416,7 +307,7 @@ const BookingPage = () => {
                   onClick={() => setActiveTab('form')}
                 >
                   <Icon name="Calendar" size={20} className="mr-2" />
-                  Резервирайте сега / Book Now
+                  {t('bookNow')}
                 </Button>
                 
                 <Button
@@ -426,7 +317,7 @@ const BookingPage = () => {
                   onClick={() => window.location.href = '/gallery'}
                 >
                   <Icon name="Camera" size={20} className="mr-2" />
-                  Вижте работата ми / View My Work
+                  {t('viewMyWork')}
                 </Button>
               </div>
             </div>

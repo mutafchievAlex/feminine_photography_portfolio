@@ -7,55 +7,42 @@ const TrustSignals = () => {
   const trustFeatures = [
     {
       icon: 'Shield',
-      title: 'Сигурно резервиране / Secure Booking',
-      description: 'Вашите данни са защитени с SSL криптиране / Your data is protected with SSL encryption'
+      title: t('secureBookingTitle'),
+      description: t('secureBookingDesc')
     },
     {
       icon: 'RefreshCw',
-      title: 'Гъвкаво пренасрочване / Flexible Rescheduling',
-      description: 'Безплатно пренасрочване до 48 часа преди сесията / Free rescheduling up to 48 hours before session'
+      title: t('flexibleReschedulingTitle'),
+      description: t('flexibleReschedulingDesc')
     },
     {
       icon: 'Phone',
-      title: 'Директен контакт / Direct Contact',
-      description: 'Винаги можете да се свържете директно с мен / You can always contact me directly'
+      title: t('directContactTitle'),
+      description: t('directContactDesc')
     },
     {
       icon: 'Award',
-      title: 'Гарантирано качество / Quality Guaranteed',
-      description: '100% гаранция за удовлетвореност / 100% satisfaction guarantee'
+      title: t('qualityGuaranteedTitle'),
+      description: t('qualityGuaranteedDesc')
     }
   ];
 
   const policies = [
     {
-      title: 'Политика за отмяна / Cancellation Policy',
+      title: t('cancellationPolicy'),
       items: [
-        'Безплатна отмяна до 48 часа преди сесията / Free cancellation up to 48 hours before session',
-        'Пълно възстановяване при отмяна от фотографа / Full refund if cancelled by photographer',
-        'Гъвкави опции при непредвидени обстоятелства / Flexible options for unforeseen circumstances'
+        t('cancellationItem1'),
+        t('cancellationItem2'),
+        t('cancellationItem3')
       ]
     },
     {
-      title: 'Политика за поверителност / Privacy Policy',
+      title: t('privacyPolicyTitle'),
       items: [
-        'Вашите снимки няма да бъдат споделени без разрешение / Your photos won\'t be shared without permission',
-        'Лични данни се използват само за комуникация / Personal data used only for communication',
-        'Възможност за изтриване на данни по всяко време / Option to delete data at any time'
+        t('privacyItem1'),
+        t('privacyItem2'),
+        t('privacyItem3')
       ]
-    }
-  ];
-
-  const testimonialHighlights = [
-    {
-      quote: `"Елена направи цялия процес толкова лесен и удобен. От първата консултация до получаването на снимките - всичко беше перфектно организирано."`,
-      author: 'Мария Петрова',
-      session: 'Сватбена фотосесия'
-    },
-    {
-      quote: `"The booking process was seamless and Elena made me feel comfortable from the very first conversation. Highly recommend!"`,
-      author: 'Sarah Johnson',
-      session: 'Maternity Session'
     }
   ];
 
@@ -113,48 +100,14 @@ const TrustSignals = () => {
           </div>
         ))}
       </div>
-      {/* Quick Testimonials */}
-      <div className="bg-surface-elevation rounded-xl shadow-soft p-6 lg:p-8">
-        <div className="text-center mb-6">
-          <h3 className="text-elegant text-xl text-sophisticated-dark mb-2">
-            {t('testimonialsTitle')}
-          </h3>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {testimonialHighlights?.map((testimonial, index) => (
-            <div key={index} className="relative">
-              <div className="bg-gallery-canvas rounded-lg p-6 shadow-soft">
-                <Icon name="Quote" size={24} className="text-accent mb-3" />
-                <p className="text-sophisticated text-sophisticated-dark mb-4 italic">
-                  {testimonial?.quote}
-                </p>
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-accent to-secondary rounded-full flex items-center justify-center">
-                    <Icon name="User" size={18} className="text-sophisticated-dark" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-sophisticated text-sophisticated-dark">
-                      {testimonial?.author}
-                    </p>
-                    <p className="text-xs text-hierarchy-secondary">
-                      {testimonial?.session}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
       {/* Contact Information */}
       <div className="bg-gradient-to-r from-accent to-secondary rounded-xl shadow-soft p-6 lg:p-8">
         <div className="text-center">
           <h3 className="text-elegant text-xl text-sophisticated-dark mb-3">
-            Имате въпроси? / Have Questions?
+            {t('haveQuestions')}
           </h3>
           <p className="text-sophisticated text-sophisticated-dark mb-6">
-            Свържете се с мен директно за бърз отговор / Contact me directly for a quick response
+            {t('contactDirectly')}
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-6">
