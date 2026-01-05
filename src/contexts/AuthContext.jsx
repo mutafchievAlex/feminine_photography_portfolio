@@ -1,5 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { 
+  isValidEmail, 
+  isValidPhone, 
+  sanitizeInput, 
+  loginRateLimiter,
+  secureStorage,
+  detectMaliciousInput
+} from '../utils/security';
 
 const AuthContext = createContext({});
 
@@ -26,6 +34,23 @@ const DEMO_ACCOUNTS = {
 };
 
 const isMockMode = import.meta.env.VITE_SUPABASE_URL?.includes('dummy');
+
+// Password strength validation
+const validatePasswordStrength = (password) => {
+  if (!password || password.length < 8) {
+    return { isValid: false, message: 'Паролата трябва да е поне 8 символа.' };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { isValid: false, message: 'Паролата трябва да съдържа поне една главна буква.' };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { isValid: false, message: 'Паролата трябва да съдържа поне една малка буква.' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { isValid: false, message: 'Паролата трябва да съдържа поне една цифра.' };
+  }
+  return { isValid: true };
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -95,30 +120,57 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signIn = async (email, password) => {
+    // Input validation
+    if (!email || !password) {
+      throw new Error('Имейл и парола са задължителни.');
+    }
+
+    // Sanitize inputs
+    const cleanEmail = sanitizeInput(email.toLowerCase().trim());
+    const cleanPassword = password.trim();
+
+    // Validate email format
+    if (!isValidEmail(cleanEmail)) {
+      throw new Error('Невалиден имейл адрес.');
+    }
+
+    // Check for malicious input
+    if (detectMaliciousInput(cleanEmail) || detectMaliciousInput(cleanPassword)) {
+      throw new Error('Невалидни данни.');
+    }
+
+    // Check rate limiting
+    if (!loginRateLimiter.isAllowed(cleanEmail)) {
+      throw new Error('Твърде много опити за вход. Моля изчакайте 5 минути.');
+    }
+
     if (isMockMode) {
       // Mock authentication - check demo accounts first, then registered accounts
-      let account = DEMO_ACCOUNTS[email];
+      let account = DEMO_ACCOUNTS[cleanEmail];
       
       // If not a demo account, check registered accounts
       if (!account) {
-        const registeredAccounts = JSON.parse(localStorage.getItem('registeredAccounts') || '{}');
-        account = registeredAccounts[email];
+        const registeredAccounts = secureStorage.getItem('registeredAccounts') || {};
+        account = registeredAccounts[cleanEmail];
       }
       
-      if (!account || account.password !== password) {
+      if (!account || account.password !== cleanPassword) {
         throw new Error('Невалидно имейл или парола');
       }
 
+      // Reset rate limiter on successful login
+      loginRateLimiter.reset(cleanEmail);
+
       const mockUser = {
-        id: email.replace(/[^a-z0-9]/gi, ''),
-        email,
+        id: cleanEmail.replace(/[^a-z0-9]/gi, ''),
+        email: cleanEmail,
         user_metadata: {
           full_name: account.fullName,
           phone: account.phone,
           role: account.role
         },
         profile: {
-          id: email.replace(/[^a-z0-9]/gi, ''),
+          id: cleanEmail.replace(/[^a-z0-9]/gi, ''),
           full_name: account.fullName,
           phone: account.phone,
           role: account.role,
@@ -128,65 +180,96 @@ export const AuthProvider = ({ children }) => {
 
       setUser(mockUser);
       setProfile(mockUser.profile);
-      localStorage.setItem('mockAuthSession', JSON.stringify(mockUser));
+      secureStorage.setItem('mockAuthSession', mockUser);
       return { user: mockUser };
     }
 
     const { data, error } = await supabase?.auth?.signInWithPassword({
-      email,
-      password
+      email: cleanEmail,
+      password: cleanPassword
     });
+    
     if (error) throw error;
+    
+    // Reset rate limiter on successful login
+    loginRateLimiter.reset(cleanEmail);
+    
     return data;
   };
 
   const signUp = async (email, password, fullName, phone) => {
-    if (isMockMode) {
-      // Mock registration
-      if (!fullName || !email || !password) {
-        throw new Error('Моля попълнете всички задължителни полета');
-      }
+    // Input validation
+    if (!fullName || !email || !password) {
+      throw new Error('Моля попълнете всички задължителни полета');
+    }
 
+    // Sanitize inputs
+    const cleanEmail = sanitizeInput(email.toLowerCase().trim());
+    const cleanFullName = sanitizeInput(fullName.trim());
+    const cleanPhone = phone ? sanitizeInput(phone.trim()) : '';
+
+    // Validate email
+    if (!isValidEmail(cleanEmail)) {
+      throw new Error('Невалиден имейл адрес.');
+    }
+
+    // Validate phone if provided
+    if (cleanPhone && !isValidPhone(cleanPhone)) {
+      throw new Error('Невалиден телефонен номер.');
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
+      throw new Error(passwordValidation.message);
+    }
+
+    // Check for malicious input
+    if (detectMaliciousInput(cleanEmail) || detectMaliciousInput(cleanFullName)) {
+      throw new Error('Невалидни данни.');
+    }
+
+    if (isMockMode) {
       const mockUser = {
-        id: email.replace(/[^a-z0-9]/gi, ''),
-        email,
+        id: cleanEmail.replace(/[^a-z0-9]/gi, ''),
+        email: cleanEmail,
         user_metadata: {
-          full_name: fullName,
-          phone: phone || '',
+          full_name: cleanFullName,
+          phone: cleanPhone,
           role: 'client'
         },
         profile: {
-          id: email.replace(/[^a-z0-9]/gi, ''),
-          full_name: fullName,
-          phone: phone || '',
+          id: cleanEmail.replace(/[^a-z0-9]/gi, ''),
+          full_name: cleanFullName,
+          phone: cleanPhone,
           role: 'client',
           created_at: new Date().toISOString()
         }
       };
 
-      // Store in localStorage instead of Supabase
-      const registeredAccounts = JSON.parse(localStorage.getItem('registeredAccounts') || '{}');
-      registeredAccounts[email] = {
+      // Store in secure storage
+      const registeredAccounts = secureStorage.getItem('registeredAccounts') || {};
+      registeredAccounts[cleanEmail] = {
         password,
-        fullName,
-        phone,
+        fullName: cleanFullName,
+        phone: cleanPhone,
         role: 'client'
       };
-      localStorage.setItem('registeredAccounts', JSON.stringify(registeredAccounts));
+      secureStorage.setItem('registeredAccounts', registeredAccounts);
 
       setUser(mockUser);
       setProfile(mockUser.profile);
-      localStorage.setItem('mockAuthSession', JSON.stringify(mockUser));
+      secureStorage.setItem('mockAuthSession', mockUser);
       return { user: mockUser };
     }
 
     const { data, error } = await supabase?.auth?.signUp({
-      email,
+      email: cleanEmail,
       password,
       options: {
         data: {
-          full_name: fullName,
-          phone: phone || '',
+          full_name: cleanFullName,
+          phone: cleanPhone,
           role: 'client'
         }
       }
@@ -199,12 +282,14 @@ export const AuthProvider = ({ children }) => {
     if (isMockMode) {
       setUser(null);
       setProfile(null);
-      localStorage.removeItem('mockAuthSession');
+      secureStorage.removeItem('mockAuthSession');
+      sessionStorage.clear(); // Clear all session data
       return;
     }
 
     const { error } = await supabase?.auth?.signOut();
     if (error) throw error;
+    sessionStorage.clear(); // Clear all session data
   };
 
   const updateProfile = async (updates) => {

@@ -87,6 +87,19 @@ const Header = () => {
     <header className={headerClasses}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
+          {/* Mobile Menu Button - Left side */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={`md:hidden flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${
+              isHeroTransparent 
+                ? 'text-white hover:bg-white/10' 
+                : 'text-sophisticated-dark hover:bg-surface-elevation'
+            }`}
+            aria-label="Toggle menu"
+          >
+            <Icon name={isMobileMenuOpen ? "X" : "Menu"} size={24} />
+          </button>
+
           {/* Navigation and controls */}
           <nav className="hidden md:flex items-center space-x-8">
             {navigationItems?.map((item) =>
@@ -114,11 +127,11 @@ const Header = () => {
             {/* Notification Bell - Only show when user is logged in */}
             {user && <NotificationBell />}
 
-            {/* Sign In / Sign Out Button */}
+            {/* Sign In / Sign Out Button - Hidden on mobile */}
             {user ? (
               <button
                 onClick={handleSignOut}
-                className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors ${authBtnClass}`}
+                className={`hidden md:flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors ${authBtnClass}`}
               >
                 <span>Sign Out</span>
                 <Icon name="LogOut" size={16} />
@@ -126,7 +139,7 @@ const Header = () => {
             ) : (
               <button
                 onClick={() => navigate('/signin')}
-                className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors ${authBtnClass}`}
+                className={`hidden md:flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors ${authBtnClass}`}
               >
                 <span>Sign In</span>
                 <Icon name="LogIn" size={16} />

@@ -120,21 +120,6 @@ const HeroGallery = () => {
               </div>
             </motion.div>
           </AnimatePresence>
-      {/* Navigation Arrows */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 elegant-hover"
-        aria-label="Previous image"
-      >
-        <Icon name="ChevronLeft" size={24} />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 elegant-hover"
-        aria-label="Next image"
-      >
-        <Icon name="ChevronRight" size={24} />
-      </button>
         </>
       ) : (
         // Fallback UI when no images are available

@@ -1,0 +1,24 @@
+<svg width="500" height="300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4C5D9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#C5B5CA;stop-opacity:1" />
+    </linearGradient>
+    <pattern id="lines" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="20" stroke="#9B8BA5" opacity="0.15" stroke-width="1"/>
+    </pattern>
+  </defs>
+  
+  <rect width="500" height="300" fill="url(#grad2)"/>
+  <rect width="500" height="300" fill="url(#lines)"/>
+  
+  <text x="250" y="135" font-family="Georgia, serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#5C4A6B" opacity="0.8">
+    Professional
+  </text>
+  <text x="250" y="180" font-family="Georgia, serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#5C4A6B" opacity="0.8">
+    Experience
+  </text>
+  
+  <polygon points="50,100 65,130 50,160 35,130" fill="#8B7B95" opacity="0.2"/>
+  <polygon points="450,80 465,110 450,140 435,110" fill="#8B7B95" opacity="0.15"/>
+</svg>

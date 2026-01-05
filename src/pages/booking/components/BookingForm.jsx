@@ -5,6 +5,12 @@ import Select from '../../../components/ui/Select';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import Icon from '../../../components/AppIcon';
 import { useLanguage } from '../../../hooks/useLanguage';
+import { 
+  validateBookingForm, 
+  sanitizeFormData, 
+  bookingRateLimiter,
+  detectMaliciousInput 
+} from '../../../utils/security';
 
 const BookingForm = ({ onSubmit, isSubmitting }) => {
   const { t } = useLanguage();
@@ -53,6 +59,15 @@ const BookingForm = ({ onSubmit, isSubmitting }) => {
   };
 
   const validateForm = () => {
+    // Use security utility for comprehensive validation
+    const { isValid, errors: validationErrors } = validateBookingForm(formData);
+    
+    if (!isValid) {
+      setErrors(validationErrors);
+      return false;
+    }
+
+    // Additional client-side validations
     const newErrors = {};
 
     if (!formData?.fullName?.trim()) {
@@ -81,14 +96,33 @@ const BookingForm = ({ onSubmit, isSubmitting }) => {
       newErrors.agreedToTerms = t('errorAcceptTerms');
     }
 
+    // Check for malicious input in text fields
+    const textFields = ['fullName', 'email', 'phone', 'vision', 'inspiration', 'specialRequests'];
+    for (const field of textFields) {
+      if (formData[field] && detectMaliciousInput(formData[field])) {
+        newErrors[field] = 'Невалидни данни. Моля използвайте само обикновен текст.';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors)?.length === 0;
   };
 
   const handleSubmit = (e) => {
     e?.preventDefault();
+    
+    // Check rate limiting
+    if (!bookingRateLimiter.isAllowed('booking-form')) {
+      setErrors({ 
+        submit: 'Твърде много опити. Моля изчакайте минута преди да опитате отново.' 
+      });
+      return;
+    }
+    
     if (validateForm()) {
-      onSubmit(formData);
+      // Sanitize all form data before submission
+      const sanitizedData = sanitizeFormData(formData);
+      onSubmit(sanitizedData);
     }
   };
 
@@ -254,6 +288,12 @@ const BookingForm = ({ onSubmit, isSubmitting }) => {
 
         {/* Submit Button */}
         <div className="pt-6">
+          {errors?.submit && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {errors.submit}
+            </div>
+          )}
+          
           <Button
             type="submit"
             variant="default"

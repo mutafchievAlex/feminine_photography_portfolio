@@ -10,6 +10,7 @@ const RecentStories = () => {
   const [language, setLanguage] = useState('bg');
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredStory, setHoveredStory] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,6 +44,7 @@ const RecentStories = () => {
             en: album?.description || 'Beautiful photo session'
           },
           image: album?.coverImageUrl || album?.photos?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1519741497674-611481863552',
+          secondImage: album?.photos?.[1]?.imageUrl || album?.coverImageUrl || album?.photos?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1519741497674-611481863552',
           category: album?.sessionType || 'wedding',
           date: album?.sessionDate || album?.createdAt,
           location: album?.location || language === 'bg' ? 'България' : 'Bulgaria',
@@ -148,13 +150,15 @@ const RecentStories = () => {
               viewport={{ amount: 0.3 }}
               className="group cursor-pointer"
               onClick={() => handleViewAlbum(story?.albumId)}
+              onMouseEnter={() => setHoveredStory(story?.id)}
+              onMouseLeave={() => setHoveredStory(null)}
             >
               <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <Image
-                    src={story?.image}
+                    src={hoveredStory === story?.id ? story?.secondImage : story?.image}
                     alt={story?.title?.[language]}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
                   />
                 </div>
                 <div className="px-5 py-4 bg-white transition-all duration-300 max-h-0 opacity-0 group-hover:max-h-40 group-hover:opacity-100">

@@ -15,6 +15,7 @@ const WhyChooseSection = () => {
     {
       id: 1,
       icon: "Palette",
+      image: "/assets/images/panel-backgrounds/artistic-vision.jpg",
       title: {
         bg: "Артистична визия",
         en: "Artistic Vision"
@@ -24,31 +25,33 @@ const WhyChooseSection = () => {
         en: "Every photo is created with a unique artistic perspective that transforms ordinary moments into extraordinary works of art."
       },
       testimonial: {
-        bg: "Елена има невероятен усет за красота и композиция. Снимките ни са като картини!",
-        en: "Elena has an incredible sense of beauty and composition. Our photos are like paintings!",
+        bg: "Десислава има невероятен усет за красота и композиция. Снимките ни са като картини!",
+        en: "Desislava has an incredible sense of beauty and composition. Our photos are like paintings!",
         author: "Мария Петрова / Maria Petrova"
       }
     },
     {
       id: 2,
       icon: "Award",
+      image: "/assets/images/panel-backgrounds/professional-experience.jpg",
       title: {
         bg: "Професионален опит",
         en: "Professional Experience"
       },
       description: {
-        bg: "Над 8 години опит в сферата на фотографията с над 200 успешно проведени сесии и множество награди от международни конкурси.",
-        en: "Over 8 years of experience in photography with over 200 successful sessions and multiple awards from international competitions."
+        bg: "Над 3 години опит в сферата на фотографията с над 200 успешно проведени сесии и множество награди от международни конкурси.",
+        en: "Over 3 years of experience in photography with over 200 successful sessions and multiple awards from international competitions."
       },
       testimonial: {
-        bg: "Професионализмът на Елена е безупречен. Тя знае точно как да ни накара да се чувстваме комфортно.",
-        en: "Elena\'s professionalism is impeccable. She knows exactly how to make us feel comfortable.",
+        bg: "Професионализмът на Десислава е безупречен. Тя знае точно как да ни накара да се чувстваме комфортно.",
+        en: "Desislava's professionalism is impeccable. She knows exactly how to make us feel comfortable.",
         author: "Димитър Георгиев / Dimitar Georgiev"
       }
     },
     {
       id: 3,
       icon: "Heart",
+      image: "/assets/images/panel-backgrounds/personalized-approach.jpg",
       title: {
         bg: "Персонализиран подход",
         en: "Personalized Approach"
@@ -58,8 +61,8 @@ const WhyChooseSection = () => {
         en: "Every session is planned individually according to your desires, style and personality to create truly authentic memories."
       },
       testimonial: {
-        bg: "Елена отдели време да ни опознае и резултатът беше перфектен - снимките наистина отразяват нас!",
-        en: "Elena took time to get to know us and the result was perfect - the photos truly reflect who we are!",
+        bg: "Десислава отдели време да ни опознае и резултатът беше перфектен - снимките наистина отразяват нас!",
+        en: "Desislava took time to get to know us and the result was perfect - the photos truly reflect who we are!",
         author: "Ива Стоянова / Iva Stoyanova"
       }
     }
@@ -99,7 +102,7 @@ const WhyChooseSection = () => {
           className="text-center mb-16"
         >
           <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl text-sophisticated-dark mb-6">
-            {language === 'bg' ? 'Защо да изберете мен?' : 'Why Choose Me?'}
+            {language === 'bg' ? 'Нека работим заедно' : 'Let’s Work Together'}
           </h2>
           <p className="font-sophisticated text-lg text-hierarchy-secondary max-w-3xl mx-auto">
             {language === 'bg' ?'Три основни причини, които правят моята работа специална и различна от останалите фотографи.' :'Three key reasons that make my work special and different from other photographers.'
@@ -123,36 +126,51 @@ const WhyChooseSection = () => {
               onMouseEnter={() => setHoveredCard(item?.id)}
               onMouseLeave={() => setHoveredCard(null)}
             >
-              {/* Main Card */}
-              <div className="bg-white rounded-2xl p-8 shadow-soft elegant-hover h-full">
+              {/* Main Card with Background Image */}
+              <div 
+                className="rounded-2xl shadow-soft elegant-hover h-full relative overflow-hidden"
+                style={{
+                  backgroundImage: item?.image ? `url(${item?.image})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
+                {/* Dark Overlay */}
+                <div className="absolute inset-0 bg-black/30"></div>
+                
+                {/* Content Container */}
+                <div className="relative z-10 p-8 h-full flex flex-col justify-between">
                 {/* Icon */}
-                <div className="w-16 h-16 bg-gradient-to-br from-accent to-secondary rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-16 h-16 bg-gradient-to-br from-accent to-secondary rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                   <Icon 
                     name={item?.icon} 
                     size={28} 
-                    className="text-sophisticated-dark" 
+                    className="text-white" 
                   />
                 </div>
 
                 {/* Content */}
-                <h3 className="font-heading text-xl md:text-2xl text-sophisticated-dark mb-4">
-                  {item?.title?.[language]}
-                </h3>
-                
-                <p className="text-hierarchy-secondary font-sophisticated leading-relaxed">
-                  {item?.description?.[language]}
-                </p>
+                <div>
+                  <h3 className="font-heading text-2xl md:text-3xl text-white mb-3 drop-shadow-lg">
+                    {item?.title?.[language]}
+                  </h3>
+                  
+                  <p className="text-white/95 font-sophisticated leading-relaxed text-sm md:text-base drop-shadow-md">
+                    {item?.description?.[language]}
+                  </p>
 
-                {/* Hover Indicator */}
-                <div className="mt-6 flex items-center text-accent group-hover:text-sophisticated-dark transition-colors duration-300">
-                  <span className="text-sm font-sophisticated mr-2">
-                    {language === 'bg' ? 'Виж отзив' : 'View testimonial'}
-                  </span>
-                  <Icon 
-                    name="ArrowRight" 
-                    size={16} 
-                    className="group-hover:translate-x-1 transition-transform duration-300" 
-                  />
+                  {/* Hover Indicator */}
+                  <div className="mt-4 flex items-center text-white/80 group-hover:text-white transition-colors duration-300">
+                    <span className="text-sm font-sophisticated mr-2">
+                      {language === 'bg' ? 'Виж отзив' : 'View testimonial'}
+                    </span>
+                    <Icon 
+                      name="ArrowRight" 
+                      size={16} 
+                      className="group-hover:translate-x-1 transition-transform duration-300" 
+                    />
+                  </div>
+                </div>
                 </div>
               </div>
 
