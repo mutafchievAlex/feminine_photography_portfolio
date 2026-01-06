@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { bookingService } from '../../../services/bookingService';
+import { supabase } from '../../../lib/supabase';
 
 const AvailabilityCalendar = ({ onDateSelect, selectedDate }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -14,17 +15,38 @@ const AvailabilityCalendar = ({ onDateSelect, selectedDate }) => {
     const loadAvailability = async () => {
       setIsLoading(true);
       try {
-        // Fetch all confirmed and pending bookings
+        // Fetch all confirmed bookings (only confirmed dates block availability)
         const allBookings = await bookingService.getAllBookings();
         const booked = new Set();
         
-        // Add booked dates from database
+        // Add ONLY confirmed bookings to booked dates
         allBookings?.forEach(booking => {
-          if (booking?.preferredDate) {
-            booked?.add(booking?.preferredDate);
+          if (booking?.status === 'confirmed') {
+            if (booking?.preferredDate) {
+              booked?.add(booking?.preferredDate);
+            }
+            if (booking?.alternateDate) {
+              booked?.add(booking?.alternateDate);
+            }
           }
-          if (booking?.alternateDate) {
-            booked?.add(booking?.alternateDate);
+        });
+
+        // Fetch blocked dates from admin
+        const { data: blockedDatesData = [] } = await supabase
+          ?.from('blocked_dates')
+          ?.select('start_date, end_date');
+
+        // Add blocked date ranges to booked dates
+        blockedDatesData?.forEach(block => {
+          const startDate = new Date(block.start_date);
+          const endDate = new Date(block.end_date);
+          
+          for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const dateString = `${year}-${month}-${day}`;
+            booked?.add(dateString);
           }
         });
         
@@ -38,12 +60,15 @@ const AvailabilityCalendar = ({ onDateSelect, selectedDate }) => {
           date?.setDate(today?.getDate() + i);
           
           const dayOfWeek = date?.getDay();
-          const dateString = date?.toISOString()?.split('T')?.[0];
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const dateString = `${year}-${month}-${day}`;
           
           // Skip Mondays (day 1) - photographer's day off
           if (dayOfWeek === 1) continue;
           
-          // If not booked, it's available
+          // If not booked or blocked, it's available
           if (!booked?.has(dateString)) {
             available?.add(dateString);
           }
@@ -62,7 +87,10 @@ const AvailabilityCalendar = ({ onDateSelect, selectedDate }) => {
           const date = new Date(today);
           date?.setDate(today?.getDate() + i);
           const dayOfWeek = date?.getDay();
-          const dateString = date?.toISOString()?.split('T')?.[0];
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const dateString = `${year}-${month}-${day}`;
           
           if (dayOfWeek !== 1 && Math.random() > 0.3) {
             available?.add(dateString);
@@ -79,6 +107,23 @@ const AvailabilityCalendar = ({ onDateSelect, selectedDate }) => {
     };
 
     loadAvailability();
+
+    // Set up real-time subscription for booking changes
+    const channel = supabase
+      .channel('public:bookings')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bookings' },
+        (payload) => {
+          // Reload availability when bookings change
+          loadAvailability();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel?.unsubscribe();
+    };
   }, []);
 
   const monthNames = [
@@ -125,21 +170,29 @@ const AvailabilityCalendar = ({ onDateSelect, selectedDate }) => {
     });
   };
 
+  const formatDateString = (date) => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const isDateAvailable = (date) => {
     if (!date) return false;
-    const dateString = date?.toISOString()?.split('T')?.[0];
+    const dateString = formatDateString(date);
     return availableDates?.has(dateString);
   };
 
   const isDateBooked = (date) => {
     if (!date) return false;
-    const dateString = date?.toISOString()?.split('T')?.[0];
+    const dateString = formatDateString(date);
     return bookedDates?.has(dateString);
   };
 
   const isDateSelected = (date) => {
     if (!date || !selectedDate) return false;
-    return date?.toISOString()?.split('T')?.[0] === selectedDate;
+    return formatDateString(date) === selectedDate;
   };
 
   const isDatePast = (date) => {
@@ -152,7 +205,7 @@ const AvailabilityCalendar = ({ onDateSelect, selectedDate }) => {
   const handleDateClick = (date) => {
     if (!date || isDatePast(date) || isDateBooked(date) || !isDateAvailable(date)) return;
     
-    const dateString = date?.toISOString()?.split('T')?.[0];
+    const dateString = formatDateString(date);
     onDateSelect(dateString);
   };
 

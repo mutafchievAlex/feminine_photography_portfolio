@@ -208,13 +208,20 @@ const BookingForm = ({ onSubmit, isSubmitting, selectedDate }) => {
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Calculate today's date in local timezone */}
             <Input
               label={t('preferredDate')}
               type="date"
               value={formData?.preferredDate}
               onChange={(e) => handleInputChange('preferredDate', e?.target?.value)}
               error={errors?.preferredDate}
-              min={new Date()?.toISOString()?.split('T')?.[0]}
+              min={(() => {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+              })()}
               required
             />
 
@@ -223,7 +230,13 @@ const BookingForm = ({ onSubmit, isSubmitting, selectedDate }) => {
               type="date"
               value={formData?.alternateDate}
               onChange={(e) => handleInputChange('alternateDate', e?.target?.value)}
-              min={new Date()?.toISOString()?.split('T')?.[0]}
+              min={(() => {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+              })()}
             />
           </div>
 

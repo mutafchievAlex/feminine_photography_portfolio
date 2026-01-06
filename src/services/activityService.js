@@ -23,6 +23,30 @@ export const activityService = {
     return this.getRecentActivity(limit);
   },
 
+  async getActivitiesPaged(limit = 5, offset = 0) {
+    const { data, error } = await supabase
+      ?.from('activity_logs')
+      ?.select(`
+        *,
+        user_profiles!user_id(full_name, email)
+      `)
+      ?.order('created_at', { ascending: false })
+      ?.range(offset, offset + limit - 1);
+
+    if (error) throw error;
+
+    return (
+      data?.map((activity) => ({
+        id: activity?.id,
+        activityType: activity?.activity_type,
+        description: activity?.description,
+        metadata: activity?.metadata,
+        user: activity?.user_profiles,
+        createdAt: activity?.created_at,
+      })) || []
+    );
+  },
+
   async getUserActivity() {
     const { data: { user } } = await supabase?.auth?.getUser();
     if (!user) throw new Error('Not authenticated');

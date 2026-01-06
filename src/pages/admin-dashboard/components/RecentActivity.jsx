@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 import { activityService } from '../../../services/activityService';
 import { realtimeService } from '../../../services/realtimeService';
@@ -9,10 +10,15 @@ export default function RecentActivity() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(0);
+  const pageSize = 5;
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(pageSize);
 
   // Fetch initial activities
   useEffect(() => {
-    fetchActivities();
+    fetchInitial();
   }, []);
 
   // Setup real-time subscription for new activities
@@ -20,24 +26,57 @@ export default function RecentActivity() {
     const subscription = realtimeService?.subscribeToActivityLogs((data) => {
       const { activity } = data;
       // Add new activity to the top of the list
-      setActivities(prev => [activity, ...prev]?.slice(0, 10));
+      setActivities((prev) => {
+        const next = [activity, ...prev];
+        return next;
+      });
     });
 
     return () => subscription?.unsubscribe();
   }, []);
 
-  const fetchActivities = async () => {
+  const fetchInitial = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await activityService?.getRecentActivities(10);
+      const data = await activityService?.getActivitiesPaged(pageSize, 0);
       setActivities(data || []);
+      setVisibleCount(Math.min((data || []).length, pageSize));
+      setPage(1);
+      setHasMore((data || []).length === pageSize);
     } catch (err) {
       console.error('Error fetching activities:', err);
       setError(err?.message || 'Грешка при зареждане на активности');
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    try {
+      // Reveal preloaded hidden items first
+      if (visibleCount < activities.length) {
+        setVisibleCount((v) => Math.min(v + pageSize, activities.length));
+        return;
+      }
+
+      setLoadingMore(true);
+      const offset = page * pageSize;
+      const data = await activityService?.getActivitiesPaged(pageSize, offset);
+      setActivities((prev) => [...prev, ...(data || [])]);
+      setVisibleCount((v) => v + (data?.length || 0));
+      setPage((p) => p + 1);
+      setHasMore((data || []).length === pageSize);
+    } catch (err) {
+      console.error('Error loading more activities:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const collapseToFive = () => {
+    setVisibleCount(pageSize);
   };
 
   const getActivityIcon = (type) => {
@@ -117,28 +156,60 @@ export default function RecentActivity() {
             Няма активност
           </p>
         ) : (
-          <div className="space-y-4">
-            {activities?.map((activity) => (
-              <div key={activity?.id} className="flex items-start space-x-3">
-                <div className={`p-2 rounded-full ${getActivityColor(activity?.activityType)}`}>
-                  <Icon name={getActivityIcon(activity?.activityType)} size={16} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-sophisticated-dark">
-                    {activity?.description}
-                  </p>
-                  {activity?.user && (
-                    <p className="text-xs text-hierarchy-secondary mt-1">
-                      {activity?.user?.full_name}
+          <motion.div layout className="space-y-4">
+            <AnimatePresence initial={false}>
+              {activities?.slice(0, visibleCount)?.map((activity) => (
+                <motion.div
+                  layout
+                  key={activity?.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  className="flex items-start space-x-3"
+                >
+                  <div className={`p-2 rounded-full ${getActivityColor(activity?.activityType)}`}>
+                    <Icon name={getActivityIcon(activity?.activityType)} size={16} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-sophisticated-dark">
+                      {activity?.description}
                     </p>
-                  )}
-                  <p className="text-xs text-hierarchy-secondary mt-1">
-                    {formatTimeAgo(activity?.createdAt)}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+                    {activity?.user && (
+                      <p className="text-xs text-hierarchy-secondary mt-1">
+                        {activity?.user?.full_name}
+                      </p>
+                    )}
+                    <p className="text-xs text-hierarchy-secondary mt-1">
+                      {formatTimeAgo(activity?.createdAt)}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            <div className="pt-2 flex gap-2">
+              {(hasMore || activities?.length > visibleCount) && (
+                <button
+                  type="button"
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="flex-1 text-sm px-4 py-2 rounded-md border border-border hover:bg-gallery-canvas transition-colors"
+                >
+                  {loadingMore ? 'Зареждане…' : 'Виж следващите 5'}
+                </button>
+              )}
+              {visibleCount > pageSize && (
+                <button
+                  type="button"
+                  onClick={collapseToFive}
+                  className="text-sm px-4 py-2 rounded-md border border-border hover:bg-gallery-canvas transition-colors"
+                >
+                  Скрий до последни 5
+                </button>
+              )}
+            </div>
+          </motion.div>
         )}
       </div>
     </div>

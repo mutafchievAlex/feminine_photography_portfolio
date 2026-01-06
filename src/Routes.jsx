@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes as RouterRoutes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import ScrollToTop from "components/ScrollToTop";
+import Preloader from "components/Preloader";
 import ErrorBoundary from "components/ErrorBoundary";
 import ProtectedRoute from "components/ProtectedRoute";
 import NotFound from "pages/NotFound";
@@ -58,6 +59,8 @@ function Routes() {
     <BrowserRouter>
       <ErrorBoundary>
         <ScrollToTop />
+        {/* Show preloader only on homepage routes */}
+        <RouteAwarePreloader />
         <AnimatedRoutes />
       </ErrorBoundary>
     </BrowserRouter>
@@ -65,3 +68,10 @@ function Routes() {
 }
 
 export default Routes;
+
+// Helper component to access router location and show Preloader only on home
+function RouteAwarePreloader() {
+  const location = useLocation();
+  const isHome = location.pathname === '/' || location.pathname === '/homepage';
+  return <Preloader isActive={isHome} minVisibleMs={3500} />;
+}

@@ -27,8 +27,15 @@ const InstagramFeed = () => {
   const [postMedias, setPostMedias] = useState([]);
   const [loadingPostMedias, setLoadingPostMedias] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
+  const [isHovered, setIsHovered] = useState(false);
   
   const accessToken = import.meta.env.VITE_INSTAGRAM_ACCESS_TOKEN;
+  const useDirectFetch = Boolean(accessToken);
+
+  const {
+    posts: backendPosts = [],
+    isLoading: backendLoading = false,
+  } = useInstagramFeed({ limit: 12, enabled: true });
 
   useEffect(() => {
     if (!useDirectFetch) return;
@@ -49,6 +56,9 @@ const InstagramFeed = () => {
 
     const fetchInstagramDirect = async () => {
       setDirectLoading(true);
+      if (typeof window !== 'undefined') {
+        window.__instagramLoading = true;
+      }
       try {
         const response = await fetch(
           `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count&access_token=${accessToken}&limit=12`
@@ -60,6 +70,9 @@ const InstagramFeed = () => {
         setDirectPosts([]);
       } finally {
         setDirectLoading(false);
+        if (typeof window !== 'undefined') {
+          window.__instagramLoading = false;
+        }
       }
     };
 
@@ -68,7 +81,9 @@ const InstagramFeed = () => {
   }, [accessToken, useDirectFetch]);
 
   const normalizedPosts = useMemo(() => {
-    const source = useDirectFetch ? directPosts : backendPosts;
+    const source = (Array.isArray(directPosts) && directPosts.length > 0)
+      ? directPosts
+      : backendPosts;
     const rawList = Array.isArray(source)
       ? source
       : Array.isArray(source?.data)
@@ -112,7 +127,20 @@ const InstagramFeed = () => {
     });
   }, [language, directPosts, backendPosts, useDirectFetch]);
 
-  const isLoading = useDirectFetch ? directLoading : backendLoading;
+  const isLoading = (
+    (directPosts?.length ?? 0) === 0 && (backendPosts?.length ?? 0) === 0
+  ) && (
+    directLoading || backendLoading
+  );
+
+  // Keep a global flag in sync for Preloader to consider direct fetch
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const anyLoading = directLoading || backendLoading;
+    const havePosts = (normalizedPosts?.length ?? 0) > 0;
+    window.__instagramLoading = anyLoading && !havePosts;
+    return () => { window.__instagramLoading = false; };
+  }, [directLoading, backendLoading, normalizedPosts]);
 
   const formatTimeAgo = (timestamp) => {
     const now = new Date();
@@ -163,9 +191,17 @@ const InstagramFeed = () => {
 
   const handleMouseLeave = () => {
     setIsDragging(false);
+    setIsHovered(false);
     if (sliderRef.current) {
       sliderRef.current.style.cursor = 'grab';
       sliderRef.current.style.userSelect = 'auto';
+    }
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    if (sliderRef.current) {
+      sliderRef.current.style.cursor = 'grab';
     }
   };
 
@@ -278,12 +314,35 @@ const InstagramFeed = () => {
     }
   }, [normalizedPosts.length]);
 
-  // Auto-scroll effect with seamless loop - every 3 seconds
+  // Smooth scroll helper with easing for a more gradual feel
+  const smoothScrollTo = (element, target, duration = 1000) => {
+    if (!element) return;
+    const start = element.scrollLeft;
+    const change = target - start;
+    const startTime = performance.now();
+
+    const easeInOutQuad = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
+
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeInOutQuad(progress);
+      element.scrollLeft = start + change * eased;
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+
+    requestAnimationFrame(animate);
+  };
+
+  // Auto-scroll effect with seamless loop - every 6 seconds, slower easing
   useEffect(() => {
     const slider = sliderRef.current;
     if (!slider || normalizedPosts.length === 0) return;
 
     const interval = setInterval(() => {
+      // Pause when user interacts
+      if (isDragging || isHovered) return;
+
       const cardWidth = slider.firstChild?.getBoundingClientRect()?.width || 300;
       const styles = getComputedStyle(slider);
       const gap = parseFloat(styles.columnGap) || 12; // read actual flex gap
@@ -297,11 +356,12 @@ const InstagramFeed = () => {
         slider.scrollLeft += singleRowWidth;
       }
 
-      slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }, 3000);
+      const target = slider.scrollLeft + scrollAmount;
+      smoothScrollTo(slider, target, 1200);
+    }, 6000);
 
     return () => clearInterval(interval);
-  }, [normalizedPosts.length]);
+  }, [normalizedPosts.length, isDragging, isHovered]);
 
   return (
     <section className="py-20 bg-black">
@@ -327,6 +387,7 @@ const InstagramFeed = () => {
             <div className="relative">
               <div
                 ref={sliderRef}
+                onMouseEnter={handleMouseEnter}
                 onMouseDown={handleMouseDown}
                 onMouseLeave={handleMouseLeave}
                 onMouseUp={handleMouseUp}

@@ -252,12 +252,16 @@ const BookingPage = () => {
                         {t('selectedDate')}
                       </h3>
                       <p className="text-sophisticated text-sophisticated-dark">
-                        {new Date(selectedDate)?.toLocaleDateString('bg-BG', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
+                        {(() => {
+                          const [year, month, day] = selectedDate.split('-');
+                          const date = new Date(year, month - 1, day);
+                          return date?.toLocaleDateString('bg-BG', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          });
+                        })()}
                       </p>
                     </div>
                   )}

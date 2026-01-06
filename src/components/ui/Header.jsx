@@ -50,7 +50,7 @@ const Header = () => {
     { name: t('booking'), path: '/booking', icon: 'Calendar' },
     ...(user?.user_metadata?.role === 'admin' || profile?.role === 'admin' ? [
       { name: 'Album Management', path: '/album-management', icon: 'LayoutGrid' },
-      { name: 'Admin Dashboard', path: '/admin-dashboard', icon: 'BarChart3' }
+      { name: 'Admin Dashboard', path: '/admin-dashboard', icon: 'BarChart' }
     ] : [])
   ];
 

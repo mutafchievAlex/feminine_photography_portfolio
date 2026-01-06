@@ -129,7 +129,7 @@ const RevenueChart = () => {
               size="sm"
               onClick={() => setChartType('bar')}
             >
-              <Icon name="BarChart3" size={16} />
+              <Icon name="BarChart" size={16} />
             </Button>
             <Button
               variant={chartType === 'line' ? 'default' : 'outline'}
