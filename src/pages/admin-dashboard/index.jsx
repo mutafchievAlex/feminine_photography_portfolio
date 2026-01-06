@@ -9,6 +9,7 @@ import QuickActions from './components/QuickActions';
 import RecentActivity from './components/RecentActivity';
 import UpcomingSchedule from './components/UpcomingSchedule';
 import RevenueChart from './components/RevenueChart';
+import BookingManagementModal from './components/BookingManagementModal';
 import { activityService } from '../../services/activityService';
 import { galleryService } from '../../services/galleryService';
 import { albumService } from '../../services/albumService';
@@ -16,12 +17,48 @@ import { bookingService } from '../../services/bookingService';
 import { useLanguage } from '../../hooks/useLanguage';
 import pkg from '../../../package.json';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useRealtimeNotifications } from '../../hooks/useRealtimeNotifications';
 
 const AdminDashboard = () => {
   const { t } = useLanguage();
   const { theme, toggleTheme, setTheme } = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [notifications, setNotifications] = useState([]);
+  const [dismissedNotifications, setDismissedNotifications] = useState(() => {
+    // Зареди dismissed notifications от localStorage
+    const saved = localStorage.getItem('dismissedNotifications');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Изчисти dismissed notifications, по-стари от 7 дни
+        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        const filtered = parsed.filter(item => {
+          // Ако е старият формат (само ID), запази го
+          if (typeof item === 'string') return true;
+          // Ако е новият формат с timestamp
+          return item.timestamp > sevenDaysAgo;
+        });
+        
+        // Ако са намалели, запази само актуалните
+        if (filtered.length !== parsed.length) {
+          localStorage.setItem('dismissedNotifications', JSON.stringify(filtered));
+        }
+        
+        return filtered;
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+
+  // Modal state for booking management
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [refreshBookings, setRefreshBookings] = useState(0);
+  
+  // Real-time notifications hook
+  const { notifications: realtimeNotifs, clearNotification } = useRealtimeNotifications();
   const [systemInfo, setSystemInfo] = useState({
     lastBackup: null,
     imagesCount: 0,
@@ -62,32 +99,64 @@ const AdminDashboard = () => {
   };
 
   const dismissNotification = (id) => {
+    // Добави към dismissed notifications с timestamp и запази в localStorage
+    const dismissedItem = {
+      id: id,
+      timestamp: Date.now()
+    };
+    const newDismissed = [...dismissedNotifications, dismissedItem];
+    setDismissedNotifications(newDismissed);
+    localStorage.setItem('dismissedNotifications', JSON.stringify(newDismissed));
+    
+    // Премахни от текущите нотификации
     setNotifications(prev => prev?.filter(notif => notif?.id !== id));
+    
+    // Ако е realtime нотификация, маркирай я като cleared
+    if (realtimeNotifs?.find(n => n?.id === id)) {
+      clearNotification(id);
+    }
   };
 
-  // Fetch notifications (recent activities) and simple system metrics
+  // Helper за проверка дали нотификацията е dismissed
+  const isNotificationDismissed = (notifId) => {
+    return dismissedNotifications.some(item => {
+      // Старият формат (само string ID)
+      if (typeof item === 'string') return item === notifId;
+      // Новият формат (object с id)
+      return item.id === notifId;
+    });
+  };
+
+  // Fetch notifications from bookings and activities
   useEffect(() => {
     let mounted = true;
 
     (async () => {
       try {
-        // Fetch activities separately and with error handling
-        let acts = [];
+        // Fetch admin notifications from table
+        let adminNotifs = [];
         try {
-          acts = await activityService?.getRecentActivities?.(5) || [];
+          adminNotifs = await bookingService?.getAdminNotifications?.() || [];
         } catch (err) {
-          console.warn('Error loading activities:', err?.message);
+          console.warn('Error loading admin notifications:', err?.message);
         }
         
         if (!mounted) return;
         
-        const notifs = (acts || []).map(a => ({
-          id: a?.id,
-          type: a?.activityType || 'info',
-          message: a?.description || '',
-          timestamp: a?.createdAt
-        }));
-        setNotifications(notifs);
+        // Convert admin notifications to UI format
+        const adminNotifsList = (adminNotifs || [])
+          ?.filter(n => !n?.read)
+          ?.filter(n => !isNotificationDismissed(n?.id))
+          ?.slice(0, 10)
+          ?.map(n => ({
+            id: n?.id,
+            type: n?.type || 'info',
+            message: n?.message || n?.title,
+            timestamp: n?.createdAt,
+            data: { bookingId: n?.bookingId }
+          }));
+
+        setNotifications(adminNotifsList);
 
         // Fetch system counts separately with fallbacks
         let images = [];
@@ -114,11 +183,8 @@ const AdminDashboard = () => {
 
         if (!mounted) return;
 
-        // find last backup-like activity if any (fallback to most recent activity)
-        const backupAct = (acts || []).find(x => (x?.activityType || '').toLowerCase().includes('backup')) || acts?.[0];
-
         setSystemInfo({
-          lastBackup: backupAct?.createdAt || null,
+          lastBackup: null,
           imagesCount: images?.length || 0,
           albumsCount: albums?.length || 0,
           bookingsCount: stats?.total || 0,
@@ -130,10 +196,37 @@ const AdminDashboard = () => {
     })();
 
     return () => { mounted = false; };
-  }, []);
+  }, [dismissedNotifications]);
+
+  // Добави realtime нотификации към списъка
+  useEffect(() => {
+    if (realtimeNotifs?.length > 0) {
+      const newNotifs = realtimeNotifs
+        ?.filter(n => !isNotificationDismissed(n?.id))
+        ?.map(n => ({
+          id: n?.id,
+          type: n?.type,
+          message: n?.message || n?.title,
+          timestamp: n?.timestamp,
+          data: n?.data
+        }));
+      
+      // Merge с existing нотификации без дубликати
+      setNotifications(prev => {
+        const existingIds = new Set(prev?.map(p => p?.id));
+        const filtered = newNotifs?.filter(n => !existingIds.has(n?.id));
+        return [...filtered, ...prev]?.slice(0, 10);
+      });
+    }
+  }, [realtimeNotifs, dismissedNotifications]);
 
   const getNotificationIcon = (type) => {
     switch (type) {
+      case 'new_booking': return 'Calendar';
+      case 'booking_status': return 'CheckCircle';
+      case 'personal_booking': return 'User';
+      case 'message': return 'MessageSquare';
+      case 'gallery_delivery': return 'Image';
       case 'urgent': return 'AlertTriangle';
       case 'info': return 'Info';
       case 'reminder': return 'Bell';
@@ -143,6 +236,11 @@ const AdminDashboard = () => {
 
   const getNotificationColor = (type) => {
     switch (type) {
+      case 'new_booking': return 'bg-green-50 border-green-200 text-green-800';
+      case 'booking_status': return 'bg-blue-50 border-blue-200 text-blue-800';
+      case 'personal_booking': return 'bg-purple-50 border-purple-200 text-purple-800';
+      case 'message': return 'bg-indigo-50 border-indigo-200 text-indigo-800';
+      case 'gallery_delivery': return 'bg-pink-50 border-pink-200 text-pink-800';
       case 'urgent': return 'bg-red-50 border-red-200 text-red-800';
       case 'info': return 'bg-blue-50 border-blue-200 text-blue-800';
       case 'reminder': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
@@ -200,38 +298,94 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {/* Mock Notifications (DEV only) */}
+          {/* Real-time Notifications */}
           {notifications?.length > 0 && (
             <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-sophisticated-dark">
+                  Нотификации
+                </h2>
+                {notifications?.length > 3 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      // Dismiss всички нотификации
+                      notifications?.forEach(n => dismissNotification(n?.id));
+                    }}
+                  >
+                    <Icon name="CheckCheck" size={16} className="mr-1" />
+                    Маркирай всички
+                  </Button>
+                )}
+              </div>
               <div className="space-y-3">
                 {notifications?.map((notification) => (
                   <div
                     key={notification?.id}
-                    className={`border rounded-lg p-4 ${getNotificationColor(notification?.type)}`}
+                    className={`border rounded-lg p-4 ${getNotificationColor(notification?.type)} transition-all hover:shadow-md cursor-pointer`}
+                    onClick={async () => {
+                      if (notification?.type === 'new_booking' && notification?.data?.bookingId) {
+                        try {
+                          const bookingData = await bookingService.getAllBookings();
+                          const booking = bookingData?.find(b => b?.id === notification?.data?.bookingId);
+                          if (booking) {
+                            setSelectedBooking(booking);
+                            setIsModalOpen(true);
+                            // Mark notification as read
+                            try {
+                              await bookingService.markNotificationAsRead(notification?.id);
+                            } catch (err) {
+                              console.warn('Error marking notification as read:', err);
+                            }
+                          }
+                        } catch (error) {
+                          console.error('Error loading booking:', error);
+                        }
+                      }
+                    }}
                   >
                     <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3">
-                        <Icon 
-                          name={getNotificationIcon(notification?.type)} 
-                          size={20} 
-                          className="mt-0.5" 
-                        />
-                        <div>
-                          <p className="text-sm font-medium">
+                      <div className="flex items-start space-x-3 flex-1">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <Icon 
+                            name={getNotificationIcon(notification?.type)} 
+                            size={20}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium break-words">
                             {notification?.message}
                           </p>
-                          <p className="text-xs opacity-75 mt-1">
-                            {new Date(notification?.timestamp)?.toLocaleTimeString('bg-BG', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-xs opacity-75">
+                              {new Date(notification?.timestamp)?.toLocaleTimeString('bg-BG', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                            {notification?.data && (
+                              <span className="text-xs opacity-75">
+                                • {new Date(notification?.timestamp)?.toLocaleDateString('bg-BG')}
+                              </span>
+                            )}
+                            {notification?.type === 'new_booking' && (
+                              <span className="text-xs opacity-75">
+                                • <Icon name="ArrowRight" size={12} className="inline-block mr-1" />
+                                Кликни да управляваш
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => dismissNotification(notification?.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          dismissNotification(notification?.id);
+                        }}
+                        className="flex-shrink-0 ml-2"
                       >
                         <Icon name="X" size={16} />
                       </Button>
@@ -346,6 +500,21 @@ const AdminDashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Booking Management Modal */}
+      <BookingManagementModal
+        isOpen={isModalOpen}
+        booking={selectedBooking}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedBooking(null);
+        }}
+        onStatusChanged={() => {
+          setRefreshBookings(prev => prev + 1);
+          // Reload notifications to reflect changes
+          window.location.reload();
+        }}
+      />
     </div>
   );
 };

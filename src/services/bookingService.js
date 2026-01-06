@@ -2,11 +2,18 @@ import { supabase } from '../lib/supabase';
 
 export const bookingService = {
   async create(bookingData) {
-    const { data: { user } } = await supabase?.auth?.getUser();
-    if (!user) throw new Error('Not authenticated');
+    // Get user if authenticated, otherwise use null
+    let userId = null;
+    try {
+      const { data: { user } } = await supabase?.auth?.getUser();
+      userId = user?.id;
+    } catch (err) {
+      // User not authenticated - allow anonymous bookings
+      console.log('Anonymous booking submission');
+    }
 
     const { data, error } = await supabase?.from('bookings')?.insert({
-        client_id: user?.id,
+        client_id: userId,
         full_name: bookingData?.fullName,
         email: bookingData?.email,
         phone: bookingData?.phone,
@@ -29,6 +36,21 @@ export const bookingService = {
       description_param: `Нова резервация за ${bookingData?.sessionType} фотосесия`,
       metadata_param: { booking_id: data?.id, session_type: bookingData?.sessionType }
     });
+
+    // Create admin notification
+    try {
+      await supabase?.from('admin_notifications')?.insert({
+        title: `Нова резервация от ${bookingData?.fullName}`,
+        message: `${bookingData?.fullName} направи резервация за ${bookingData?.sessionType} на дата ${bookingData?.preferredDate}`,
+        type: 'new_booking',
+        booking_id: data?.id,
+        read: false,
+        created_at: new Date().toISOString()
+      });
+    } catch (notifErr) {
+      // Log notification error but don't fail the booking
+      console.warn('Failed to create admin notification:', notifErr?.message);
+    }
 
     return {
       id: data?.id,
@@ -128,6 +150,42 @@ export const bookingService = {
     };
   },
 
+  async updateBookingWithDetails(bookingId, bookingData) {
+    const { data, error } = await supabase?.from('bookings')?.update({
+      full_name: bookingData?.fullName,
+      email: bookingData?.email,
+      phone: bookingData?.phone,
+      location: bookingData?.location,
+      preferred_date: bookingData?.preferredDate,
+      vision: bookingData?.vision,
+      special_requests: bookingData?.specialRequests,
+      admin_notes: bookingData?.adminNotes,
+      updated_at: new Date()?.toISOString()
+    })?.eq('id', bookingId)?.select()?.single();
+
+    if (error) throw error;
+
+    // Log activity
+    await supabase?.rpc('log_activity', {
+      activity_type_param: 'booking_updated',
+      description_param: `Детайли на резервация актуализирани от администратор`,
+      metadata_param: { booking_id: bookingId }
+    });
+
+    return {
+      id: data?.id,
+      fullName: data?.full_name,
+      email: data?.email,
+      phone: data?.phone,
+      location: data?.location,
+      preferredDate: data?.preferred_date,
+      vision: data?.vision,
+      specialRequests: data?.special_requests,
+      adminNotes: data?.admin_notes,
+      updatedAt: data?.updated_at
+    };
+  },
+
   async getStats() {
     const { data, error } = await supabase?.from('bookings')?.select('status, session_type, created_at');
 
@@ -148,5 +206,55 @@ export const bookingService = {
     };
 
     return stats;
+  },
+
+  // Admin notification methods
+  async getAdminNotifications() {
+    const { data, error } = await supabase
+      ?.from('admin_notifications')
+      ?.select('*')
+      ?.order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return (data || [])?.map(notif => ({
+      id: notif?.id,
+      title: notif?.title,
+      message: notif?.message,
+      type: notif?.type,
+      bookingId: notif?.booking_id,
+      read: notif?.read,
+      createdAt: notif?.created_at,
+      updatedAt: notif?.updated_at
+    }));
+  },
+
+  async markNotificationAsRead(notificationId) {
+    const { data, error } = await supabase
+      ?.from('admin_notifications')
+      ?.update({ read: true, updated_at: new Date().toISOString() })
+      ?.eq('id', notificationId)
+      ?.select()
+      ?.single();
+
+    if (error) throw error;
+
+    return {
+      id: data?.id,
+      read: data?.read,
+      updatedAt: data?.updated_at
+    };
+  },
+
+  async deleteNotification(notificationId) {
+    const { error } = await supabase
+      ?.from('admin_notifications')
+      ?.delete()
+      ?.eq('id', notificationId);
+
+    if (error) throw error;
+
+    return true;
   }
+
 };

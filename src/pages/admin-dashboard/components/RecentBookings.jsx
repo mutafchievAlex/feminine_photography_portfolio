@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { useRecentBookings, useUpdateBookingStatus } from '../../../hooks/useBookings';
 import { useLanguage } from '../../../hooks/useLanguage';
+import AllBookingsModal from './AllBookingsModal';
 
 export default function RecentBookings() {
   const { t } = useLanguage();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: bookings, isLoading, isError, error } = useRecentBookings({
     refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
   });
@@ -196,11 +198,17 @@ export default function RecentBookings() {
         </div>
       </div>
       <div className="px-6 py-4 border-t border-border">
-        <Button variant="ghost" fullWidth>
+        <Button variant="ghost" fullWidth onClick={() => setIsModalOpen(true)}>
           {t('viewAllBookings')}
           <Icon name="ArrowRight" size={16} className="ml-2" />
         </Button>
       </div>
+
+      {/* All Bookings Modal */}
+      <AllBookingsModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </div>
   );
 }

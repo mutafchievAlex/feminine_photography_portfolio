@@ -5,6 +5,7 @@ import BookingForm from './components/BookingForm';
 import ConsultationProcess from './components/ConsultationProcess';
 import TrustSignals from './components/TrustSignals';
 import AvailabilityCalendar from './components/AvailabilityCalendar';
+import Toast from '../../components/Toast';
 import { bookingService } from '../../services/bookingService';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
@@ -14,26 +15,27 @@ import { useLanguage } from '../../hooks/useLanguage';
 
 const BookingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [submitError, setSubmitError] = useState('');
+  const [toast, setToast] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [activeTab, setActiveTab] = useState('form');
 
   const handleBookingSubmit = async (formData) => {
     setIsSubmitting(true);
-    setSubmitError('');
     
     try {
       await bookingService?.create(formData);
-      setSubmitSuccess(true);
-      
-      // Show success message
-      setTimeout(() => {
-        setSubmitSuccess(false);
-      }, 5000);
+      setToast({
+        type: 'success',
+        message: 'Резервацията е обработена успешно! Очаквайте потвърждение на имейла си.'
+      });
+      // Reset form
+      setSelectedDate(null);
     } catch (error) {
       console.error('Booking error:', error);
-      setSubmitError(error?.message || t('bookingErrorMessage'));
+      setToast({
+        type: 'error',
+        message: error?.message || 'Възникна грешка при обработката на резервацията. Моля, опитайте отново.'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -41,18 +43,21 @@ const BookingPage = () => {
 
   const handleFormSubmit = async (formData) => {
     setIsSubmitting(true);
-    setSubmitError('');
     
     try {
       await bookingService?.create(formData);
-      setSubmitSuccess(true);
-      
-      setTimeout(() => {
-        setSubmitSuccess(false);
-      }, 5000);
+      setToast({
+        type: 'success',
+        message: 'Резервацията е обработена успешно! Очаквайте потвърждение на имейла си.'
+      });
+      // Reset form
+      setSelectedDate(null);
     } catch (error) {
       console.error('Booking error:', error);
-      setSubmitError(error?.message || t('bookingErrorMessage'));
+      setToast({
+        type: 'error',
+        message: error?.message || 'Възникна грешка при обработката на резервацията. Моля, опитайте отново.'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -60,6 +65,8 @@ const BookingPage = () => {
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
+    // Automatically switch to form tab when date is selected
+    setActiveTab('form');
   };
 
   const { t } = useLanguage();
@@ -151,20 +158,6 @@ const BookingPage = () => {
             </div>
           </section>
 
-          {submitSuccess && (
-            <div className="mb-8 bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-800 text-center">
-                {t('bookingSuccessMessage')}
-              </p>
-            </div>
-          )}
-
-          {submitError && (
-            <div className="mb-8 bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800 text-center">{submitError}</p>
-            </div>
-          )}
-
           {/* Main Content */}
           <section className="pb-16">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -196,6 +189,7 @@ const BookingPage = () => {
                     <BookingForm 
                       onSubmit={handleFormSubmit} 
                       isSubmitting={isSubmitting}
+                      selectedDate={selectedDate}
                     />
                   )}
                   
@@ -324,6 +318,17 @@ const BookingPage = () => {
           </section>
         </div>
       </main>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+          autoClose={true}
+          duration={4000}
+        />
+      )}
     </div>
   );
 };

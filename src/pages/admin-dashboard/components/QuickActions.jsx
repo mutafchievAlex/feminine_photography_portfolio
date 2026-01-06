@@ -70,31 +70,20 @@ const QuickActions = () => {
         </p>
       </div>
       <div className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {quickActions?.map((action) => (
             <div
               key={action?.id}
-              className={`${action?.color} rounded-lg p-4 elegant-hover cursor-pointer transition-all duration-300`}
+              className={`${action?.color} rounded-lg p-6 elegant-hover cursor-pointer transition-all duration-300 border border-border flex items-center justify-center aspect-square group`}
               onClick={() => handleAction(action?.action)}
+              title={`${action?.title} - ${action?.description}`}
             >
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                    <Icon name={action?.icon} size={20} className="text-sophisticated-dark" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-sophisticated-dark font-sophisticated">
-                    {action?.title}
-                  </h4>
-                  <p className="text-xs text-hierarchy-secondary mt-1">
-                    {action?.description}
-                  </p>
-                </div>
-                <div className="flex-shrink-0">
-                  <Icon name="ChevronRight" size={16} className="text-hierarchy-secondary" />
-                </div>
-              </div>
+              <Icon 
+                name={action?.icon} 
+                size={32} 
+                className="text-sophisticated-dark group-hover:scale-110 transition-transform" 
+                strokeWidth={2}
+              />
             </div>
           ))}
         </div>

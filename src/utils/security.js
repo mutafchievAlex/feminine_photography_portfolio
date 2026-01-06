@@ -122,8 +122,8 @@ class RateLimiter {
 
 // Create rate limiters for different actions
 export const loginRateLimiter = new RateLimiter(5, 300000); // 5 attempts per 5 minutes
-export const bookingRateLimiter = new RateLimiter(3, 60000); // 3 attempts per minute
-export const apiRateLimiter = new RateLimiter(30, 60000); // 30 requests per minute
+export const bookingRateLimiter = new RateLimiter(10, 60000); // 10 attempts per minute (increased for dev)
+export const apiRateLimiter = new RateLimiter(50, 60000); // 50 requests per minute
 
 // CSRF Token generation and validation
 export const generateCSRFToken = () => {
@@ -187,8 +187,10 @@ export const validateBookingForm = (formData) => {
     errors.phone = 'Невалиден телефонен номер. Използвайте формат: +359 XX XXX XXXX';
   }
 
-  if (!formData.selectedDate || !isValidFutureDate(formData.selectedDate)) {
-    errors.selectedDate = 'Моля изберете бъдеща дата.';
+  // Check for preferred date (or selectedDate for backwards compatibility)
+  const dateToValidate = formData.preferredDate || formData.selectedDate;
+  if (!dateToValidate || !isValidFutureDate(dateToValidate)) {
+    errors.preferredDate = 'Моля изберете бъдеща дата.';
   }
 
   // Validate optional text fields length

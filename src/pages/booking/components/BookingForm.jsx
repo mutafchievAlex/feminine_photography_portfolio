@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
@@ -12,7 +12,7 @@ import {
   detectMaliciousInput 
 } from '../../../utils/security';
 
-const BookingForm = ({ onSubmit, isSubmitting }) => {
+const BookingForm = ({ onSubmit, isSubmitting, selectedDate }) => {
   const { t } = useLanguage();
   
   const [formData, setFormData] = useState({
@@ -29,6 +29,16 @@ const BookingForm = ({ onSubmit, isSubmitting }) => {
     agreedToTerms: false,
     marketingConsent: false
   });
+
+  // Auto-populate date when selectedDate changes
+  useEffect(() => {
+    if (selectedDate) {
+      setFormData(prev => ({
+        ...prev,
+        preferredDate: selectedDate
+      }));
+    }
+  }, [selectedDate]);
 
   const [errors, setErrors] = useState({});
 
@@ -113,9 +123,14 @@ const BookingForm = ({ onSubmit, isSubmitting }) => {
     
     // Check rate limiting
     if (!bookingRateLimiter.isAllowed('booking-form')) {
+      const errorMsg = 'Твърде много опити. Моля изчакайте минута преди да опитате отново.';
       setErrors({ 
-        submit: 'Твърде много опити. Моля изчакайте минута преди да опитате отново.' 
+        submit: errorMsg
       });
+      // Clear error after 3 seconds
+      setTimeout(() => {
+        setErrors(prev => ({ ...prev, submit: '' }));
+      }, 3000);
       return;
     }
     

@@ -1,54 +1,84 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { bookingService } from '../../../services/bookingService';
 
 const AvailabilityCalendar = ({ onDateSelect, selectedDate }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [availableDates, setAvailableDates] = useState(new Set());
   const [bookedDates, setBookedDates] = useState(new Set());
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock availability data
+  // Load real availability data from database
   useEffect(() => {
-    const generateAvailability = () => {
-      const available = new Set();
-      const booked = new Set();
-      const today = new Date();
-      
-      // Generate next 3 months of availability
-      for (let i = 0; i < 90; i++) {
-        const date = new Date(today);
-        date?.setDate(today?.getDate() + i);
+    const loadAvailability = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch all confirmed and pending bookings
+        const allBookings = await bookingService.getAllBookings();
+        const booked = new Set();
         
-        const dayOfWeek = date?.getDay();
-        const dateString = date?.toISOString()?.split('T')?.[0];
+        // Add booked dates from database
+        allBookings?.forEach(booking => {
+          if (booking?.preferredDate) {
+            booked?.add(booking?.preferredDate);
+          }
+          if (booking?.alternateDate) {
+            booked?.add(booking?.alternateDate);
+          }
+        });
         
-        // Skip Mondays (day 1) - photographer's day off
-        if (dayOfWeek === 1) continue;
+        // Generate availability for next 6 months
+        const available = new Set();
+        const today = new Date();
+        today?.setHours(0, 0, 0, 0);
         
-        // Random booking pattern (30% of available dates are booked)
-        if (Math.random() > 0.3) {
-          available?.add(dateString);
-        } else {
-          booked?.add(dateString);
+        for (let i = 0; i < 180; i++) {
+          const date = new Date(today);
+          date?.setDate(today?.getDate() + i);
+          
+          const dayOfWeek = date?.getDay();
+          const dateString = date?.toISOString()?.split('T')?.[0];
+          
+          // Skip Mondays (day 1) - photographer's day off
+          if (dayOfWeek === 1) continue;
+          
+          // If not booked, it's available
+          if (!booked?.has(dateString)) {
+            available?.add(dateString);
+          }
         }
+        
+        setAvailableDates(available);
+        setBookedDates(booked);
+      } catch (error) {
+        console.error('Error loading availability:', error);
+        // Fallback to default availability if API fails
+        const available = new Set();
+        const booked = new Set();
+        const today = new Date();
+        
+        for (let i = 0; i < 90; i++) {
+          const date = new Date(today);
+          date?.setDate(today?.getDate() + i);
+          const dayOfWeek = date?.getDay();
+          const dateString = date?.toISOString()?.split('T')?.[0];
+          
+          if (dayOfWeek !== 1 && Math.random() > 0.3) {
+            available?.add(dateString);
+          } else if (dayOfWeek !== 1) {
+            booked?.add(dateString);
+          }
+        }
+        
+        setAvailableDates(available);
+        setBookedDates(booked);
+      } finally {
+        setIsLoading(false);
       }
-      
-      // Add some specific booked dates for realism
-      const specificBookedDates = [
-        '2024-09-15', '2024-09-22', '2024-10-05', '2024-10-12', 
-        '2024-10-26', '2024-11-02', '2024-11-16', '2024-11-30'
-      ];
-      
-      specificBookedDates?.forEach(date => {
-        available?.delete(date);
-        booked?.add(date);
-      });
-      
-      setAvailableDates(available);
-      setBookedDates(booked);
     };
 
-    generateAvailability();
+    loadAvailability();
   }, []);
 
   const monthNames = [
