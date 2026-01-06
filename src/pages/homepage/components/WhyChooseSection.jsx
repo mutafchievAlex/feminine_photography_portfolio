@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const WhyChooseSection = () => {
-  const [language, setLanguage] = useState('bg');
+  const { language } = useLanguage();
   const [hoveredCard, setHoveredCard] = useState(null);
-
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') || 'bg';
-    setLanguage(savedLanguage);
-  }, []);
 
   const differentiators = [
     {

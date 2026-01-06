@@ -5,18 +5,14 @@ import Image from '../../../components/AppImage';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { albumService } from '../../../services/albumService';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const RecentStories = () => {
-  const [language, setLanguage] = useState('bg');
+  const { language } = useLanguage();
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hoveredStory, setHoveredStory] = useState(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') || 'bg';
-    setLanguage(savedLanguage);
-  }, []);
 
   useEffect(() => {
     const fetchRecentAlbums = async () => {

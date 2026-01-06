@@ -3,15 +3,11 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const Footer = () => {
-  const [language, setLanguage] = useState('bg');
+  const { language } = useLanguage();
   const [email, setEmail] = useState('');
-
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') || 'bg';
-    setLanguage(savedLanguage);
-  }, []);
 
   const currentYear = new Date()?.getFullYear();
 

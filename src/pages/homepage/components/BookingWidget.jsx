@@ -2,16 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const BookingWidget = () => {
-  const [language, setLanguage] = useState('bg');
+  const { language } = useLanguage();
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
-
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') || 'bg';
-    setLanguage(savedLanguage);
-  }, []);
 
   // Mock availability data
   const availableDates = [

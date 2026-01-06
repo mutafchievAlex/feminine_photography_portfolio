@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from '../../../components/AppImage';
 import Icon from '../../../components/AppIcon';
 import { useHeroGallery } from '../../../hooks/useHeroGallery';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 const HeroGallery = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [language, setLanguage] = useState('bg');
+  const { language } = useLanguage();
   const { images: heroImages, loading, error } = useHeroGallery();
 
   const textContainerVariants = {
@@ -42,11 +43,6 @@ const HeroGallery = () => {
       sub: "Professional photography with a feminine touch"
     }
   };
-
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') || 'bg';
-    setLanguage(savedLanguage);
-  }, []);
 
   useEffect(() => {
     if (!heroImages || heroImages.length === 0) return;

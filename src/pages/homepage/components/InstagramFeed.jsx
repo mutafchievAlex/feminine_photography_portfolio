@@ -4,6 +4,7 @@ import { AppImage } from '../../../components/AppImage';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import useInstagramFeed from '../../../hooks/useInstagramFeed';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 // Instagram Profile Configuration
 const INSTAGRAM_CONFIG = {
@@ -13,7 +14,7 @@ const INSTAGRAM_CONFIG = {
 };
 
 const InstagramFeed = () => {
-  const [language, setLanguage] = useState('bg');
+  const { language } = useLanguage();
   const sliderRef = useRef(null);
   const [directPosts, setDirectPosts] = useState([]);
   const [directLoading, setDirectLoading] = useState(false);
@@ -28,18 +29,6 @@ const InstagramFeed = () => {
   const [profileImage, setProfileImage] = useState(null);
   
   const accessToken = import.meta.env.VITE_INSTAGRAM_ACCESS_TOKEN;
-  const useDirectFetch = !!accessToken;
-
-  const { posts: backendPosts, isLoading: backendLoading } = useInstagramFeed({
-    username: INSTAGRAM_CONFIG.username,
-    limit: 12,
-    enabled: !useDirectFetch,
-  });
-
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') || 'bg';
-    setLanguage(savedLanguage);
-  }, []);
 
   useEffect(() => {
     if (!useDirectFetch) return;
