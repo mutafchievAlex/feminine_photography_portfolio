@@ -2,7 +2,8 @@ import axios from 'axios';
 import { getCSRFToken, apiRateLimiter, sanitizeInput, detectMaliciousInput } from '../utils/security';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  // Fallback to local backend in dev to avoid wrong relative /api when VITE_API_BASE_URL is missing
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081',
   headers: {
     'Content-Type': 'application/json',
   },

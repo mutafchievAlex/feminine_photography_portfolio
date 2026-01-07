@@ -123,6 +123,7 @@ const InstagramFeed = () => {
         timestamp: post?.timestamp || post?.taken_at || post?.createdAt,
         url: post?.permalink || post?.url || INSTAGRAM_CONFIG.profileUrl,
         mediaType: post?.media_type || 'IMAGE',
+        children: post?.children?.data || post?.children || [],
       };
     });
   }, [language, directPosts, backendPosts, useDirectFetch]);
@@ -170,6 +171,35 @@ const InstagramFeed = () => {
         ease: "easeOut"
       }
     }
+  };
+
+  const normalizeChildMedias = (children = []) => {
+    const list = Array.isArray(children)
+      ? children
+      : Array.isArray(children?.data)
+        ? children.data
+        : [];
+
+    return list.map((media, idx) => ({
+      image: media?.media_type === 'VIDEO' ? media?.thumbnail_url || media?.media_url : media?.media_url || media?.image,
+      videoUrl: media?.media_type === 'VIDEO' ? media?.media_url : null,
+      thumbnail: media?.thumbnail_url || media?.media_url || media?.image,
+      mediaType: media?.media_type || 'IMAGE',
+      id: media?.id || `child-${idx}`,
+    })).filter((media) => Boolean(media.image || media.videoUrl));
+  };
+
+  const buildInitialMediaList = (post) => {
+    const childMedias = normalizeChildMedias(post?.children);
+    if (childMedias.length > 0) return childMedias;
+
+    return [{
+      image: post?.image,
+      mediaType: post?.mediaType,
+      videoUrl: post?.videoUrl || (post?.mediaType === 'VIDEO' ? post?.image : null),
+      thumbnail: post?.thumbnail || post?.image,
+      id: post?.id || 'media-0'
+    }];
   };
 
   const scrollByCards = (direction = 1) => {
@@ -232,16 +262,12 @@ const InstagramFeed = () => {
   const openModal = async (post, index) => {
     setSelectedPost(post);
     setCurrentImageIndex(0);
-    setPostMedias([{ 
-      image: post.image, 
-      mediaType: post.mediaType,
-      videoUrl: post.videoUrl || (post.mediaType === 'VIDEO' ? post.image : null),
-      thumbnail: post.thumbnail || post.image 
-    }]);
+    const initialMedias = buildInitialMediaList(post);
+    setPostMedias(initialMedias);
     document.body.style.overflow = 'hidden';
 
-    // Fetch all media from the post if it's a carousel
-    if (useDirectFetch && accessToken) {
+    // Fetch all media from the post if it's a carousel and we do not already have children
+    if (useDirectFetch && accessToken && initialMedias.length <= 1) {
       setLoadingPostMedias(true);
       try {
         // First get the post details to check media type
@@ -256,16 +282,8 @@ const InstagramFeed = () => {
             `https://graph.instagram.com/${post.id}/children?fields=id,media_type,media_url,thumbnail_url&access_token=${accessToken}`
           );
           const json = await response.json();
-          if (json?.data && json.data.length > 0) {
-            const medias = json.data.map((media) => ({
-              image: media.media_type === 'VIDEO' ? media.thumbnail_url : media.media_url,
-              videoUrl: media.media_type === 'VIDEO' ? media.media_url : null,
-              thumbnail: media.thumbnail_url || media.media_url,
-              mediaType: media.media_type,
-              id: media.id,
-            }));
-            setPostMedias(medias);
-          }
+          const medias = normalizeChildMedias(json?.data);
+          if (medias.length > 0) setPostMedias(medias);
         }
         // Otherwise keep the single media we already have
       } catch (error) {
@@ -364,7 +382,7 @@ const InstagramFeed = () => {
   }, [normalizedPosts.length, isDragging, isHovered]);
 
   return (
-    <section className="py-20 bg-black">
+    <section className="py-20 bg-black relative">
       {/* Instagram Carousel (single row with navigation) - Full Width */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

@@ -161,7 +161,7 @@ export const applyCSP = () => {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https: blob:",
     "font-src 'self' https://fonts.gstatic.com",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://graph.instagram.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'"

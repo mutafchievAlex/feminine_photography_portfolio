@@ -1,6 +1,8 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
+import { motion } from 'framer-motion';
 import { useLanguage } from '../../hooks/useLanguage';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 import Header from '../../components/ui/Header';
 import HeroGallery from './components/HeroGallery';
 import RecentStories from './components/RecentStories';
@@ -11,6 +13,27 @@ import Footer from './components/Footer';
 
 const Homepage = () => {
   const { language, isEnglish, t } = useLanguage();
+  
+  // Scroll reveal refs for different sections
+  const heroRef = useScrollReveal({ threshold: 0.1 });
+  const storiesRef = useScrollReveal({ threshold: 0.15 });
+  const whyChooseRef = useScrollReveal({ threshold: 0.15 });
+  const bookingRef = useScrollReveal({ threshold: 0.2 });
+  const instagramRef = useScrollReveal({ threshold: 0.15 });
+
+  // Animation variants for staggered entrance
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 40 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.7,
+        delay: i * 0.12,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    }),
+  };
 
   return (
     <>
@@ -26,30 +49,66 @@ const Homepage = () => {
         <link rel="canonical" href="https://elenarose-photography.bg" />
       </Helmet>
 
-      <div className="min-h-screen bg-gallery-canvas">
+      <div>
         {/* Header */}
         <Header />
 
         {/* Main Content */}
         <main>
           {/* Hero Gallery Section */}
-          <HeroGallery />
+          <div ref={heroRef.ref}>
+            <HeroGallery />
+          </div>
 
           {/* Recent Stories Section */}
-          <RecentStories />
+          <motion.div
+            ref={storiesRef.ref}
+            custom={1}
+            variants={sectionVariants}
+            initial="hidden"
+            animate={storiesRef.isVisible ? 'visible' : 'hidden'}
+          >
+            <RecentStories />
+          </motion.div>
 
           {/* Why Choose Section */}
-          <WhyChooseSection />
+          <motion.div
+            ref={whyChooseRef.ref}
+            custom={2}
+            variants={sectionVariants}
+            initial="hidden"
+            animate={whyChooseRef.isVisible ? 'visible' : 'hidden'}
+          >
+            <WhyChooseSection />
+          </motion.div>
 
           {/* Booking Widget Section */}
-          <BookingWidget />
+          <motion.div
+            ref={bookingRef.ref}
+            custom={3}
+            variants={sectionVariants}
+            initial="hidden"
+            animate={bookingRef.isVisible ? 'visible' : 'hidden'}
+          >
+            <BookingWidget />
+          </motion.div>
 
           {/* Instagram Feed Section */}
-          <InstagramFeed />
+          <motion.div
+            ref={instagramRef.ref}
+            custom={4}
+            variants={sectionVariants}
+            initial="hidden"
+            animate={instagramRef.isVisible ? 'visible' : 'hidden'}
+          >
+            <InstagramFeed />
+          </motion.div>
         </main>
 
         {/* Footer */}
-        <Footer />
+        <div className="bg-gallery-canvas">
+          <Footer />
+        </div>
       </div>
     </>
   );
