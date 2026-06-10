@@ -39,10 +39,10 @@ const Homepage = () => {
     <>
       <Helmet>
         <html lang={language} />
-        <title>{isEnglish ? 'Elena Rose Photography - Professional Photography with a Feminine Touch' : 'Elena Rose Photography - Професионална фотография с женствен поглед'}</title>
+        <title>{isEnglish ? 'Desislava Tepavicharova Photography - Professional Photography with a Feminine Touch' : 'Desislava Tepavicharova Photography - Професионална фотография с женствен поглед'}</title>
         <meta name="description" content={isEnglish ? 'Professional photographer in Sofia, Bulgaria. Wedding, portrait and family photography with artistic vision and personalized approach.' : 'Професионална фотографка в София, България. Сватбена, портретна и семейна фотография с артистична визия и персонализиран подход.'} />
         <meta name="keywords" content={isEnglish ? 'photographer sofia, wedding photography, portrait photography, maternity sessions, family photography' : 'фотограф софия, сватбена фотография, портретна фотография, матернити сесии, семейна фотография'} />
-        <meta property="og:title" content={isEnglish ? 'Elena Rose Photography - Professional Photography' : 'Elena Rose Photography - Професионална фотография'} />
+        <meta property="og:title" content={isEnglish ? 'Desislava Tepavicharova Photography - Professional Photography' : 'Desislava Tepavicharova Photography - Професионална фотография'} />
         <meta property="og:description" content={t('heroSubtitle')} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://elenarose-photography.bg" />

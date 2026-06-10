@@ -12,8 +12,8 @@ const DocsPage = () => {
   return (
     <>
       <Helmet>
-        <title>API Documentation | Elena Rose Photography</title>
-        <meta name="description" content="Embedded Swagger UI for the Elena Rose Photography API." />
+        <title>API Documentation | Desislava Tepavicharova Photography</title>
+        <meta name="description" content="Embedded Swagger UI for the Desislava Tepavicharova Photography API." />
         <link rel="canonical" href="/docs" />
       </Helmet>
       <div className="min-h-screen bg-background">

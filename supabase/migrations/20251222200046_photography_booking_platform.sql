@@ -332,7 +332,7 @@ BEGIN
     ) VALUES
         (admin_uuid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
          'elena@elenarosephotography.bg', crypt('elena2024', gen_salt('bf', 10)), now(), now(), now(),
-         '{"full_name": "Elena Rose", "phone": "+359 888 123 456", "role": "admin"}'::jsonb, 
+         '{"full_name": "Desislava Tepavicharova", "phone": "+359 888 123 456", "role": "admin"}'::jsonb, 
          '{"provider": "email", "providers": ["email"]}'::jsonb,
          false, false, '', null, '', null, '', '', null, '', 0, '', null, null, '', '', null),
         (client_uuid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',

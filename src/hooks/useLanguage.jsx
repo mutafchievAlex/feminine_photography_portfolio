@@ -98,7 +98,7 @@ const translations = {
       
       // Admin Dashboard
       adminDashboard: 'Admin Dashboard',
-      adminDashboardTitle: 'Admin Dashboard • Elena Rose Photography',
+      adminDashboardTitle: 'Admin Dashboard • Desislava Tepavicharova Photography',
       financialOverview: 'Financial Overview',
       revenueAndStats: 'Revenue and statistics for the last 6 months',
       totalRevenue: 'Total Revenue',
@@ -469,7 +469,7 @@ const translations = {
       testimonial3Occasion: 'Corporate Portraits',
       
       // Meta tags
-      photographerName: 'Elena Rose',
+      photographerName: 'Desislava Tepavicharova',
       professionalPhotographer: 'Professional Photographer',
       metaKeywords: 'photographer Bulgaria, wedding photography, portrait photography, family photography, professional photographer Sofia',
       locationSofiaBulgaria: 'Sofia, Bulgaria',
@@ -645,7 +645,7 @@ const translations = {
       
       // Admin Dashboard
       adminDashboard: 'Админ Табло',
-      adminDashboardTitle: 'Админ Табло • Elena Rose Photography',
+      adminDashboardTitle: 'Админ Табло • Desislava Tepavicharova Photography',
       financialOverview: 'Финансов преглед',
       revenueAndStats: 'Приходи и статистики за последните 6 месеца',
       totalRevenue: 'Общо приходи',

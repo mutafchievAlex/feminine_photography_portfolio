@@ -21,7 +21,7 @@ const DEMO_ACCOUNTS = {
   },
   'elena@elenarosephotography.bg': {
     password: 'elena2024',
-    fullName: 'Elena Rose',
+    fullName: 'Desislava Tepavicharova',
     phone: '+359 89 123 4567',
     role: 'admin'
   },

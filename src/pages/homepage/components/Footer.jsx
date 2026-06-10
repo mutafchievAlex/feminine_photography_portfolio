@@ -128,7 +128,7 @@ const Footer = () => {
               </div>
               <div className="flex flex-col">
                 <span className="font-heading font-medium text-xl text-white leading-none">
-                  Elena Rose
+                  Desislava Tepavicharova
                 </span>
                 <span className="font-body text-sm text-white/70 leading-none">
                   Photography
@@ -208,7 +208,7 @@ const Footer = () => {
 
             <div className="text-center md:text-right">
               <p className="text-white/60 font-sophisticated text-sm">
-                © {currentYear} Elena Rose Photography. {language === 'bg' ? 'Всички права запазени.' : 'All rights reserved.'}
+                © {currentYear} Desislava Tepavicharova Photography. {language === 'bg' ? 'Всички права запазени.' : 'All rights reserved.'}
               </p>
               <div className="flex items-center justify-center md:justify-end space-x-4 mt-2">
                 <Link to="/about" className="text-white/50 hover:text-accent transition-colors duration-300 text-xs font-sophisticated">

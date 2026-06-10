@@ -90,7 +90,7 @@ export default function GalleryPage() {
   return (
     <>
       <Helmet>
-        <title>Gallery | Elena Rose Photography</title>
+        <title>Gallery | Desislava Tepavicharova Photography</title>
       </Helmet>
       <div className="min-h-screen bg-gray-50">
         <Header />

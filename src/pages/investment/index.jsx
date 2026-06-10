@@ -202,7 +202,7 @@ const Investment = () => {
   return (
     <>
       <Helmet>
-        <title>{t('investment')} - Elena Rose Photography</title>
+        <title>{t('investment')} - Desislava Tepavicharova Photography</title>
         <meta name="description" content={t('heroDescription')} />
         <meta name="keywords" content={t('investmentKeywords')} />
       </Helmet>
@@ -497,7 +497,7 @@ const Investment = () => {
                 </div>
                 <div className="flex flex-col">
                   <span className="font-heading font-medium text-lg leading-none">
-                    Elena Rose
+                    Desislava Tepavicharova
                   </span>
                   <span className="font-body text-xs text-white/70 leading-none">
                     Photography
@@ -526,7 +526,7 @@ const Investment = () => {
               
               <div className="border-t border-white/20 pt-6">
                 <p className="text-white/50 text-sm">
-                  © {new Date()?.getFullYear()} Elena Rose Photography. {t('allRightsReserved')}.
+                  © {new Date()?.getFullYear()} Desislava Tepavicharova Photography. {t('allRightsReserved')}.
                 </p>
               </div>
             </div>
